@@ -195,10 +195,15 @@
                         <i data-lucide="list-checks" class="w-6 h-6 mr-2 text-indigo-500"></i>
                         Alle Zeiteinträge
                     </h2>
-                    <!-- Kundenfilter für Einträge -->
-                    <select id="entries-customer-filter" class="p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm">
-                        <!-- Optionen werden von JS gefüllt -->
-                    </select>
+                    <!-- Filtergruppe -->
+                    <div class="flex gap-4">
+                        <!-- Kundenfilter für Einträge -->
+                        <select id="entries-customer-filter" class="p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm">
+                            <!-- Optionen werden von JS gefüllt -->
+                        </select>
+                         <!-- Monatsfilter für Einträge -->
+                        <input type="month" id="entries-month-filter" class="p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                    </div>
                 </div>
 
                 <!-- Neue Zeiterfassung Formular (Bleibt hier, da es die Hauptaktion ist) -->
@@ -557,7 +562,8 @@
         let customers = [];
         let entries = [];
         let isAuthReady = false;
-        let entriesFilterCustomerId = 'all'; // NEU: Filterzustand für die Einträge-Liste
+        let entriesFilterCustomerId = 'all'; // NEU: Filterzustand Kunde für die Einträge-Liste
+        let entriesFilterMonth = ''; // NEU: Filterzustand Monat für die Einträge-Liste
         
         // --- AUTH-STATE ---
         let isLoginMode = true; // Startet im Login-Modus
@@ -574,6 +580,7 @@
         const forgotPasswordBtn = document.getElementById('forgot-password-btn'); // NEU
         
         const entriesCustomerFilterEl = document.getElementById('entries-customer-filter'); // NEU: Kundenfilter für Einträge
+        const entriesMonthFilterEl = document.getElementById('entries-month-filter'); // NEU: Monatsfilter für Einträge
         
         // --- FEIERTAGSDEFINITION HAMBURG ---
         // Feste Feiertage in Hamburg (Monat ist 0-basiert)
@@ -767,8 +774,15 @@
             } else if (tabId === 'forecasting' && selectedMonth) {
                 renderForecastingTab(selectedMonth); 
             } else if (tabId === 'entries') { // NEU: Bei Wechsel zum Einträge-Tab die Liste neu rendern
-                renderEntriesList(entriesFilterCustomerId);
+                renderEntriesList(entriesFilterCustomerId, entriesFilterMonth);
                 renderEntriesCustomerFilter();
+                // Setze Monatsfilter beim Öffnen des Tabs (falls noch leer)
+                if (entriesMonthFilterEl && !entriesFilterMonth) {
+                    const today = new Date();
+                    const monthString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+                    entriesFilterMonth = monthString;
+                    entriesMonthFilterEl.value = monthString;
+                }
             }
             
             lucide.createIcons();
@@ -817,7 +831,7 @@
             const today = new Date(); // NEU: Datum hier initialisieren
             if (document.getElementById('entry-date')) document.getElementById('entry-date').valueAsDate = today; // FEHLER BEHOBEN: Element existiert jetzt.
             
-            // Setze initialen Monatsfilter
+            // Setze initialen Monatsfilter für Analyse/Export
             const monthString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
             if (revenueMonthFilterEl) revenueMonthFilterEl.value = monthString;
             if (exportMonthInput) exportMonthInput.value = monthString;
@@ -1091,7 +1105,7 @@
             onSnapshot(collection(db, getEntryPath()), (snapshot) => {
                 entries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), date: doc.data().date || '2000-01-01' }));
                 entries.sort((a, b) => new Date(b.date) - new Date(a.date)); // Sortieren nach Datum (neueste zuerst)
-                if (entriesListEl) renderEntriesList(entriesFilterCustomerId); // NEU: Mit Filter rendern
+                if (entriesListEl) renderEntriesList(entriesFilterCustomerId, entriesFilterMonth); // NEU: Mit Monats-Filter rendern
                 // Verwende den aktuellen Filterwert
                 if (revenueMonthFilterEl) calculateRevenueSummary(revenueMonthFilterEl.value); 
                 if (revenueMonthFilterEl) renderForecastingTab(revenueMonthFilterEl.value); 
@@ -1740,6 +1754,7 @@
             
             // Filterwert setzen und Liste neu rendern
             entriesCustomerFilterEl.value = entriesFilterCustomerId;
+            if (entriesMonthFilterEl) entriesMonthFilterEl.value = entriesFilterMonth;
         }
 
 
@@ -1765,13 +1780,19 @@
             }
         }
 
-        function renderEntriesList(filterId = 'all') {
+        function renderEntriesList(filterId = 'all', filterMonth = '') {
             if (!entriesListEl) return; // Null-Check
             
-            // Filter anwenden
-            const filteredEntries = entries.filter(entry => {
+            // Filtern nach Kunde
+            let filteredEntries = entries.filter(entry => {
                 return filterId === 'all' || entry.customerId === filterId;
             });
+            
+            // Filtern nach Monat (YYYY-MM)
+            if (filterMonth) {
+                filteredEntries = filteredEntries.filter(entry => entry.date.startsWith(filterMonth));
+            }
+
 
             entriesListEl.innerHTML = '';
             if (filteredEntries.length === 0) {
@@ -2460,6 +2481,12 @@
                 calculateRevenueSummary(e.target.value);
             });
             
+            // NEU: Einträge Monats-Filter Listener
+            if (entriesMonthFilterEl) entriesMonthFilterEl.addEventListener('change', (e) => {
+                entriesFilterMonth = e.target.value;
+                renderEntriesList(entriesFilterCustomerId, entriesFilterMonth);
+            });
+            
             // NEU: Auth Form und Toggle Listener
             if(toggleAuthModeBtn) toggleAuthModeBtn.addEventListener('click', toggleAuthMode); 
             if(authForm) authForm.addEventListener('submit', handleAuthSubmit);
@@ -2544,7 +2571,7 @@
             // NEU: Einträge-Filter Listener
             if (entriesCustomerFilterEl) entriesCustomerFilterEl.addEventListener('change', (e) => {
                 entriesFilterCustomerId = e.target.value;
-                renderEntriesList(entriesFilterCustomerId);
+                renderEntriesList(entriesFilterCustomerId, entriesFilterMonth);
             });
 
 
