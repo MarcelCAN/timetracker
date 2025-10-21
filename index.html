@@ -339,20 +339,35 @@
                 const appId = typeof __app_id !== 'undefined' ? String(__app_id) : 'default-app-id';
                 const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? String(__initial_auth_token) : null;
                 
-                let firebaseConfig = {};
-                const configString = typeof __firebase_config !== 'undefined' ? String(__firebase_config).trim() : '';
-                
-                // Versuche, die Konfiguration zu parsen
-                if (configString.length > 2) {
-                    try {
-                        firebaseConfig = JSON.parse(configString);
-                    } catch (e) {
-                        console.error("Fehler beim Parsen der Firebase Config:", e);
-                        throw new Error(`Config Parse Error: ${e.message}`);
-                    }
+                // =================================================================
+                // 🛑 WICHTIG: BENUTZERDEFINIERTE FIREBASE KONFIGURATION 🛑
+                //
+                // Da die automatische Canvas-Konfiguration fehlschlägt (auth/invalid-api-key),
+                // MÜSSEN SIE HIER IHRE EIGENEN FIREBASE-PROJEKTDATEN eintragen.
+                // Ersetzen Sie alle "YOUR_..." Platzhalter mit den Werten aus Ihrer Firebase Console.
+                // =================================================================
+              const firebaseConfig = {
+    apiKey: "AIzaSyDGzrNBazLFhxTI-O-xkdSUU-c4EIWHGF0",
+    authDomain: "business-case-kalkulator.firebaseapp.com",
+    projectId: "business-case-kalkulator",
+    storageBucket: "business-case-kalkulator.firebasestorage.app",
+    messagingSenderId: "439851647109",
+    appId: "1:439851647109:web:50faf47e5970ada8b4a9ec",
+    measurementId: "G-ZGEB3JMEVH"
+  };
+
+                // Wenn der Benutzer die Platzhalter nicht ersetzt hat:
+                if (firebaseConfig.apiKey === "YOUR_API_KEY") {
+                    document.getElementById('currentUserId').textContent = 'Bitte Firebase-Keys im Code ersetzen, um zu speichern.';
+                    document.getElementById('authStatus').textContent = 'Konfiguration fehlt!';
+                    document.getElementById('authStatus').classList.remove('text-yellow-600', 'text-green-600');
+                    document.getElementById('authStatus').classList.add('text-red-600');
+                    document.getElementById('saveButton').disabled = true;
+                    isAuthReady = false; // Deaktiviert Speicherfunktionen
+                    calculateMetrics();
+                    return; // Beende Firebase-Initialisierung
                 }
-                
-                // Wir entfernen die strikte Prüfung auf firebaseConfig.apiKey und lassen die Bibliothek den Fehler fangen.
+
 
                 // Log-Level für Debugging setzen
                 setLogLevel('debug');
@@ -370,8 +385,10 @@
 
                 // Melde den Benutzer an: Custom Token (bevorzugt) oder Anonym
                 if (initialAuthToken) {
+                    // Verwende den optionalen Canvas-Token für eine persistente User-ID
                     await signInWithCustomToken(auth, initialAuthToken);
                 } else {
+                    // Fallback: Anonyme Anmeldung, um eine temporäre UID zu erhalten
                     await signInAnonymously(auth);
                 }
 
@@ -389,32 +406,29 @@
                         // Starte Datenbank-Listener und Berechnungen
                         loadScenariosListener();
                     } else {
-                        // Anonyme Verbindung oder Abmeldung
-                        // Wichtig: Selbst wenn Auth fehlschlägt, setzen wir isAuthReady auf true, 
-                        // um Firestore-Operationen mit der bereitgestellten db-Instanz zu versuchen.
-                        document.getElementById('authStatus').textContent = 'Anonym Verbunden';
-                        document.getElementById('authStatus').classList.add('text-orange-500');
-                        document.getElementById('saveButton').disabled = false;
+                        // Sollte nicht passieren, wenn signInAnonymously aufgerufen wird
+                        document.getElementById('authStatus').textContent = 'Anmeldung fehlgeschlagen';
+                        document.getElementById('authStatus').classList.add('text-red-600');
                     }
                     isAuthReady = true; // Auth-Status ist gesetzt
                     calculateMetrics();
                 });
 
             } catch (error) {
-                // Fängt Fehler von initializeApp und signInWithCustomToken ab
+                // Fängt Fehler von initializeApp, signInWithCustomToken ab
                 console.error("Kritischer Firebase-Fehler bei Initialisierung/Auth: ", error);
-                document.getElementById('authStatus').textContent = 'Fehler!';
                 
-                // Extrahiere den Firebase-Fehlercode oder die Custom-Fehlermeldung
+                document.getElementById('authStatus').textContent = 'Fehler!';
+                document.getElementById('authStatus').classList.remove('text-yellow-600', 'text-green-600', 'text-orange-500');
+                document.getElementById('authStatus').classList.add('text-red-600');
+                
                 let errorMessage = error.message;
                 if (error.code) {
                     errorMessage = `Firebase: ${error.code} - ${error.message}`;
                 }
-                
-                // Zeige detailliertere Fehler-ID an (max. 80 Zeichen)
+
+                // Zeige detailliertere Fehler-ID an
                 document.getElementById('currentUserId').textContent = errorMessage.substring(0, 80) + '...'; 
-                document.getElementById('authStatus').classList.remove('text-yellow-600', 'text-green-600', 'text-orange-500');
-                document.getElementById('authStatus').classList.add('text-red-600');
                 isAuthReady = false; 
                 document.getElementById('saveButton').disabled = true;
                 calculateMetrics(); 
@@ -457,8 +471,8 @@
                 console.error("Datenbank nicht initialisiert.");
                 throw new Error("Datenbank nicht initialisiert.");
             }
-            // WICHTIG: Verwende die globale App-ID für den öffentlichen Pfad
-            const appId = typeof __app_id !== 'undefined' ? String(__app_id) : 'default-app-id';
+            // Da wir eine benutzerdefinierte Konfiguration verwenden, ist appId der projectId
+            const appId = auth.app.options.projectId || 'default-project-id';
             const collectionPath = `artifacts/${appId}/public/data/${SCENARIOS_COLLECTION_NAME}`;
             return collection(db, collectionPath);
         }
