@@ -352,11 +352,7 @@
                     }
                 }
                 
-                // NEUE, ZIELGERICHTETE PRÜFUNG: Wenn API Key fehlt, liegt ein Problem mit der Umgebung vor.
-                if (!firebaseConfig.apiKey) {
-                    // Wir werfen einen Fehler mit einer klaren Diagnose, die anzeigt, dass die Konfiguration fehlerhaft ist.
-                    throw new Error("Canvas Config Fehlt: Die API-Schlüssel-Konfiguration der Umgebung ist leer oder ungültig.");
-                }
+                // Wir entfernen die strikte Prüfung auf firebaseConfig.apiKey und lassen die Bibliothek den Fehler fangen.
 
                 // Log-Level für Debugging setzen
                 setLogLevel('debug');
@@ -394,6 +390,8 @@
                         loadScenariosListener();
                     } else {
                         // Anonyme Verbindung oder Abmeldung
+                        // Wichtig: Selbst wenn Auth fehlschlägt, setzen wir isAuthReady auf true, 
+                        // um Firestore-Operationen mit der bereitgestellten db-Instanz zu versuchen.
                         document.getElementById('authStatus').textContent = 'Anonym Verbunden';
                         document.getElementById('authStatus').classList.add('text-orange-500');
                         document.getElementById('saveButton').disabled = false;
@@ -561,6 +559,9 @@
 
             const scenariosQuery = query(getScenarioCollectionRef());
             const selector = document.getElementById('scenarioSelector');
+
+            // HINWEIS: Dieser Listener wird nun direkt in der onAuthStateChanged/catch-Blöcken aufgerufen, 
+            // um zu versuchen, Daten abzurufen, auch wenn die Auth-Routine fehlschlägt.
 
             onSnapshot(scenariosQuery, (snapshot) => {
                 const currentSelectedId = selector.value;
