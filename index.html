@@ -334,11 +334,18 @@
         // 1. FIREBASE INITIALISIERUNG & AUTH
         // =================================================================
         async function initFirebase() {
+            let firebaseConfig = {};
+            let initialAuthToken = null;
+
             try {
-                // Sicherstellen, dass die globalen Canvas-Variablen verfügbar sind
+                // Konfigurationsdaten aus der Canvas-Umgebung lesen
                 const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-                const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                if (typeof __firebase_config !== 'undefined') {
+                    firebaseConfig = JSON.parse(__firebase_config);
+                } else {
+                    console.error("FEHLER: __firebase_config ist nicht definiert.");
+                }
+                initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
                 // Initialisiere App, Firestore und Auth
                 const app = initializeApp(firebaseConfig);
@@ -347,7 +354,7 @@
                 
                 document.getElementById('authStatus').textContent = 'Authentifiziere...';
                 
-                // Setze Session Persistence (optional, aber empfohlen)
+                // Setze Session Persistence 
                 await setPersistence(auth, browserSessionPersistence).catch(e => console.warn("Persistence konnte nicht gesetzt werden:", e));
 
                 // Melde den Benutzer an
@@ -363,7 +370,7 @@
                         userId = user.uid;
                         document.getElementById('currentUserId').textContent = userId;
                         document.getElementById('authStatus').textContent = 'Verbunden';
-                        document.getElementById('authStatus').classList.remove('text-yellow-600', 'text-red-600');
+                        document.getElementById('authStatus').classList.remove('text-yellow-600', 'text-red-600', 'text-orange-500');
                         document.getElementById('authStatus').classList.add('text-green-600');
                         isAuthReady = true;
                         
@@ -371,7 +378,7 @@
                         calculateMetrics();
                         loadScenariosListener();
                     } else {
-                        // Fallback: Sollte im Canvas normalerweise nicht eintreten, aber für den Fall der Fälle
+                        // Fallback: Anonyme Verbindung
                         document.getElementById('authStatus').textContent = 'Anonym Verbunden';
                         document.getElementById('authStatus').classList.remove('text-yellow-600', 'text-red-600');
                         document.getElementById('authStatus').classList.add('text-orange-500');
@@ -381,11 +388,12 @@
                 });
 
             } catch (error) {
-                console.error("Firebase Initialisierung oder Auth fehlgeschlagen: ", error);
+                console.error("Kritischer Firebase-Fehler (Prüfen Sie __firebase_config): ", error);
                 document.getElementById('authStatus').textContent = 'Fehler!';
                 document.getElementById('currentUserId').textContent = 'Initialisierungsfehler';
+                document.getElementById('authStatus').classList.remove('text-yellow-600', 'text-green-600', 'text-orange-500');
                 document.getElementById('authStatus').classList.add('text-red-600');
-                isAuthReady = true; // Setze auf true, damit der Rechner ohne Speichern funktioniert
+                isAuthReady = false; 
                 calculateMetrics(); 
             }
         }
@@ -403,6 +411,7 @@
             });
             data.userId = userId;
             data.timestamp = new Date().toISOString();
+            // Name des Szenarios wird separat beim Speichern hinzugefügt
             return data;
         }
 
@@ -421,6 +430,10 @@
 
         // Firestore Pfad für öffentliche (teilbare) Daten
         function getScenarioCollectionRef() {
+            if (!db) {
+                console.error("Datenbank nicht initialisiert.");
+                throw new Error("Datenbank nicht initialisiert.");
+            }
             // WICHTIG: Verwende die globale App-ID für den öffentlichen Pfad
             const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
             const collectionPath = `artifacts/${appId}/public/data/${SCENARIOS_COLLECTION_NAME}`;
@@ -447,7 +460,8 @@
                 data.name = scenarioName;
                 
                 // Firestore Dokument-ID ist der Name des Szenarios (für einfache Adressierung)
-                const scenarioRef = doc(getScenarioCollectionRef(), scenarioName.replace(/[^a-zA-Z0-9]/g, '_')); 
+                const docId = scenarioName.replace(/[^a-zA-Z0-9\-_]/g, '_'); // Erlaubt nur alphanumerische Zeichen, - und _
+                const scenarioRef = doc(getScenarioCollectionRef(), docId); 
                 await setDoc(scenarioRef, data);
                 
                 setStatusMessage(`Szenario "${scenarioName}" erfolgreich gespeichert.`);
@@ -481,7 +495,7 @@
             }
         }
         
-        // Löscht das aktuell ausgewählte Szenario
+        // Löscht das aktuell ausgewählte Szenario (ohne Bestätigungs-Prompt, da alert/confirm verboten sind)
         window.deleteScenario = async function() {
             if (!isAuthReady || !db) {
                 setStatusMessage('Warte auf Firebase-Verbindung oder Datenbank-Initialisierung.', true);
@@ -497,9 +511,8 @@
                 return;
             }
             
-            // Simuliere eine Bestätigung, da alert/confirm verboten sind
-            const proceed = window.confirm(`Sind Sie sicher, dass Sie das Szenario "${scenarioName}" löschen möchten?`);
-            if (!proceed) return;
+            // WICHTIG: Da alert/confirm verboten ist, wird die Bestätigung übersprungen.
+            // Der User muss wissen, dass der Lösch-Button sofort löscht.
 
             try {
                 const scenarioRef = doc(getScenarioCollectionRef(), scenarioId);
@@ -513,16 +526,6 @@
             }
         }
         
-        // Window.confirm Ersatz (einfache Implementierung)
-        window.confirm = (message) => {
-            // Hier sollte normalerweise ein Modal/Custom Dialog verwendet werden.
-            // Da dies eine Canvas-Umgebung ist, verlassen wir uns auf die Umgebung, 
-            // falls sie window.confirm zulässt, andernfalls wird nur geloggt.
-            console.warn("WARNUNG: window.confirm wird für die Löschbestätigung verwendet.", message);
-            return true; // Im Zweifel annehmen, dass bestätigt wurde
-        };
-
-
         // Listener für Echtzeit-Updates der Szenarien
         function loadScenariosListener() {
             if (!db) return; // Wichtig: Sicherstellen, dass db initialisiert wurde
