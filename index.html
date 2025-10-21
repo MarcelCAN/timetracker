@@ -346,11 +346,6 @@
                 // Log-Level für Debugging setzen
                 setLogLevel('debug');
 
-                // Prüfe, ob eine minimale Konfiguration vorhanden ist (um Fehler bei leeren Objekten zu vermeiden)
-                if (Object.keys(firebaseConfig).length === 0 || !firebaseConfig.apiKey) {
-                    throw new Error("Canvas Konfiguration fehlt oder ist leer.");
-                }
-
                 // Initialisiere App, Auth und Firestore
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
@@ -393,10 +388,11 @@
                 });
 
             } catch (error) {
+                // Fängt Fehler von initializeApp und signInWithCustomToken ab
                 console.error("Kritischer Firebase-Fehler bei Initialisierung/Auth: ", error);
                 document.getElementById('authStatus').textContent = 'Fehler!';
-                // Zeige detailliertere Fehler-ID an
-                document.getElementById('currentUserId').textContent = error.message.substring(0, 30) + '...'; 
+                // Zeige detailliertere Fehler-ID an (max. 80 Zeichen)
+                document.getElementById('currentUserId').textContent = error.message.substring(0, 80) + '...'; 
                 document.getElementById('authStatus').classList.remove('text-yellow-600', 'text-green-600', 'text-orange-500');
                 document.getElementById('authStatus').classList.add('text-red-600');
                 isAuthReady = false; 
