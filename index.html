@@ -352,15 +352,16 @@
                     }
                 }
                 
-                // ***************************************************************
-                // HINWEIS: Die vorherige aggressive Prüfung, die diesen Fehler ausgelöst hat,
-                // wurde entfernt. Nun muss die Firebase-Bibliothek selbst den Fehler melden.
-                // ***************************************************************
+                // NEUE, ZIELGERICHTETE PRÜFUNG: Wenn API Key fehlt, liegt ein Problem mit der Umgebung vor.
+                if (!firebaseConfig.apiKey) {
+                    // Wir werfen einen Fehler mit einer klaren Diagnose, die anzeigt, dass die Konfiguration fehlerhaft ist.
+                    throw new Error("Canvas Config Fehlt: Die API-Schlüssel-Konfiguration der Umgebung ist leer oder ungültig.");
+                }
 
                 // Log-Level für Debugging setzen
                 setLogLevel('debug');
 
-                // Initialisiere App, Auth und Firestore. Dies wird fehlschlagen, wenn der API Key ungültig ist.
+                // Initialisiere App, Auth und Firestore. 
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
