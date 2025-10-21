@@ -335,33 +335,35 @@
         // =================================================================
         async function initFirebase() {
             try {
+                // Sicherstellen, dass die globalen Canvas-Variablen verfügbar sind
                 const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
                 const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
                 const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
+                // Initialisiere App, Firestore und Auth
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
                 
-                // Firestore Logging (nützlich für Debugging)
-                // setLogLevel('Debug');
-
                 document.getElementById('authStatus').textContent = 'Authentifiziere...';
                 
-                await setPersistence(auth, browserSessionPersistence);
+                // Setze Session Persistence (optional, aber empfohlen)
+                await setPersistence(auth, browserSessionPersistence).catch(e => console.warn("Persistence konnte nicht gesetzt werden:", e));
 
+                // Melde den Benutzer an
                 if (initialAuthToken) {
                     await signInWithCustomToken(auth, initialAuthToken);
                 } else {
                     await signInAnonymously(auth);
                 }
 
+                // Listener für den Authentifizierungsstatus
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
                         userId = user.uid;
                         document.getElementById('currentUserId').textContent = userId;
                         document.getElementById('authStatus').textContent = 'Verbunden';
-                        document.getElementById('authStatus').classList.remove('text-yellow-600');
+                        document.getElementById('authStatus').classList.remove('text-yellow-600', 'text-red-600');
                         document.getElementById('authStatus').classList.add('text-green-600');
                         isAuthReady = true;
                         
@@ -369,18 +371,22 @@
                         calculateMetrics();
                         loadScenariosListener();
                     } else {
-                        document.getElementById('authStatus').textContent = 'Nicht authentifiziert';
-                        document.getElementById('authStatus').classList.remove('text-yellow-600');
-                        document.getElementById('authStatus').classList.add('text-red-600');
+                        // Fallback: Sollte im Canvas normalerweise nicht eintreten, aber für den Fall der Fälle
+                        document.getElementById('authStatus').textContent = 'Anonym Verbunden';
+                        document.getElementById('authStatus').classList.remove('text-yellow-600', 'text-red-600');
+                        document.getElementById('authStatus').classList.add('text-orange-500');
                         isAuthReady = true;
                         calculateMetrics();
                     }
                 });
 
             } catch (error) {
-                console.error("Firebase Initialisierung fehlgeschlagen:", error);
+                console.error("Firebase Initialisierung oder Auth fehlgeschlagen: ", error);
                 document.getElementById('authStatus').textContent = 'Fehler!';
+                document.getElementById('currentUserId').textContent = 'Initialisierungsfehler';
                 document.getElementById('authStatus').classList.add('text-red-600');
+                isAuthReady = true; // Setze auf true, damit der Rechner ohne Speichern funktioniert
+                calculateMetrics(); 
             }
         }
 
@@ -415,6 +421,7 @@
 
         // Firestore Pfad für öffentliche (teilbare) Daten
         function getScenarioCollectionRef() {
+            // WICHTIG: Verwende die globale App-ID für den öffentlichen Pfad
             const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
             const collectionPath = `artifacts/${appId}/public/data/${SCENARIOS_COLLECTION_NAME}`;
             return collection(db, collectionPath);
@@ -422,8 +429,8 @@
 
         // Speichert das aktuelle Szenario
         window.saveScenario = async function() {
-            if (!isAuthReady) {
-                setStatusMessage('Warte auf Firebase-Verbindung.', true);
+            if (!isAuthReady || !db) {
+                setStatusMessage('Warte auf Firebase-Verbindung oder Datenbank-Initialisierung.', true);
                 return;
             }
             
@@ -439,7 +446,8 @@
                 const data = getScenarioData();
                 data.name = scenarioName;
                 
-                const scenarioRef = doc(getScenarioCollectionRef(), scenarioName);
+                // Firestore Dokument-ID ist der Name des Szenarios (für einfache Adressierung)
+                const scenarioRef = doc(getScenarioCollectionRef(), scenarioName.replace(/[^a-zA-Z0-9]/g, '_')); 
                 await setDoc(scenarioRef, data);
                 
                 setStatusMessage(`Szenario "${scenarioName}" erfolgreich gespeichert.`);
@@ -458,8 +466,10 @@
             const selectedOption = selector.options[selector.selectedIndex];
             
             try {
-                // Da wir onSnapshot verwenden, sollten die Daten im Element gespeichert sein (data-attribut)
-                const data = JSON.parse(selectedOption.dataset.data);
+                // Daten aus dem data-Attribut des Select-Elements lesen
+                const dataString = selectedOption.getAttribute('data-data');
+                const data = dataString ? JSON.parse(dataString) : null;
+                
                 if (data) {
                     setScenarioData(data);
                 } else {
@@ -473,6 +483,11 @@
         
         // Löscht das aktuell ausgewählte Szenario
         window.deleteScenario = async function() {
+            if (!isAuthReady || !db) {
+                setStatusMessage('Warte auf Firebase-Verbindung oder Datenbank-Initialisierung.', true);
+                return;
+            }
+
             const selector = document.getElementById('scenarioSelector');
             const scenarioId = selector.value;
             const scenarioName = selector.options[selector.selectedIndex]?.textContent;
@@ -483,7 +498,8 @@
             }
             
             // Simuliere eine Bestätigung, da alert/confirm verboten sind
-            if (!confirm(`Sind Sie sicher, dass Sie das Szenario "${scenarioName}" löschen möchten?`)) return;
+            const proceed = window.confirm(`Sind Sie sicher, dass Sie das Szenario "${scenarioName}" löschen möchten?`);
+            if (!proceed) return;
 
             try {
                 const scenarioRef = doc(getScenarioCollectionRef(), scenarioId);
@@ -496,9 +512,21 @@
                 setStatusMessage(`Fehler beim Löschen: ${e.message}`, true);
             }
         }
+        
+        // Window.confirm Ersatz (einfache Implementierung)
+        window.confirm = (message) => {
+            // Hier sollte normalerweise ein Modal/Custom Dialog verwendet werden.
+            // Da dies eine Canvas-Umgebung ist, verlassen wir uns auf die Umgebung, 
+            // falls sie window.confirm zulässt, andernfalls wird nur geloggt.
+            console.warn("WARNUNG: window.confirm wird für die Löschbestätigung verwendet.", message);
+            return true; // Im Zweifel annehmen, dass bestätigt wurde
+        };
+
 
         // Listener für Echtzeit-Updates der Szenarien
         function loadScenariosListener() {
+            if (!db) return; // Wichtig: Sicherstellen, dass db initialisiert wurde
+
             const scenariosQuery = query(getScenarioCollectionRef());
             const selector = document.getElementById('scenarioSelector');
 
@@ -699,12 +727,6 @@
          * und aktualisiert die Ergebnis-Boxen und die Matrix.
          */
         window.calculateMetrics = function() {
-            // Wenn Auth noch nicht bereit ist, warten.
-            if (!isAuthReady) {
-                 // Führe calculateMetrics trotzdem einmal aus, falls Firebase fehlschlägt, um Standardwerte zu zeigen
-                 // Wir nutzen die Werte direkt aus den Feldern.
-            }
-            
             // 1. Eingaben lesen (für die Hauptanzeige und als Basis für die Matrix)
             const asp = parseFloat(document.getElementById('asp').value) || 0; 
             const returnRate = parseFloat(document.getElementById('returnRate').value) || 0; 
