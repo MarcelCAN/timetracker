@@ -176,7 +176,7 @@
                             <label for="saveName" class="block text-sm font-medium text-gray-700">Name für neues Szenario:</label>
                             <input type="text" id="saveName" placeholder="z.B. Baseline Q4 2024" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500 border-2">
                         </div>
-                        <button onclick="saveScenario()" class="self-end px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-150 shadow-lg whitespace-nowrap">Speichern</button>
+                        <button onclick="saveScenario()" class="self-end px-6 py-3 bg-blue-600 disabled:bg-gray-400 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-150 shadow-lg whitespace-nowrap" id="saveButton" disabled>Speichern</button>
                     </div>
                     <div id="statusMessage" class="text-sm text-center text-red-500"></div>
                 </div>
@@ -305,7 +305,7 @@
         // Importiere Firebase Module
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection, deleteDoc, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, deleteDoc, query, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Globale Firebase-Variablen
         let db;
@@ -334,30 +334,27 @@
         // 1. FIREBASE INITIALISIERUNG & AUTH
         // =================================================================
         async function initFirebase() {
-            let firebaseConfig = {};
-            let initialAuthToken = null;
-
             try {
-                // Konfigurationsdaten aus der Canvas-Umgebung lesen
+                // Konfigurationsdaten aus der Canvas-Umgebung lesen (Muss vorhanden sein)
                 const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                if (typeof __firebase_config !== 'undefined') {
-                    firebaseConfig = JSON.parse(__firebase_config);
-                } else {
-                    console.error("FEHLER: __firebase_config ist nicht definiert.");
-                }
-                initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+                const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-                // Initialisiere App, Firestore und Auth
+                // Log-Level für Debugging setzen (optional, aber hilfreich)
+                setLogLevel('debug');
+
+                // Initialisiere App
                 const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
                 auth = getAuth(app);
-                
+                db = getFirestore(app); // Get Firestore nach setLogLevel
+
                 document.getElementById('authStatus').textContent = 'Authentifiziere...';
-                
+                document.getElementById('saveButton').disabled = true;
+
                 // Setze Session Persistence 
                 await setPersistence(auth, browserSessionPersistence).catch(e => console.warn("Persistence konnte nicht gesetzt werden:", e));
 
-                // Melde den Benutzer an
+                // Melde den Benutzer an: Custom Token (bevorzugt) oder Anonym
                 if (initialAuthToken) {
                     await signInWithCustomToken(auth, initialAuthToken);
                 } else {
@@ -373,28 +370,30 @@
                         document.getElementById('authStatus').classList.remove('text-yellow-600', 'text-red-600', 'text-orange-500');
                         document.getElementById('authStatus').classList.add('text-green-600');
                         isAuthReady = true;
+                        document.getElementById('saveButton').disabled = false;
                         
                         // Starte initiale Metrikberechnung und Laden der Szenarien
                         calculateMetrics();
                         loadScenariosListener();
                     } else {
-                        // Fallback: Anonyme Verbindung
+                        // Fallback: Anonyme Verbindung (sollte durch signInAnonymously abgedeckt sein)
                         document.getElementById('authStatus').textContent = 'Anonym Verbunden';
-                        document.getElementById('authStatus').classList.remove('text-yellow-600', 'text-red-600');
                         document.getElementById('authStatus').classList.add('text-orange-500');
                         isAuthReady = true;
+                        document.getElementById('saveButton').disabled = false;
                         calculateMetrics();
                     }
                 });
 
             } catch (error) {
-                console.error("Kritischer Firebase-Fehler (Prüfen Sie __firebase_config): ", error);
+                console.error("Kritischer Firebase-Fehler bei Initialisierung/Auth: ", error);
                 document.getElementById('authStatus').textContent = 'Fehler!';
                 document.getElementById('currentUserId').textContent = 'Initialisierungsfehler';
                 document.getElementById('authStatus').classList.remove('text-yellow-600', 'text-green-600', 'text-orange-500');
                 document.getElementById('authStatus').classList.add('text-red-600');
                 isAuthReady = false; 
-                calculateMetrics(); 
+                document.getElementById('saveButton').disabled = true;
+                calculateMetrics(); // Rechner-Logik läuft trotzdem
             }
         }
 
@@ -443,7 +442,7 @@
         // Speichert das aktuelle Szenario
         window.saveScenario = async function() {
             if (!isAuthReady || !db) {
-                setStatusMessage('Warte auf Firebase-Verbindung oder Datenbank-Initialisierung.', true);
+                setStatusMessage('Fehler: Speichern nur in verbundener Umgebung möglich.', true);
                 return;
             }
             
@@ -474,6 +473,10 @@
 
         // Lädt ein ausgewähltes Szenario
         window.loadScenario = function(scenarioId) {
+            if (!isAuthReady) {
+                 setStatusMessage('Fehler: Laden nur in verbundener Umgebung möglich.', true);
+                 return;
+            }
             if (!scenarioId) return;
 
             const selector = document.getElementById('scenarioSelector');
@@ -498,7 +501,7 @@
         // Löscht das aktuell ausgewählte Szenario (ohne Bestätigungs-Prompt, da alert/confirm verboten sind)
         window.deleteScenario = async function() {
             if (!isAuthReady || !db) {
-                setStatusMessage('Warte auf Firebase-Verbindung oder Datenbank-Initialisierung.', true);
+                setStatusMessage('Fehler: Löschen nur in verbundener Umgebung möglich.', true);
                 return;
             }
 
@@ -780,6 +783,7 @@
             const totalReturnProcessingCost = returnItems * returnProcessingCostPerItem;
             const totalStorageCost = orderedItemsGross * storageCostPerItemPerMonth * avgStorageDurationMonths;
 
+            // Gesamtkosten Logistik & Versand (SUMME)
             const totalCostEuro = 
                 outboundShippingCost + 
                 returnShippingCost + 
