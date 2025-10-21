@@ -348,21 +348,19 @@
                         firebaseConfig = JSON.parse(configString);
                     } catch (e) {
                         console.error("Fehler beim Parsen der Firebase Config:", e);
-                        // Werfe Fehler, um in den Haupt-Catch-Block zu springen
                         throw new Error(`Config Parse Error: ${e.message}`);
                     }
                 }
                 
-                // Überprüfe, ob die Konfiguration leer ist (was zu invalid-api-key führt)
-                if (Object.keys(firebaseConfig).length === 0 || !firebaseConfig.apiKey) {
-                     throw new Error("Fehler: Konfiguration vom Canvas-Server ist leer oder ungültig.");
-                }
-
+                // ***************************************************************
+                // HINWEIS: Die vorherige aggressive Prüfung, die diesen Fehler ausgelöst hat,
+                // wurde entfernt. Nun muss die Firebase-Bibliothek selbst den Fehler melden.
+                // ***************************************************************
 
                 // Log-Level für Debugging setzen
                 setLogLevel('debug');
 
-                // Initialisiere App, Auth und Firestore
+                // Initialisiere App, Auth und Firestore. Dies wird fehlschlagen, wenn der API Key ungültig ist.
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
@@ -404,7 +402,7 @@
                 });
 
             } catch (error) {
-                // Fängt Fehler von initializeApp, signInWithCustomToken und Config-Check ab
+                // Fängt Fehler von initializeApp und signInWithCustomToken ab
                 console.error("Kritischer Firebase-Fehler bei Initialisierung/Auth: ", error);
                 document.getElementById('authStatus').textContent = 'Fehler!';
                 
