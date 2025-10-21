@@ -42,7 +42,7 @@
     <div class="max-w-6xl mx-auto bg-white rounded-xl shadow-2xl p-6 md:p-10">
         <header class="mb-8 flex justify-between items-start">
             <div>
-                <h1 class="text-3xl md:text-4xl font-extrabold text-blue-800 border-b-4 border-blue-200 pb-2">
+                <h1 class="3xl md:text-4xl font-extrabold text-blue-800 border-b-4 border-blue-200 pb-2">
                     E-Commerce Commercial Controller Rechner
                 </h1>
                 <p class="text-gray-500 mt-2">Geben Sie Ihre Eckdaten ein, um Nachfrage, Umsatz und Gesamtkosten zu analysieren.</p>
@@ -335,18 +335,26 @@
         // =================================================================
         async function initFirebase() {
             try {
-                // Konfigurationsdaten aus der Canvas-Umgebung lesen (Muss vorhanden sein)
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-                const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                // Lese Canvas-Variablen mit Fallback für leere/undefined Werte
+                const appId = typeof __app_id !== 'undefined' ? String(__app_id) : 'default-app-id';
+                let firebaseConfig = {};
+                if (typeof __firebase_config !== 'undefined' && String(__firebase_config).length > 2) {
+                    firebaseConfig = JSON.parse(String(__firebase_config));
+                }
+                const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? String(__initial_auth_token) : null;
 
-                // Log-Level für Debugging setzen (optional, aber hilfreich)
+                // Log-Level für Debugging setzen
                 setLogLevel('debug');
 
-                // Initialisiere App
+                // Prüfe, ob eine minimale Konfiguration vorhanden ist (um Fehler bei leeren Objekten zu vermeiden)
+                if (Object.keys(firebaseConfig).length === 0 || !firebaseConfig.apiKey) {
+                    throw new Error("Canvas Konfiguration fehlt oder ist leer.");
+                }
+
+                // Initialisiere App, Auth und Firestore
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
-                db = getFirestore(app); // Get Firestore nach setLogLevel
+                db = getFirestore(app);
 
                 document.getElementById('authStatus').textContent = 'Authentifiziere...';
                 document.getElementById('saveButton').disabled = true;
@@ -364,36 +372,36 @@
                 // Listener für den Authentifizierungsstatus
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
+                        // Erfolgreiche Anmeldung
                         userId = user.uid;
                         document.getElementById('currentUserId').textContent = userId;
                         document.getElementById('authStatus').textContent = 'Verbunden';
                         document.getElementById('authStatus').classList.remove('text-yellow-600', 'text-red-600', 'text-orange-500');
                         document.getElementById('authStatus').classList.add('text-green-600');
-                        isAuthReady = true;
                         document.getElementById('saveButton').disabled = false;
                         
-                        // Starte initiale Metrikberechnung und Laden der Szenarien
-                        calculateMetrics();
+                        // Starte Datenbank-Listener und Berechnungen
                         loadScenariosListener();
                     } else {
-                        // Fallback: Anonyme Verbindung (sollte durch signInAnonymously abgedeckt sein)
+                        // Anonyme Verbindung oder Abmeldung
                         document.getElementById('authStatus').textContent = 'Anonym Verbunden';
                         document.getElementById('authStatus').classList.add('text-orange-500');
-                        isAuthReady = true;
                         document.getElementById('saveButton').disabled = false;
-                        calculateMetrics();
                     }
+                    isAuthReady = true; // Auth-Status ist gesetzt
+                    calculateMetrics();
                 });
 
             } catch (error) {
                 console.error("Kritischer Firebase-Fehler bei Initialisierung/Auth: ", error);
                 document.getElementById('authStatus').textContent = 'Fehler!';
-                document.getElementById('currentUserId').textContent = 'Initialisierungsfehler';
+                // Zeige detailliertere Fehler-ID an
+                document.getElementById('currentUserId').textContent = error.message.substring(0, 30) + '...'; 
                 document.getElementById('authStatus').classList.remove('text-yellow-600', 'text-green-600', 'text-orange-500');
                 document.getElementById('authStatus').classList.add('text-red-600');
                 isAuthReady = false; 
                 document.getElementById('saveButton').disabled = true;
-                calculateMetrics(); // Rechner-Logik läuft trotzdem
+                calculateMetrics(); 
             }
         }
 
@@ -434,7 +442,7 @@
                 throw new Error("Datenbank nicht initialisiert.");
             }
             // WICHTIG: Verwende die globale App-ID für den öffentlichen Pfad
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const appId = typeof __app_id !== 'undefined' ? String(__app_id) : 'default-app-id';
             const collectionPath = `artifacts/${appId}/public/data/${SCENARIOS_COLLECTION_NAME}`;
             return collection(db, collectionPath);
         }
