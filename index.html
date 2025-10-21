@@ -335,13 +335,29 @@
         // =================================================================
         async function initFirebase() {
             try {
-                // Lese Canvas-Variablen mit Fallback für leere/undefined Werte
+                // Lese Canvas-Variablen (sollten Strings sein)
                 const appId = typeof __app_id !== 'undefined' ? String(__app_id) : 'default-app-id';
-                let firebaseConfig = {};
-                if (typeof __firebase_config !== 'undefined' && String(__firebase_config).length > 2) {
-                    firebaseConfig = JSON.parse(String(__firebase_config));
-                }
                 const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? String(__initial_auth_token) : null;
+                
+                let firebaseConfig = {};
+                const configString = typeof __firebase_config !== 'undefined' ? String(__firebase_config).trim() : '';
+                
+                // Versuche, die Konfiguration zu parsen
+                if (configString.length > 2) {
+                    try {
+                        firebaseConfig = JSON.parse(configString);
+                    } catch (e) {
+                        console.error("Fehler beim Parsen der Firebase Config:", e);
+                        // Werfe Fehler, um in den Haupt-Catch-Block zu springen
+                        throw new Error(`Config Parse Error: ${e.message}`);
+                    }
+                }
+                
+                // Überprüfe, ob die Konfiguration leer ist (was zu invalid-api-key führt)
+                if (Object.keys(firebaseConfig).length === 0 || !firebaseConfig.apiKey) {
+                     throw new Error("Fehler: Konfiguration vom Canvas-Server ist leer oder ungültig.");
+                }
+
 
                 // Log-Level für Debugging setzen
                 setLogLevel('debug');
@@ -388,11 +404,18 @@
                 });
 
             } catch (error) {
-                // Fängt Fehler von initializeApp und signInWithCustomToken ab
+                // Fängt Fehler von initializeApp, signInWithCustomToken und Config-Check ab
                 console.error("Kritischer Firebase-Fehler bei Initialisierung/Auth: ", error);
                 document.getElementById('authStatus').textContent = 'Fehler!';
+                
+                // Extrahiere den Firebase-Fehlercode oder die Custom-Fehlermeldung
+                let errorMessage = error.message;
+                if (error.code) {
+                    errorMessage = `Firebase: ${error.code} - ${error.message}`;
+                }
+                
                 // Zeige detailliertere Fehler-ID an (max. 80 Zeichen)
-                document.getElementById('currentUserId').textContent = error.message.substring(0, 80) + '...'; 
+                document.getElementById('currentUserId').textContent = errorMessage.substring(0, 80) + '...'; 
                 document.getElementById('authStatus').classList.remove('text-yellow-600', 'text-green-600', 'text-orange-500');
                 document.getElementById('authStatus').classList.add('text-red-600');
                 isAuthReady = false; 
