@@ -3,875 +3,2627 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-Commerce Kalkulator</title>
-    <!-- Tailwind CSS CDN -->
+    <title>Schlankes Time Tracking Tool</title>
+    <!-- Lade Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Custom font and basic setup */
-        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
-        input[type="number"]::-webkit-inner-spin-button, 
-        input[type="number"]::-webkit-outer-spin-button { 
-            -webkit-appearance: none; 
-            margin: 0; 
-        }
-        input[type="number"] { -moz-appearance: textfield; }
-        .result-box { 
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06); 
+        /* Angepasste Scrollbar für schlankes Design */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Stil für das Hauptlayout, um den gesamten Bildschirm einzunehmen */
+        body { min-height: 100vh; background-color: #f8fafc; font-family: 'Inter', sans-serif; }
+
+        /* NEU: Tab Styling */
+        .tab-button {
+            padding: 0.75rem 1.25rem;
+            font-weight: 600;
+            border-radius: 0.5rem 0.5rem 0 0;
             transition: all 0.2s;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
         }
-        .sensitivity-table th, .sensitivity-table td {
-            min-width: 60px;
+        .tab-button:hover {
+            background-color: #f3f4f6;
         }
-        /* Style für die Lade-Animation */
-        .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-top: 4px solid #3b82f6;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
+        .tab-button.active {
+            background-color: #ffffff;
+            border-bottom-color: #4f46e5; /* indigo-600 */
+            color: #1f2937; /* gray-900 */
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        /* Style für das Login-Zentrum */
+        #login-center {
+            min-height: calc(100vh - 6rem); /* Bildschirmhöhe minus Header/Padding */
+        }
+
+        /* --- NEU: PRINT STYLES FÜR TIMESHEET-ANSICHT --- */
+        @media print {
+            /* Verstecke alles, was nicht der Timesheet-Vorschau entspricht */
+            body > :not(#timesheet-preview-modal) { /* Changed target to modal for better isolation */
+                display: none;
+            }
+            body {
+                background-color: white;
+            }
+            #timesheet-preview-modal {
+                position: fixed;
+                inset: 0;
+                background-color: white; /* Ensure white background for PDF */
+            }
+            #timesheet-modal-content {
+                display: block !important;
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                max-width: 100%;
+                transform: none !important;
+                opacity: 1 !important;
+                box-shadow: none;
+                min-height: 100vh;
+            }
+
+            /* Verstecke den Print-Button und die Buttons im Timesheet-Modal selbst */
+            .print\:hidden {
+                display: none !important;
+            }
+            /* Erzwungene Tabelle für PDF-Lesbarkeit */
+            #timesheet-preview table {
+                width: 100%;
+                font-size: 10pt;
+            }
+            #timesheet-preview table th, #timesheet-preview table td {
+                padding: 4px 8px;
+            }
+            /* Brich Beschreibungen nicht um, um eine Zeile pro Eintrag zu gewährleisten */
+            #timesheet-preview td:nth-child(4) {
+                max-width: 300px;
+                word-wrap: break-word;
+            }
+        }
+        
+        /* NEU: Rich Text Editor Style */
+        .rte-toolbar button {
+            @apply p-1.5 rounded hover:bg-gray-200 transition text-gray-700;
+        }
+        #editor-note-content { /* Id des neuen Vollbild-Editors */
+            min-height: 250px; /* Deutlich größer */
+            @apply p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white;
+        }
+        /* Custom list style for contenteditable */
+        #editor-note-content ul {
+            list-style-type: disc;
+            margin-left: 20px;
+        }
+        #editor-note-content ol {
+            list-style-type: decimal;
+            margin-left: 20px;
         }
     </style>
+    <!-- Lade Lucide Icons -->
+    <script type="module" src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body class="p-4 md:p-8">
 
-    <div class="max-w-6xl mx-auto bg-white rounded-xl shadow-2xl p-6 md:p-10">
-        <header class="mb-8 flex justify-between items-start">
-            <div>
-                <h1 class="3xl md:text-4xl font-extrabold text-blue-800 border-b-4 border-blue-200 pb-2">
-                    E-Commerce Commercial Controller Rechner
-                </h1>
-                <p class="text-gray-500 mt-2">Geben Sie Ihre Eckdaten ein, um Nachfrage, Umsatz und Gesamtkosten zu analysieren.</p>
-            </div>
-            
-            <!-- User Info und Status -->
-            <div class="text-right text-sm">
-                <p class="font-semibold text-gray-700">Status: <span id="authStatus" class="text-yellow-600">Verbinde...</span></p>
-                <p class="text-xs text-gray-500 truncate">User ID: <span id="currentUserId">N/A</span></p>
+    <!-- Hauptcontainer -->
+    <div id="app" class="max-w-4xl mx-auto space-y-8">
+
+        <!-- Kopfzeile und Auth Status -->
+        <header class="flex flex-col sm:flex-row justify-between items-center pb-4 border-b border-gray-200">
+            <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight mb-2 sm:mb-0">
+                Zeiterfassung für Beratung
+            </h1>
+            <div id="auth-status" class="text-sm text-gray-500 bg-gray-100 p-2 rounded-lg flex items-center">
+                <!-- Status wird von JS befüllt -->
+                Authentifizierung wird geladen...
+                <button id="logout-button" class="hidden ml-3 bg-red-500 text-white p-1 px-3 rounded-md text-xs font-semibold hover:bg-red-600 transition">Logout</button>
             </div>
         </header>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            <!-- Linke Spalte: Eingabedimensionen -->
-            <div class="lg:col-span-2 space-y-6">
-                
-                <h2 class="2xl font-semibold text-gray-700">1. Dimensionen festlegen (Netto-Basis)</h2>
-                
-                <!-- Input Grid (6 Reihen für 11 Felder) -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 p-4 bg-gray-50 rounded-lg shadow-inner">
-                    
-                    <!-- Durchschnitts-VK (ASP) -->
-                    <div class="input-group">
-                        <label for="asp" class="block text-sm font-medium text-gray-700">Durchschnitts-VK (Brutto €)</label>
-                        <input type="number" id="asp" value="65.00" min="0" step="0.01" oninput="calculateMetrics()" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500 border-2">
-                        <p class="text-xs text-gray-400 mt-1">Dieser Wert enthält die Mehrwertsteuer.</p>
-                    </div>
-
-                    <!-- Mehrwertsteuersatz (%) -->
-                    <div class="input-group">
-                        <label for="vatRate" class="block text-sm font-medium text-gray-700">Mehrwertsteuersatz (%)</label>
-                        <input type="number" id="vatRate" value="19.0" min="0" max="100" step="0.1" oninput="calculateMetrics()" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500 border-2">
-                    </div>
-                    
-                    <!-- Zahl der Netto verkauften Artikel (Ziel) -->
-                    <div class="input-group">
-                        <label for="netSoldTarget" class="block text-sm font-medium text-gray-700 font-bold">Zahl der Netto verkauften Artikel (Ziel)</label>
-                        <input type="number" id="netSoldTarget" value="10000" min="1" step="100" oninput="calculateMetrics()" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500 border-2 bg-white font-semibold">
-                    </div>
-
-                    <!-- Retourenquote in % -->
-                    <div class="input-group">
-                        <label for="returnRate" class="block text-sm font-medium text-gray-700">Retourenquote (%)</label>
-                        <input type="number" id="returnRate" value="60.0" min="0" max="100" step="0.1" oninput="calculateMetrics()" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500 border-2">
-                    </div>
-
-                    <!-- Artikel / Bestellung (IPO) -->
-                    <div class="input-group">
-                        <label for="ipo" class="block text-sm font-medium text-gray-700">Artikel / Bestellung (IPO)</label>
-                        <input type="number" id="ipo" value="1.2" min="0" step="0.1" oninput="calculateMetrics()" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500 border-2">
-                    </div>
-
-                    <!-- Artikel / Retourensendung (IPR) -->
-                    <div class="input-group">
-                        <label for="ipr" class="block text-sm font-medium text-gray-700">Artikel / Retourensendung (IPR)</label>
-                        <input type="number" id="ipr" value="1.2" min="1" step="0.1" oninput="calculateMetrics()" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500 border-2">
-                        <p class="text-xs text-gray-400 mt-1">Durchschnittliche Artikel pro Retourensendung.</p>
-                    </div>
-
-                    <!-- Versandkosten (Outbound) pro Bestellung -->
-                    <div class="input-group">
-                        <label for="shippingCostOut" class="block text-sm font-medium text-gray-700">Versandkosten (Outbound) pro Bestellung (€)</label>
-                        <input type="number" id="shippingCostOut" value="4.99" min="0" step="0.01" oninput="calculateMetrics()" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500 border-2">
-                    </div>
-
-                    <!-- Versandkosten für Retouren pro Sendung -->
-                    <div class="input-group">
-                        <label for="shippingCostReturnShipment" class="block text-sm font-medium text-gray-700">Versandkosten für Retouren pro Sendung (€)</label>
-                        <input type="number" id="shippingCostReturnShipment" value="5.99" min="0" step="0.01" oninput="calculateMetrics()" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500 border-2">
-                    </div>
-
-                    <h3 class="sm:col-span-2 text-lg font-semibold text-gray-600 mt-4 border-t pt-4 border-gray-300">Detaillierte Logistikkosten</h3>
-
-                    <!-- Auftragsverarbeitung inkl. Kartonage (pro Bestellung) -->
-                    <div class="input-group">
-                        <label for="orderProcessingCostPerOrder" class="block text-sm font-medium text-gray-700">Auftragsverarbeitung inkl. Kartonage (pro Bestellung €)</label>
-                        <input type="number" id="orderProcessingCostPerOrder" value="1.50" min="0" step="0.01" oninput="calculateMetrics()" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500 border-2">
-                    </div>
-                    
-                    <!-- Pick & Pack (pro Artikel) -->
-                    <div class="input-group">
-                        <label for="pickPackCostPerItem" class="block text-sm font-medium text-gray-700">Pick & Pack (pro Artikel €)</label>
-                        <input type="number" id="pickPackCostPerItem" value="1.10" min="0" step="0.01" oninput="calculateMetrics()" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500 border-2">
-                    </div>
-
-                    <!-- NEU: Warenannahme (pro Artikel) -->
-                    <div class="input-group">
-                        <label for="goodsReceiptCostPerItem" class="block text-sm font-medium text-gray-700">Warenannahme (pro Artikel €)</label>
-                        <input type="number" id="goodsReceiptCostPerItem" value="0.50" min="0" step="0.01" oninput="calculateMetrics()" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500 border-2">
-                    </div>
-
-                    <!-- Retoure inkl. Aufbereitung (pro retourniertem Artikel) -->
-                    <div class="input-group">
-                        <label for="returnProcessingCostPerItem" class="block text-sm font-medium text-gray-700">Retoure inkl. Aufbereitung (pro retourniertem Artikel €)</label>
-                        <input type="number" id="returnProcessingCostPerItem" value="2.50" min="0" step="0.01" oninput="calculateMetrics()" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500 border-2">
-                    </div>
-
-                    <!-- Lagerung (pro Artikel pro Monat) -->
-                    <div class="input-group">
-                        <label for="storageCostPerItemPerMonth" class="block text-sm font-medium text-gray-700">Lagerung (pro Artikel pro Monat €)</label>
-                        <input type="number" id="storageCostPerItemPerMonth" value="0.10" min="0" step="0.01" oninput="calculateMetrics()" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500 border-2">
-                    </div>
-
-                    <!-- Durchschnittliche Dauer im Lager (Monate) -->
-                    <div class="input-group">
-                        <label for="avgStorageDurationMonths" class="block text-sm font-medium text-gray-700">Durchschn. Lagerdauer (Monate)</label>
-                        <input type="number" id="avgStorageDurationMonths" value="3.0" min="0" step="0.1" oninput="calculateMetrics()" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500 border-2">
-                    </div>
-                    
-                </div>
-                
-                <!-- Speichern / Laden Sektion -->
-                <div class="p-4 bg-white rounded-lg border border-blue-200 shadow-md space-y-4">
-                    <h3 class="text-lg font-semibold text-blue-700 border-b pb-2">Szenario Speichern & Laden</h3>
-                    
-                    <!-- Laden -->
-                    <div>
-                        <label for="scenarioSelector" class="block text-sm font-medium text-gray-700">Gespeicherte Szenarien laden:</label>
-                        <div class="mt-1 flex space-x-2 items-center">
-                            <select id="scenarioSelector" onchange="loadScenario(this.value)" class="block w-full rounded-lg border-gray-300 shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500 border-2">
-                                <option value="">--- Szenario auswählen ---</option>
-                            </select>
-                            <button onclick="deleteScenario()" class="px-4 py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition duration-150 shadow-sm text-sm">Löschen</button>
-                        </div>
-                    </div>
-
-                    <!-- Speichern -->
-                    <div class="flex space-x-4">
-                        <div class="flex-grow">
-                            <label for="saveName" class="block text-sm font-medium text-gray-700">Name für neues Szenario:</label>
-                            <input type="text" id="saveName" placeholder="z.B. Baseline Q4 2024" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500 border-2">
-                        </div>
-                        <button onclick="saveScenario()" class="self-end px-6 py-3 bg-blue-600 disabled:bg-gray-400 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-150 shadow-lg whitespace-nowrap" id="saveButton" disabled>Speichern</button>
-                    </div>
-                    <div id="statusMessage" class="text-sm text-center text-red-500"></div>
-                </div>
-
-            </div>
-
-            <!-- Rechte Spalte: Ergebnisse -->
-            <div class="lg:col-span-1 space-y-6">
-                <h2 class="text-2xl font-semibold text-gray-700">2. Ergebnisse</h2>
-                <div class="p-4 bg-blue-50 rounded-lg shadow-xl border-t-4 border-blue-400 space-y-4">
-
-                    <h3 class="text-xl font-bold text-blue-800">Nachfrage & Umsatz (Netto)</h3>
-
-                    <!-- Umsatz Brutto (Netto-VK, vor Retouren) -->
-                    <div class="result-box bg-green-100 p-4 rounded-lg flex justify-between items-center border border-gray-200">
-                        <span class="text-sm text-gray-700 font-bold">Umsatz Brutto (Netto-VK, vor Retouren)</span>
-                        <span id="grossRevenueNetVat" class="text-lg font-extrabold text-green-800">0,00 €</span>
-                    </div>
-
-                    <!-- Nettoumsatz (EXKL. MwSt., nach Retouren) -->
-                    <div class="result-box bg-white p-4 rounded-lg flex justify-between items-center border border-gray-200">
-                        <span class="text-sm text-gray-600 font-medium">Nettoumsatz (Net Revenue, exkl. MwSt.)</span>
-                        <span id="netRevenue" class="text-lg font-bold text-green-600">0,00 €</span>
-                    </div>
-                    
-                    <!-- ABGELEITET: Brutto Bestellungen -->
-                    <div class="result-box bg-white p-4 rounded-lg flex justify-between items-center border border-gray-200 bg-green-50">
-                        <span class="text-sm text-gray-600 font-medium font-semibold">Zahl der bestellten Artikel (Brutto)</span>
-                        <span id="orderedItemsGrossDisplay" class="text-lg font-bold text-green-700">0</span>
-                    </div>
-
-                    <!-- Bestellvolumen (Anzahl Bestellungen) -->
-                    <div class="result-box bg-white p-4 rounded-lg flex justify-between items-center border border-gray-200">
-                        <span class="text-sm text-gray-600 font-medium">Bestellvolumen (Anzahl Bestellungen)</span>
-                        <span id="ordersVolume" class="text-lg font-bold text-blue-600">0</span>
-                    </div>
-                    
-                    <!-- Retouren (Anzahl Artikel) -->
-                    <div class="result-box bg-white p-4 rounded-lg flex justify-between items-center border border-gray-200 bg-yellow-50">
-                        <span class="text-sm text-gray-600 font-medium">Zahl der Retouren (Artikel)</span>
-                        <span id="returnItems" class="text-lg font-bold text-yellow-700">0</span>
-                    </div>
-
-                    <!-- Retouren (Anzahl Sendungen) -->
-                    <div class="result-box bg-white p-4 rounded-lg flex justify-between items-center border border-gray-200 bg-yellow-100">
-                        <span class="text-sm text-gray-600 font-medium font-semibold">Anzahl Retourensendungen</span>
-                        <span id="returnShipmentsDisplay" class="text-lg font-bold text-yellow-800">0</span>
-                    </div>
-
-                    <!-- Anzeige Netto Verkauft (Bestätigung des Inputs) -->
-                    <div class="result-box bg-white p-4 rounded-lg flex justify-between items-center border border-gray-200">
-                        <span class="text-sm text-gray-600 font-medium">Netto verkaufte Artikel (Basis)</span>
-                        <span id="netItemsSold" class="text-lg font-bold text-green-600">0</span>
-                    </div>
-
-                    <h3 class="text-xl font-bold text-blue-800 pt-4 border-t border-blue-200">Logistik & Versandkosten</h3>
-
-                    <!-- NEU: Kostenaufschlüsselung -->
-                    <div class="space-y-2 text-sm p-2 bg-white rounded-lg border border-gray-200">
-                        <div class="font-bold text-base text-gray-700 border-b pb-1 mb-1">Kosten-Aufschlüsselung (Euro)</div>
-                        <div class="flex justify-between items-center text-gray-600">
-                            <span>Versand (Outbound)</span>
-                            <span id="cost_outbound_shipping" class="font-medium">0,00 €</span>
-                        </div>
-                        <div class="flex justify-between items-center text-gray-600">
-                            <span>Versand (Retouren)</span>
-                            <span id="cost_return_shipping" class="font-medium">0,00 €</span>
-                        </div>
-                        <div class="flex justify-between items-center text-gray-600">
-                            <span>Auftragsverarbeitung / Kartonage</span>
-                            <span id="cost_order_processing" class="font-medium">0,00 €</span>
-                        </div>
-                        <div class="flex justify-between items-center text-gray-600">
-                            <span>Pick & Pack</span>
-                            <span id="cost_pick_pack" class="font-medium">0,00 €</span>
-                        </div>
-                        <div class="flex justify-between items-center text-gray-600 font-semibold text-blue-700">
-                            <span>Warenannahme</span>
-                            <span id="cost_goods_receipt" class="font-semibold">0,00 €</span>
-                        </div>
-                        <div class="flex justify-between items-center text-gray-600">
-                            <span>Retoure inkl. Aufbereitung</span>
-                            <span id="cost_return_processing" class="font-medium">0,00 €</span>
-                        </div>
-                        <div class="flex justify-between items-center text-gray-600">
-                            <span>Lagerung</span>
-                            <span id="cost_storage" class="font-medium">0,00 €</span>
-                        </div>
-                    </div>
-
-                    <!-- Gesamtkosten in Euro -->
-                    <div class="result-box bg-red-100 p-4 rounded-lg flex justify-between items-center border border-red-300">
-                        <span class="text-sm text-red-800 font-bold">Gesamtkosten Logistik & Versand (SUMME)</span>
-                        <span id="totalCostEuro" class="text-lg font-bold text-red-800">0,00 €</span>
-                    </div>
-
-                    <!-- Gesamtkosten in % -->
-                    <div class="result-box bg-white p-4 rounded-lg flex justify-between items-center border border-gray-200 bg-red-50">
-                        <span class="text-sm text-red-700 font-bold">Kostenanteil am Nettoumsatz</span>
-                        <span id="totalCostPercent" class="text-lg font-extrabold text-red-800">0,00 %</span>
-                    </div>
-                </div>
-            </div>
-
+        
+        <!-- Tab Navigation -->
+        <div id="tab-selector" class="hidden flex-wrap border-b border-gray-200 bg-gray-50 rounded-t-xl">
+            <!-- TAB WURDE UMBENANNT UND IST JETZT ZUERST -->
+            <button class="tab-button active" data-tab="entries">
+                <i data-lucide="list-checks" class="w-4 h-4 inline mr-1"></i> Einträge verwalten
+            </button>
+            <button class="tab-button" data-tab="analysis">
+                <i data-lucide="bar-chart-2" class="w-4 h-4 inline mr-1"></i> Analyse & Export
+            </button>
+            <button class="tab-button" data-tab="forecasting">
+                <i data-lucide="trending-up" class="w-4 h-4 inline mr-1"></i> Forecasting
+            </button>
+            <button class="tab-button" data-tab="management">
+                <i data-lucide="settings" class="w-4 h-4 inline mr-1"></i> Verwaltung
+            </button>
         </div>
 
-        <!-- NEU: Sensitivitäts-Matrix -->
-        <section class="mt-12">
-            <h2 class="text-2xl font-extrabold text-blue-800 mb-4 border-b pb-1">3. Sensitivitätsanalyse: Logistikkostenanteil in %</h2>
-            <p class="text-sm text-gray-600 mb-4">Analyse der prozentualen Logistikkosten in Abhängigkeit von **Durchschnitts-VK** (Y-Achse) und **Retourenquote** (X-Achse). Die Zelle in der Mitte repräsentiert die aktuell eingegebenen Werte.</p>
 
-            <div class="overflow-x-auto rounded-lg shadow-xl">
-                <table class="w-full text-left whitespace-nowrap sensitivity-table bg-white">
-                    <thead id="sensitivityTableHead">
-                        <!-- Head wird von JS befüllt -->
-                    </thead>
-                    <tbody id="sensitivityTableBody">
-                        <!-- Body wird von JS befüllt -->
-                    </tbody>
-                </table>
+        <!-- Lade-Indikator / Fehleranzeige -->
+        <div id="loading-indicator" class="text-center py-10">
+            <svg class="animate-spin h-5 w-5 text-indigo-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="mt-2 text-sm text-gray-600">Daten werden synchronisiert...</p>
+        </div>
+        <div id="error-message" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+            <strong class="font-bold">Fehler beim Laden:</strong>
+            <span class="block sm:inline" id="error-text"></span>
+            <p class="mt-1 text-xs italic">Bitte die Seite neu laden, falls der Fehler bestehen bleibt.</p>
+        </div>
+        
+        <!-- NEU: Login Center (wird angezeigt, wenn nicht angemeldet) -->
+        <div id="login-center" class="hidden flex items-center justify-center">
+            <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm border border-gray-100 space-y-6">
+                <h2 class="text-2xl font-bold text-gray-800 text-center">Login oder Registrierung</h2>
+                <form id="auth-form" class="space-y-4">
+                    <div>
+                        <label for="auth-email" class="block text-sm font-medium text-gray-700 mb-1">E-Mail</label>
+                        <input type="email" id="auth-email" required placeholder="name@beispiel.de" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label for="auth-password" class="block text-sm font-medium text-gray-700 mb-1">Passwort</label>
+                        <input type="password" id="auth-password" required placeholder="mind. 6 Zeichen" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <p id="auth-message" class="text-sm text-center text-red-500"></p>
+                    <button type="submit" id="auth-submit-btn" class="w-full bg-indigo-600 text-white p-3 rounded-lg font-semibold hover:bg-indigo-700 transition duration-150 shadow-md">
+                        Login
+                    </button>
+                </form>
+                <div class="text-center flex flex-col space-y-2 mt-4">
+                    <button id="toggle-auth-mode" class="text-sm text-indigo-600 hover:underline">
+                        Noch kein Konto? Hier registrieren.
+                    </button>
+                    <!-- NEU: Passwort vergessen -->
+                    <button id="forgot-password-btn" class="text-xs text-gray-500 hover:text-indigo-600 hover:underline">
+                        Passwort vergessen?
+                    </button>
+                </div>
             </div>
-        </section>
+        </div>
+
+        <!-- Hauptansicht (wird nach dem Laden angezeigt) -->
+        <div id="main-content" class="hidden space-y-8 bg-white p-6 rounded-xl shadow-lg border border-gray-100 rounded-t-none">
+
+             <!-- TAB 1 (NEU): Einträge verwalten (Zentrale Liste) -->
+            <div id="tab-entries" class="tab-content space-y-8">
+                
+                <!-- Filter und Titel -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b border-gray-100 pb-3">
+                    <h2 class="text-2xl font-bold text-gray-800 flex items-center mb-3 sm:mb-0">
+                        <i data-lucide="list-checks" class="w-6 h-6 mr-2 text-indigo-500"></i>
+                        Alle Zeiteinträge
+                    </h2>
+                    <!-- Filtergruppe -->
+                    <div class="flex gap-4">
+                        <!-- Kundenfilter für Einträge -->
+                        <select id="entries-customer-filter" class="p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm">
+                            <!-- Optionen werden von JS gefüllt -->
+                        </select>
+                         <!-- Monatsfilter für Einträge -->
+                        <input type="month" id="entries-month-filter" class="p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                    </div>
+                </div>
+
+                <!-- Neue Zeiterfassung Formular (Bleibt hier, da es die Hauptaktion ist) -->
+                <section class="bg-gray-50 p-6 rounded-xl shadow-inner border border-gray-100">
+                    <h3 class="text-xl font-bold text-gray-700 mb-4 flex items-center">
+                        <i data-lucide="clock-4" class="w-5 h-5 mr-2 text-indigo-500"></i>
+                        Neuen Eintrag hinzufügen
+                    </h3>
+                    <form id="entry-form" class="grid grid-cols-1 md:grid-cols-6 gap-4">
+
+                        <!-- Datum -->
+                        <div class="md:col-span-1">
+                            <label for="entry-date" class="block text-sm font-medium text-gray-700 mb-1">Datum</label>
+                            <input type="date" id="entry-date" required class="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+
+                        <!-- Kunde -->
+                        <div class="md:col-span-2">
+                            <label for="customer-select" class="block text-sm font-medium text-gray-700 mb-1">Kunde</label>
+                            <select id="customer-select" required class="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-white">
+                                <option value="" disabled selected>Kunde wählen...</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Tagessatz/Stundensatz Anzeige -->
+                        <div id="rate-display" class="md:col-span-3 flex items-end mb-1 text-sm text-gray-600 h-full">
+                            <span class="p-2 border border-dashed border-gray-300 rounded-lg w-full bg-gray-100 italic">
+                                Tagessatz: --- / Stundensatz: ---
+                            </span>
+                        </div>
+
+                        <!-- Thema/Projekt -->
+                        <div class="md:col-span-2">
+                            <label for="project-select" class="block text-sm font-medium text-gray-700 mb-1">Thema/Projekt</label>
+                            <select id="project-select" required class="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-white" disabled>
+                                <option value="" disabled selected>Thema wählen...</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Anzeige, ob es ein Pauschal-Projekt ist -->
+                        <div id="pauschal-display" class="md:col-span-4 flex items-end mb-1 text-sm text-orange-600 h-full hidden">
+                            <span class="p-2 border border-dashed border-orange-300 rounded-lg w-full bg-orange-50 font-semibold italic">
+                                Achtung: Dieses Projekt ist eine Pauschale. Stunden dienen nur zur Dokumentation, der Umsatz ist fix.
+                            </span>
+                        </div>
+
+                        <!-- Stunden -->
+                        <div class="md:col-span-1">
+                            <label for="entry-hours" class="block text-sm font-medium text-gray-700 mb-1">Stunden</label>
+                            <input type="number" id="entry-hours" step="0.5" min="0.5" max="24" required placeholder="z.B. 4.5" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+
+                        <!-- Beschreibung -->
+                        <div class="md:col-span-5">
+                            <label for="entry-description" class="block text-sm font-medium text-gray-700 mb-1">Beschreibung der Tätigkeit</label>
+                            <input type="text" id="entry-description" required placeholder="Detaillierte Aufgabenbeschreibung" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+
+                        <!-- Speichern Button -->
+                        <div class="md:col-span-1 flex items-end">
+                            <button type="submit" class="w-full bg-indigo-600 text-white p-2 rounded-lg font-semibold hover:bg-indigo-700 transition duration-150 shadow-md">
+                                Speichern
+                            </button>
+                        </div>
+                    </form>
+                </section>
+
+
+                <!-- Liste aller Einträge -->
+                <section>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Datum</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kunde</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Projekt/Thema</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Stunden</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aktion</th>
+                                </tr>
+                            </thead>
+                            <tbody id="entries-list" class="bg-white divide-y divide-gray-200">
+                                <!-- Alle Einträge werden hier per JS eingefügt -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <!-- TAB 2: Analyse & Export -->
+            <div id="tab-analysis" class="tab-content space-y-8 hidden">
+                <!-- 2. Umsatz-Übersicht mit Monatsfilter -->
+                <section id="revenue-section">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b border-gray-100 pb-3">
+                        <h2 class="text-2xl font-bold text-gray-800 flex items-center mb-3 sm:mb-0">
+                            <i data-lucide="bar-chart-2" class="w-6 h-6 mr-2 text-green-600"></i>
+                            <span id="revenue-header-text">Umsatz-Übersicht</span>
+                        </h2>
+                        <input type="month" id="revenue-month-filter" class="p-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 text-sm">
+                    </div>
+
+                    <div id="revenue-summary" class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                        <!-- Summary cards will be injected here -->
+                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-100 text-gray-500 col-span-full">
+                            Keine Daten vorhanden oder Tagessätze fehlen.
+                        </div>
+                    </div>
+                    <div id="revenue-details-container" class="mt-4 pt-4 border-t border-gray-100 hidden">
+                        <h4 class="text-lg font-semibold mb-2 text-gray-700">Umsatz pro Kunde (Details)</h4>
+                        <ul id="customer-revenue-list" class="space-y-2 text-sm">
+                            <!-- Details will be injected here -->
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- 3.2 Export-Funktion -->
+                <section>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                        <i data-lucide="download" class="w-6 h-6 mr-2 text-orange-500"></i>
+                        Monats-Export & Vorschau
+                    </h2>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <input type="month" id="export-month" class="p-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 flex-grow">
+                        <!-- NEU: Kundenspezifischer Filter für Export -->
+                        <select id="export-customer-select" class="p-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 bg-white flex-grow">
+                            <!-- Optionen werden von JS gefüllt -->
+                        </select>
+                        <select id="export-type" class="p-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 bg-white">
+                            <option value="total">Zusammenfassung nach Stunden</option>
+                            <option value="topic">Detailliert nach Themen/Einträgen</option>
+                        </select>
+                        <!-- NEU: Vorschau Button -->
+                        <button id="preview-button" class="bg-blue-600 text-white p-2 rounded-lg font-semibold hover:bg-blue-700 transition duration-150 shadow-md sm:w-auto flex items-center justify-center">
+                            <i data-lucide="eye" class="w-4 h-4 mr-2"></i>
+                            Vorschau (PDF)
+                        </button>
+                        <button id="export-button" class="bg-orange-600 text-white p-2 rounded-lg font-semibold hover:bg-orange-700 transition duration-150 shadow-md sm:w-auto">
+                            CSV Export (Excel)
+                        </button>
+                    </div>
+                    <textarea id="export-output" readonly placeholder="Nach dem Export erscheint hier eine Bestätigung oder eine Fehlermeldung." rows="3" class="mt-4 w-full p-3 text-sm border border-gray-300 rounded-lg bg-gray-50 focus:outline-none"></textarea>
+                </section>
+            </div>
+
+            <!-- TAB 3: Forecasting (NEU) -->
+            <div id="tab-forecasting" class="tab-content space-y-8 hidden">
+                <section id="forecasting-section">
+                    <!-- Inhalt wird über JS geladen -->
+                    <div class="text-center py-8 text-gray-500">Wählen Sie einen Monat in der Analyse-Ansicht, um eine Prognose zu sehen.</div>
+                </section>
+            </div>
+            
+            <!-- TAB 4: Verwaltung -->
+            <div id="tab-management" class="tab-content space-y-8 hidden">
+                <section>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                        <i data-lucide="users" class="w-6 h-6 mr-2 text-pink-500"></i>
+                        Kunden & Projekte verwalten
+                    </h2>
+                    <p class="text-gray-600 mb-4">Hier definieren und bearbeiten Sie Kunden, Tagessätze, Pauschalen und Projekte. Die Verwaltung wird in einem separaten Fenster geöffnet.</p>
+                    <button id="open-manage-modal" class="w-full bg-pink-500 text-white p-2 rounded-lg font-semibold hover:bg-pink-600 transition duration-150 shadow-md flex items-center justify-center">
+                        <i data-lucide="settings" class="w-5 h-5 mr-2"></i>
+                        Verwaltungs-Modal öffnen
+                    </button>
+                </section>
+            </div>
+
+
+        </div>
+    </div>
+    <div id="manage-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 z-50 overflow-y-auto transition-opacity duration-300">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6 space-y-6 transform transition-all duration-300 scale-95 opacity-0" id="modal-content">
+                <h3 class="text-2xl font-bold text-gray-800 border-b pb-3 flex items-center">
+                    <i data-lucide="settings" class="w-6 h-6 mr-2 text-pink-500"></i>
+                    Kunden- & Projektverwaltung
+                </h3>
+                <section>
+                    <h4 class="text-xl font-semibold mb-3 text-gray-700">Kunde hinzufügen</h4>
+                    <form id="add-customer-form" class="flex flex-col gap-2">
+                        <input type="text" id="new-customer-name" required placeholder="Name des neuen Kunden" class="p-2 border border-gray-300 rounded-lg">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                            <div class="flex-grow w-full">
+                                <label for="new-customer-rate" class="block text-sm text-gray-700 mb-1">Tagessatz (optional)</label>
+                                <input type="number" id="new-customer-rate" placeholder="z.B. 800" min="0" class="w-full p-2 border border-gray-300 rounded-lg">
+                                <span class="text-xs text-gray-500">EUR / Tag (für T&M Projekte)</span>
+                            </div>
+                            <div class="flex-grow w-full mt-2 sm:mt-0">
+                                <label for="new-customer-monthly-rate" class="block text-sm text-gray-700 mb-1">Monatliche Pauschale (optional)</label>
+                                <input type="number" id="new-customer-monthly-rate" placeholder="z.g. 4000" min="0" class="w-full p-2 border border-gray-300 rounded-lg">
+                                <span class="text-xs text-gray-500">EUR / Monat (Fixum)</span>
+                            </div>
+                        </div>
+                        <!-- NEU: Fixum Laufzeit -->
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                            <div class="flex-grow w-full">
+                                <label for="new-monthly-rate-start" class="block text-sm text-gray-700 mb-1">Start-Monat (für Pauschale)</label>
+                                <input type="month" id="new-monthly-rate-start" class="w-full p-2 border border-gray-300 rounded-lg">
+                            </div>
+                            <div class="flex-grow w-full">
+                                <label for="new-monthly-rate-end" class="block text-sm text-gray-700 mb-1">End-Monat (für Pauschale)</label>
+                                <input type="month" id="new-monthly-rate-end" class="w-full p-2 border border-gray-300 rounded-lg">
+                            </div>
+                        </div>
+                        <button type="submit" class="bg-pink-600 text-white p-2 rounded-lg font-semibold hover:bg-pink-700 transition duration-150 shadow-md">Hinzufügen</button>
+                    </form>
+                </section>
+                <section>
+                    <h4 class="text-xl font-semibold mb-3 text-gray-700">Existierende Kunden</h4>
+                    <div id="customer-management-list" class="space-y-4 max-h-64 overflow-y-auto p-2 border border-gray-200 rounded-lg bg-gray-50">
+                        <!-- Kunden werden hier eingefügt -->
+                        <p class="text-center text-gray-500 italic" id="no-customers-msg">Noch keine Kunden angelegt.</p>
+                    </div>
+                </section>
+                <div class="flex justify-end">
+                    <button id="close-manage-modal" class="bg-gray-500 text-white p-2 rounded-lg font-semibold hover:bg-gray-600 transition duration-150">
+                        Schließen
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- NEU: Modal für Edit Entry -->
+    <div id="edit-entry-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 z-50 overflow-y-auto transition-opacity duration-300">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 space-y-6 transform transition-all duration-300 scale-95 opacity-0">
+
+                <h3 class="text-2xl font-bold text-gray-800 border-b pb-3 flex items-center">
+                    <i data-lucide="pencil" class="w-6 h-6 mr-2 text-blue-500"></i>
+                    Zeiteintrag bearbeiten
+                </h3>
+
+                <form id="edit-entry-form" class="space-y-4">
+                    <input type="hidden" id="edit-entry-id">
+                    
+                    <div>
+                        <label for="edit-entry-date" class="block text-sm font-medium text-gray-700 mb-1">Datum</label>
+                        <input type="date" id="edit-entry-date" required class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+
+                    <div>
+                        <label for="edit-entry-hours" class="block text-sm font-medium text-gray-700 mb-1">Stunden</label>
+                        <input type="number" id="edit-entry-hours" step="0.5" min="0.5" max="24" required class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+
+                    <div>
+                        <label for="edit-entry-description" class="block text-sm font-medium text-gray-700 mb-1">Beschreibung der Tätigkeit</label>
+                        <input type="text" id="edit-entry-description" required class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+
+                    <div class="flex justify-end gap-3 pt-2">
+                        <button type="button" id="close-edit-modal" class="bg-gray-200 text-gray-700 p-2 rounded-lg font-semibold hover:bg-gray-300 transition duration-150">Abbrechen</button>
+                        <button type="submit" class="bg-blue-600 text-white p-2 rounded-lg font-semibold hover:bg-blue-700 transition duration-150 shadow-md">
+                            Speichern
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- NEU: Daily Reminder Modal -->
+    <div id="reminder-modal" class="hidden fixed bottom-4 right-4 z-50 transition-transform duration-500 transform translate-x-full">
+        <div class="bg-indigo-600 text-white p-4 rounded-lg shadow-xl max-w-xs flex items-start space-x-3">
+            <i data-lucide="bell" class="w-6 h-6 flex-shrink-0 mt-1"></i>
+            <div>
+                <h4 class="font-bold text-lg mb-1" id="reminder-title"></h4>
+                <p class="text-sm mb-2" id="reminder-body"></p>
+                <button id="reminder-mailto-btn" class="mt-2 text-sm font-semibold bg-white text-indigo-700 p-1 px-2 rounded hover:bg-gray-100 transition">Tage buchen / Mail senden</button>
+                <button id="reminder-close-btn" class="mt-2 text-xs font-semibold underline opacity-80 hover:opacity-100 transition ml-2">Ignorieren</button>
+            </div>
+        </div>
     </div>
 
+    <!-- NEU: Timesheet Preview Modal (mit Print-CSS) -->
+    <div id="timesheet-preview-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 z-50 overflow-y-auto transition-opacity duration-300">
+        <div class="flex items-start justify-center min-h-screen p-4">
+            <!-- Hintergrund weiß für Druck -->
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl p-6 space-y-6 transform transition-all duration-300 scale-95 opacity-0" id="timesheet-modal-content">
+
+                <!-- Kontroll-Buttons -->
+                <div class="flex justify-between items-center print:hidden border-b pb-3">
+                    <h3 class="text-xl font-bold text-gray-800">Timesheet Vorschau (Monatsbericht)</h3>
+                    <div>
+                        <button id="print-button" class="bg-indigo-600 text-white p-2 rounded-lg font-semibold hover:bg-indigo-700 transition duration-150 shadow-md flex items-center">
+                            <i data-lucide="printer" class="w-4 h-4 mr-2"></i> Als PDF drucken
+                        </button>
+                        <button id="close-preview-modal" class="bg-gray-500 text-white p-2 rounded-lg font-semibold hover:bg-gray-600 transition duration-150 ml-2">
+                            Schließen
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Timesheet Inhalt -->
+                <div id="timesheet-preview" class="p-4">
+                    <p class="text-center text-gray-500">Wählen Sie einen Monat und klicken Sie auf Vorschau.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Firebase Konfiguration und Logik -->
     <script type="module">
-        // Importiere Firebase Module
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection, deleteDoc, query, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // Wichtig: Auf Version 12.3.0 aktualisiert, wie von Ihnen verwendet
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+        import { getFirestore, doc, deleteDoc, setDoc, onSnapshot, collection, query, addDoc, updateDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
-        // Globale Firebase-Variablen
-        let db;
-        let auth;
-        let userId = 'N/A';
-        let isAuthReady = false;
-        const SCENARIOS_COLLECTION_NAME = 'scenarios';
+        // Firebase Log-Level setzen (zum Debuggen)
+        setLogLevel('debug');
 
-        // Hilfsfunktion zur Formatierung als Währung (Deutsch/Euro)
-        const formatter = new Intl.NumberFormat('de-DE', {
-            style: 'currency',
-            currency: 'EUR',
-        });
+        // Konstante für die Umsatzberechnung (8 Stunden pro Tagessatz)
+        const FULL_DAY_HOURS = 8;
+        const CURRENCY = '€'; // Währung für die Anzeige
+        const CSV_SEPARATOR = ';'; // Trennzeichen für CSV (Semikolon für DE Excel)
 
-        const numFormatter = new Intl.NumberFormat('de-DE');
-
-        // Funktion zur Anzeige von Statusmeldungen
-        function setStatusMessage(message, isError = false) {
-            const statusDiv = document.getElementById('statusMessage');
-            statusDiv.textContent = message;
-            statusDiv.className = `text-sm text-center font-medium mt-2 ${isError ? 'text-red-600' : 'text-green-600'}`;
-            setTimeout(() => statusDiv.textContent = '', 5000);
+        // Globale Variablen aus dem Canvas-Environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-time-tracker-app';
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
+        // --- Statische Konfiguration (Ihre eigenen, eingefügten Schlüssel) ---
+        // Dies ist der Block, den Sie mit Ihren eigenen, echten Firebase-Keys befüllt haben.
+        let firebaseConfig = {
+            apiKey: "AIzaSyDramsPfqWtBGdvHyMAos0nhyT0t4EMkAg",
+            authDomain: "timetracker-7bf2a.firebaseapp.com",
+            projectId: "timetracker-7bf2a",
+            storageBucket: "timetracker-7bf2a.firebasestorage.app",
+            messagingSenderId: "3152109841",
+            appId: "1:3152109841:web:4e83e101949907c056acb0"
+        };
+        
+        // --- KONFIGURATIONSLOGIK FÜR LOKALE VS. CANVAS AUSFÜHRUNG ---
+        const isCanvasEnvironment = typeof __firebase_config !== 'undefined' && __firebase_config !== '{}';
+        
+        if (isCanvasEnvironment) {
+            // 1. Ausführung im Canvas-Editor (automatisches Laden und Überschreiben)
+            try {
+                // Wenn die Canvas-Konfig existiert, überschreiben wir die statische Konfig
+                const canvasConfig = JSON.parse(__firebase_config);
+                firebaseConfig = { ...firebaseConfig, ...canvasConfig };
+                console.log("Canvas-Konfiguration aktiv (Ihre statischen Keys werden überschrieben).");
+            } catch (e) {
+                console.error("Fehler beim Parsen von __firebase_config:", e);
+            }
+        } else {
+            console.warn("LOKALER MODUS / GITHUB PAGES AKTIV: Die Daten werden mit Ihrer eingebetteten Firebase-Konfiguration gespeichert.");
         }
 
-        // =================================================================
-        // 1. FIREBASE INITIALISIERUNG & AUTH
-        // =================================================================
+
+        // Firebase Initialisierung
+        let app, db, auth, userId = null;
+
+        // Anwendungszustand
+        let customers = [];
+        let entries = [];
+        let isAuthReady = false;
+        let entriesFilterCustomerId = 'all'; // NEU: Filterzustand Kunde für die Einträge-Liste
+        let entriesFilterMonth = ''; // NEU: Filterzustand Monat für die Einträge-Liste
+        
+        // --- AUTH-STATE ---
+        let isLoginMode = true; // Startet im Login-Modus
+        const loginCenter = document.getElementById('login-center');
+        const authForm = document.getElementById('auth-form');
+        const authSubmitBtn = document.getElementById('auth-submit-btn');
+        const authMessage = document.getElementById('auth-message');
+        const authEmail = document.getElementById('auth-email');
+        const authPassword = document.getElementById('auth-password');
+        const toggleAuthModeBtn = document.getElementById('toggle-auth-mode');
+        const logoutButton = document.getElementById('logout-button');
+        const tabSelector = document.getElementById('tab-selector');
+        
+        const forgotPasswordBtn = document.getElementById('forgot-password-btn'); // NEU
+        
+        const entriesCustomerFilterEl = document.getElementById('entries-customer-filter'); // NEU: Kundenfilter für Einträge
+        const entriesMonthFilterEl = document.getElementById('entries-month-filter'); // NEU: Monatsfilter für Einträge
+        
+        // --- FEIERTAGSDEFINITION HAMBURG ---
+        // Feste Feiertage in Hamburg (Monat ist 0-basiert)
+        const FIXED_HOLIDAYS_HAMBURG = [
+            { month: 0, day: 1, name: 'Neujahr' },          // 1. Januar
+            { month: 4, day: 1, name: 'Tag der Arbeit' },   // 1. Mai
+            { month: 9, day: 3, name: 'Tag der Dt. Einheit' }, // 3. Oktober
+            { month: 9, day: 31, name: 'Reformationstag' }, // 31. Oktober
+            { month: 11, day: 25, name: '1. Weihnachtstag' },// 25. Dezember
+            { month: 11, day: 26, name: '2. Weihnachtstag' },// 26. Dezember
+        ];
+
+        // Funktion zur Berechnung der variablen Osterfeiertage (vereinfacht für die nächsten Jahre)
+        function getVariableHolidays(year) {
+            const holidays = [];
+
+            // Die gängigsten Termine, die sich an Ostern orientieren
+            const variableHolidays = {
+                // Karfreitag (Fr), Ostermontag (Mo), Christi Himmelfahrt (Do), Pfingstmontag (Mo)
+                2024: [
+                    { month: 2, day: 29, name: 'Karfreitag' },
+                    { month: 3, day: 1, name: 'Ostermontag' },
+                    { month: 4, day: 9, name: 'Christi Himmelfahrt' },
+                    { month: 4, day: 20, name: 'Pfingstmontag' }
+                ],
+                2025: [
+                    { month: 3, day: 18, name: 'Karfreitag' },
+                    { month: 3, day: 21, name: 'Ostermontag' },
+                    { month: 4, day: 29, name: 'Christi Himmelfahrt' },
+                    { month: 5, day: 9, name: 'Pfingstmontag' }
+                ],
+                 2026: [
+                    { month: 3, day: 3, name: 'Karfreitag' },
+                    { month: 3, day: 6, name: 'Ostermontag' },
+                    { month: 4, day: 14, name: 'Christi Himmelfahrt' },
+                    { month: 4, day: 25, name: 'Pfingstmontag' }
+                ]
+            };
+            
+            // Füge die variablen Feiertage für das aktuelle Jahr und Nachbarjahre hinzu
+            if (variableHolidays[year]) {
+                holidays.push(...variableHolidays[year]);
+            }
+            if (variableHolidays[year - 1]) {
+                holidays.push(...variableHolidays[year - 1]);
+            }
+            if (variableHolidays[year + 1]) {
+                holidays.push(...variableHolidays[year + 1]);
+            }
+            
+            return holidays;
+        }
+        
+        function isHoliday(date) {
+            const year = date.getFullYear();
+            const month = date.getMonth();
+            const day = date.getDate();
+
+            // 1. Feste Feiertage prüfen
+            const isFixedHoliday = FIXED_HOLIDAYS_HAMBURG.some(h => h.month === month && h.day === day);
+            if (isFixedHoliday) return true;
+
+            // 2. Variable Feiertage prüfen
+            const variableHolidays = getVariableHolidays(year);
+             const isVariableHoliday = variableHolidays.some(h => h.month === month && h.day === day);
+            if (isVariableHoliday) return true;
+
+            return false;
+        }
+
+        /**
+         * Berechnet die verfügbaren Arbeitstage (Montag-Freitag abzgl. Feiertage)
+         * @param {number} year 
+         * @param {number} month (1-basiert)
+         * @returns {{days: number, hours: number}}
+         */
+        function calculateMonthlyWorkingDays(year, month) {
+            const date = new Date(year, month - 1, 1);
+            const daysInMonth = new Date(year, month, 0).getDate();
+            let workingDays = 0;
+
+            for (let i = 1; i <= daysInMonth; i++) {
+                date.setDate(i);
+                const dayOfWeek = date.getDay(); // 0 = Sonntag, 6 = Samstag
+
+                // Ist es ein Wochentag (Montag=1 bis Freitag=5)?
+                if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+                    // Ist es ein Feiertag?
+                    if (!isHoliday(date)) {
+                        workingDays++;
+                    }
+                }
+            }
+            
+            const workingHours = workingDays * FULL_DAY_HOURS;
+
+            return { days: workingDays, hours: workingHours };
+        }
+
+
+        // --- DOM-Elemente ---
+        const authStatusEl = document.getElementById('auth-status');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const mainContent = document.getElementById('main-content');
+        const errorMessageEl = document.getElementById('error-message');
+        const errorTextEl = document.getElementById('error-text');
+        
+        const tabButtons = document.querySelectorAll('.tab-button'); // NEU
+        const tabContents = document.querySelectorAll('.tab-content'); // NEU
+        const forecastingSectionEl = document.getElementById('forecasting-section'); // NEU
+
+        const entryForm = document.getElementById('entry-form');
+        const customerSelect = document.getElementById('customer-select');
+        const projectSelect = document.getElementById('project-select');
+        const entriesListEl = document.getElementById('entries-list');
+        const rateDisplayEl = document.getElementById('rate-display'); 
+        const pauschalDisplayEl = document.getElementById('pauschal-display'); 
+        
+        const newCustomerMonthlyRateEl = document.getElementById('new-customer-monthly-rate'); 
+        const newMonthlyRateStartEl = document.getElementById('new-monthly-rate-start'); 
+        const newMonthlyRateEndEl = document.getElementById('new-monthly-rate-end');     
+
+        const manageModal = document.getElementById('manage-modal');
+        const modalContent = document.getElementById('modal-content');
+        const openManageModalBtn = document.getElementById('open-manage-modal');
+        const closeManageModalBtn = document.getElementById('close-manage-modal');
+        const addCustomerForm = document.getElementById('add-customer-form');
+        const customerManagementListEl = document.getElementById('customer-management-list');
+        const noCustomersMsgEl = document.getElementById('no-customers-msg');
+        
+        // NEU: Edit Modal Elemente
+        const editEntryModal = document.getElementById('edit-entry-modal');
+        const closeEditModalBtn = document.getElementById('close-edit-modal');
+        const editEntryForm = document.getElementById('edit-entry-form');
+        const editEntryId = document.getElementById('edit-entry-id');
+        const editEntryDate = document.getElementById('edit-entry-date');
+        const editEntryHours = document.getElementById('edit-entry-hours');
+        const editEntryDescription = document.getElementById('edit-entry-description');
+        
+        // NEU: Timesheet Preview Elemente
+        const timesheetPreviewModal = document.getElementById('timesheet-preview-modal');
+        const timesheetModalContent = document.getElementById('timesheet-modal-content');
+        const closePreviewModalBtn = document.getElementById('close-preview-modal');
+        const printButton = document.getElementById('print-button');
+        const timesheetPreviewEl = document.getElementById('timesheet-preview');
+        const previewButton = document.getElementById('preview-button');
+
+
+        const exportButton = document.getElementById('export-button');
+        const exportMonthInput = document.getElementById('export-month');
+        const exportTypeSelect = document.getElementById('export-type');
+        const exportOutputEl = document.getElementById('export-output');
+        const exportCustomerSelect = document.getElementById('export-customer-select'); // NEU
+        
+        // Revenue Elemente
+        const revenueSummaryEl = document.getElementById('revenue-summary');
+        const revenueDetailsContainerEl = document.getElementById('revenue-details-container');
+        const customerRevenueListEl = document.getElementById('customer-revenue-list');
+        const revenueMonthFilterEl = document.getElementById('revenue-month-filter');
+        const revenueHeaderTextEl = document.getElementById('revenue-header-text');
+        
+        // NEU: Reminder Elemente
+        const reminderModal = document.getElementById('reminder-modal');
+        const reminderCloseBtn = document.getElementById('reminder-close-btn');
+        const reminderMailtoBtn = document.getElementById('reminder-mailto-btn');
+        const reminderTitleEl = document.getElementById('reminder-title');
+        const reminderBodyEl = document.getElementById('reminder-body');
+
+
+        // --- UI HILFSFUNKTIONEN ---
+        
+        function switchTab(tabId) {
+            // Alle Buttons inaktiv setzen
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            // Alle Inhalte ausblenden
+            tabContents.forEach(content => content.classList.add('hidden'));
+
+            // Aktuellen Button aktivieren
+            const activeTabButton = document.querySelector(`.tab-button[data-tab="${tabId}"]`);
+            if (activeTabButton) activeTabButton.classList.add('active');
+
+            // Aktuellen Inhalt anzeigen
+            const activeTabContent = document.getElementById(`tab-${tabId}`);
+            if (activeTabContent) activeTabContent.classList.remove('hidden');
+
+            // Spezielle Aktionen für Tabs
+            const selectedMonth = revenueMonthFilterEl ? revenueMonthFilterEl.value : null;
+
+            if (tabId === 'analysis' && selectedMonth) {
+                calculateRevenueSummary(selectedMonth); 
+            } else if (tabId === 'forecasting' && selectedMonth) {
+                renderForecastingTab(selectedMonth); 
+            } else if (tabId === 'entries') { // NEU: Bei Wechsel zum Einträge-Tab die Liste neu rendern
+                renderEntriesList(entriesFilterCustomerId, entriesFilterMonth);
+                renderEntriesCustomerFilter();
+                // Setze Monatsfilter beim Öffnen des Tabs (falls noch leer)
+                if (entriesMonthFilterEl && !entriesFilterMonth) {
+                    const today = new Date();
+                    const monthString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+                    entriesFilterMonth = monthString;
+                    entriesMonthFilterEl.value = monthString;
+                }
+            }
+            
+            lucide.createIcons();
+        }
+
+
+        function displayError(message) {
+            console.error("APP ERROR:", message);
+            if(authMessage) authMessage.textContent = ''; // Auth-Nachricht zuerst löschen
+            if(errorTextEl) errorTextEl.textContent = message;
+            if(errorMessageEl) errorMessageEl.classList.remove('hidden');
+            // Zeige den Fehler kurz an und blende ihn nach 5 Sekunden wieder aus
+            setTimeout(() => {
+                if(errorMessageEl) errorMessageEl.classList.add('hidden');
+            }, 5000);
+        }
+        
+        function displayAuthError(message) {
+             if(authMessage) authMessage.textContent = message;
+        }
+
+        function showLoading() {
+            if(loadingIndicator) loadingIndicator.classList.remove('hidden');
+            if(mainContent) mainContent.classList.add('hidden');
+            if(loginCenter) loginCenter.classList.add('hidden');
+            if(errorMessageEl) errorMessageEl.classList.add('hidden');
+            if(tabSelector) tabSelector.classList.add('hidden');
+        }
+
+        function showLoginScreen() {
+            if(loadingIndicator) loadingIndicator.classList.add('hidden');
+            if(mainContent) mainContent.classList.add('hidden');
+            if(loginCenter) loginCenter.classList.remove('hidden');
+            if(tabSelector) tabSelector.classList.add('hidden');
+            if(logoutButton) logoutButton.classList.add('hidden');
+        }
+
+        function showContent() {
+            if(loadingIndicator) loadingIndicator.classList.add('hidden');
+            if(mainContent) mainContent.classList.remove('hidden');
+            if(loginCenter) loginCenter.classList.add('hidden');
+            if(tabSelector) tabSelector.classList.remove('hidden');
+            if(logoutButton) logoutButton.classList.remove('hidden');
+            lucide.createIcons();
+            
+            const today = new Date(); // NEU: Datum hier initialisieren
+            if (document.getElementById('entry-date')) document.getElementById('entry-date').valueAsDate = today; // FEHLER BEHOBEN: Element existiert jetzt.
+            
+            // Setze initialen Monatsfilter für Analyse/Export
+            const monthString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+            if (revenueMonthFilterEl) revenueMonthFilterEl.value = monthString;
+            if (exportMonthInput) exportMonthInput.value = monthString;
+            
+            // Starte mit dem ersten Tab (Einträge verwalten)
+            switchTab('entries'); 
+        }
+
+        function toggleModal(show) {
+            // Vereinfachte Modal-Logik für Robustheit
+            if (show) {
+                if (manageModal) manageModal.classList.remove('hidden');
+                setTimeout(() => {
+                    if (modalContent) modalContent.classList.remove('scale-95', 'opacity-0');
+                    if (modalContent) modalContent.classList.add('scale-100', 'opacity-100');
+                }, 10);
+                renderCustomerManagementList();
+            } else {
+                if (modalContent) modalContent.classList.remove('scale-100', 'opacity-100');
+                if (modalContent) modalContent.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    if (manageModal) manageModal.classList.add('hidden');
+                }, 300);
+            }
+        }
+        
+        // NEU: Funktionen für Edit Modal
+        function openEditModal(entryId) {
+            const entry = entries.find(e => e.id === entryId);
+            if (!entry) {
+                displayError("Eintrag zum Bearbeiten nicht gefunden.");
+                return;
+            }
+
+            if (editEntryId) editEntryId.value = entryId;
+            if (editEntryDate) editEntryDate.value = entry.date;
+            if (editEntryHours) editEntryHours.value = entry.hours;
+            if (editEntryDescription) editEntryDescription.value = entry.description;
+
+            // Show modal
+            if (editEntryModal) editEntryModal.classList.remove('hidden');
+            const editModalContent = editEntryModal ? editEntryModal.querySelector('.bg-white') : null;
+            setTimeout(() => {
+                if (editModalContent) editModalContent.classList.remove('scale-95', 'opacity-0');
+                if (editModalContent) editModalContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+        window.openEditModal = openEditModal;
+
+        function hideEditModal() {
+            const editModalContent = editEntryModal ? editEntryModal.querySelector('.bg-white') : null;
+            if (editModalContent) editModalContent.classList.remove('scale-100', 'opacity-100');
+            if (editModalContent) editModalContent.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                if (editEntryModal) editEntryModal.classList.add('hidden');
+                if (editEntryForm) editEntryForm.reset();
+            }, 300);
+        }
+
+        // NEU: Timesheet Preview Modal Funktionen
+        function openTimesheetPreviewModal() {
+            if (timesheetPreviewModal) timesheetPreviewModal.classList.remove('hidden');
+            if (timesheetModalContent) timesheetModalContent.classList.remove('scale-95', 'opacity-0');
+            if (timesheetModalContent) timesheetModalContent.classList.add('scale-100', 'opacity-100');
+            lucide.createIcons();
+        }
+
+        function closeTimesheetPreviewModal() {
+            if (timesheetModalContent) timesheetModalContent.classList.remove('scale-100', 'opacity-100');
+            if (timesheetModalContent) timesheetModalContent.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                if (timesheetPreviewModal) timesheetPreviewModal.classList.add('hidden');
+            }, 300);
+        }
+        
+
+
+        // --- FIREBASE INITIALISIERUNG UND AUTHENTIFIZIERUNG (MAXIMAL ROBUST) ---
+
         async function initFirebase() {
+            showLoading();
             try {
-                // Lese Canvas-Variablen (sollten Strings sein)
-                const appId = typeof __app_id !== 'undefined' ? String(__app_id) : 'default-app-id';
-                const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? String(__initial_auth_token) : null;
-                
-                // =================================================================
-                // 🛑 WICHTIG: BENUTZERDEFINIERTE FIREBASE KONFIGURATION 🛑
-                //
-                // Da die automatische Canvas-Konfiguration fehlschlägt (auth/invalid-api-key),
-                // MÜSSEN SIE HIER IHRE EIGENEN FIREBASE-PROJEKTDATEN eintragen.
-                // Ersetzen Sie alle "YOUR_..." Platzhalter mit den Werten aus Ihrer Firebase Console.
-                // =================================================================
-              const firebaseConfig = {
-    apiKey: "AIzaSyDGzrNBazLFhxTI-O-xkdSUU-c4EIWHGF0",
-    authDomain: "business-case-kalkulator.firebaseapp.com",
-    projectId: "business-case-kalkulator",
-    storageBucket: "business-case-kalkulator.firebasestorage.app",
-    messagingSenderId: "439851647109",
-    appId: "1:439851647109:web:50faf47e5970ada8b4a9ec",
-    measurementId: "G-ZGEB3JMEVH"
-  };
-
-                // Wenn der Benutzer die Platzhalter nicht ersetzt hat:
-                if (firebaseConfig.apiKey === "YOUR_API_KEY") {
-                    document.getElementById('currentUserId').textContent = 'Bitte Firebase-Keys im Code ersetzen, um zu speichern.';
-                    document.getElementById('authStatus').textContent = 'Konfiguration fehlt!';
-                    document.getElementById('authStatus').classList.remove('text-yellow-600', 'text-green-600');
-                    document.getElementById('authStatus').classList.add('text-red-600');
-                    document.getElementById('saveButton').disabled = true;
-                    isAuthReady = false; // Deaktiviert Speicherfunktionen
-                    calculateMetrics();
-                    return; // Beende Firebase-Initialisierung
+                // Schnelle Überprüfung, ob die Konfiguration grundlegend existiert
+                if (!firebaseConfig || !firebaseConfig.apiKey || firebaseConfig.apiKey.length < 5) {
+                    throw new Error("Fehler: Firebase Konfiguration ist ungültig oder unvollständig.");
                 }
 
-
-                // Log-Level für Debugging setzen
-                setLogLevel('debug');
-
-                // Initialisiere App, Auth und Firestore. 
-                const app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
+                console.log("1. Firebase App wird initialisiert...");
+                app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
+                auth = getAuth(app);
+                
+                if (authStatusEl) authStatusEl.textContent = "Warte auf Login...";
 
-                document.getElementById('authStatus').textContent = 'Authentifiziere...';
-                document.getElementById('saveButton').disabled = true;
-
-                // Setze Session Persistence 
-                await setPersistence(auth, browserSessionPersistence).catch(e => console.warn("Persistence konnte nicht gesetzt werden:", e));
-
-                // Melde den Benutzer an: Custom Token (bevorzugt) oder Anonym
-                if (initialAuthToken) {
-                    // Verwende den optionalen Canvas-Token für eine persistente User-ID
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    // Fallback: Anonyme Anmeldung, um eine temporäre UID zu erhalten
-                    await signInAnonymously(auth);
-                }
-
-                // Listener für den Authentifizierungsstatus
+                // NEU: Listener für Auth State Changes
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
-                        // Erfolgreiche Anmeldung
+                        // User ist angemeldet
                         userId = user.uid;
-                        document.getElementById('currentUserId').textContent = userId;
-                        document.getElementById('authStatus').textContent = 'Verbunden';
-                        document.getElementById('authStatus').classList.remove('text-yellow-600', 'text-red-600', 'text-orange-500');
-                        document.getElementById('authStatus').classList.add('text-green-600');
-                        document.getElementById('saveButton').disabled = false;
-                        
-                        // Starte Datenbank-Listener und Berechnungen
-                        loadScenariosListener();
+                        const userDisplay = user.email || user.uid; // SICHERHEIT: Zeige UID, falls E-Mail aus irgendeinem Grund fehlt
+                        if (authStatusEl) authStatusEl.innerHTML = `<span class="font-bold text-gray-800">Angemeldet als:</span> ${userDisplay} <button id="logout-button-2" onclick="window.handleLogout()" class="ml-3 bg-red-500 text-white p-1 px-3 rounded-md text-xs font-semibold hover:bg-red-600 transition">Logout</button>`;
+                        if (logoutButton) logoutButton.classList.remove('hidden');
+                        isAuthReady = true;
+                        console.log("2. Auth erfolgreich. User ID:", userId);
+                        startDataListeners();
+                        showContent();
                     } else {
-                        // Sollte nicht passieren, wenn signInAnonymously aufgerufen wird
-                        document.getElementById('authStatus').textContent = 'Anmeldung fehlgeschlagen';
-                        document.getElementById('authStatus').classList.add('text-red-600');
+                        // User ist abgemeldet
+                        userId = null;
+                        isAuthReady = false;
+                        if (authStatusEl) authStatusEl.textContent = "Nicht angemeldet";
+                        if (logoutButton) logoutButton.classList.add('hidden');
+                        showLoginScreen();
+                        // Reset entries/customers/docs to empty array to clear UI
+                        entries = [];
+                        customers = [];
+                        if (entriesListEl) renderEntriesList();
+                        if (customerSelect) renderCustomerSelect();
                     }
-                    isAuthReady = true; // Auth-Status ist gesetzt
-                    calculateMetrics();
                 });
+
+                // Wenn im Canvas-Umfeld ein Token existiert, versuchen wir es zu nutzen (für Dev/Test)
+                if (initialAuthToken && isCanvasEnvironment) {
+                    console.log("1.1 Versuche Anmeldung mit Custom Token...");
+                    // Hinweis: Wenn E-Mail/Passwort aktiv ist, könnte Custom Token fehlschlagen,
+                    // aber onAuthStateChanged wird den User trotzdem korrekt behandeln.
+                    // Wir lassen den Aufruf drin, falls der Nutzer doch den Anon-Weg nutzen möchte.
+                    // await signInWithCustomToken(auth, initialAuthToken); 
+                }
+                
+                // Wir zeigen den Ladebildschirm nur einmal am Anfang
+                if (!auth.currentUser) {
+                     showLoginScreen();
+                }
 
             } catch (error) {
-                // Fängt Fehler von initializeApp, signInWithCustomToken ab
-                console.error("Kritischer Firebase-Fehler bei Initialisierung/Auth: ", error);
-                
-                document.getElementById('authStatus').textContent = 'Fehler!';
-                document.getElementById('authStatus').classList.remove('text-yellow-600', 'text-green-600', 'text-orange-500');
-                document.getElementById('authStatus').classList.add('text-red-600');
-                
-                let errorMessage = error.message;
-                if (error.code) {
-                    errorMessage = `Firebase: ${error.code} - ${error.message}`;
-                }
-
-                // Zeige detailliertere Fehler-ID an
-                document.getElementById('currentUserId').textContent = errorMessage.substring(0, 80) + '...'; 
-                isAuthReady = false; 
-                document.getElementById('saveButton').disabled = true;
-                calculateMetrics(); 
+                console.error("Schwerwiegender Firebase-Fehler:", error);
+                displayError("Die App konnte nicht gestartet werden. Grund: " + error.message);
             }
         }
-
-        // =================================================================
-        // 2. SZENARIO SPEICHERN / LADEN LOGIK
-        // =================================================================
         
-        // Funktion zum Abrufen aller Eingabewerte
-        function getScenarioData() {
-            const inputs = document.querySelectorAll('.input-group input');
-            const data = {};
-            inputs.forEach(input => {
-                data[input.id] = input.value;
-            });
-            data.userId = userId;
-            data.timestamp = new Date().toISOString();
-            // Name des Szenarios wird separat beim Speichern hinzugefügt
-            return data;
-        }
-
-        // Funktion zum Laden der Werte in die Eingabefelder
-        function setScenarioData(data) {
-            for (const id in data) {
-                const input = document.getElementById(id);
-                if (input) {
-                    input.value = data[id];
-                }
+        // --- AUTH LOGIK ---
+        
+        function toggleAuthMode() {
+            isLoginMode = !isLoginMode;
+            if(authMessage) authMessage.textContent = ''; // Fehler löschen
+            
+            if (isLoginMode) {
+                if(authSubmitBtn) authSubmitBtn.textContent = 'Login';
+                if(toggleAuthModeBtn) toggleAuthModeBtn.textContent = 'Noch kein Konto? Hier registrieren.';
+            } else {
+                if(authSubmitBtn) authSubmitBtn.textContent = 'Registrieren';
+                if(toggleAuthModeBtn) toggleAuthModeBtn.textContent = 'Bereits registriert? Hier einloggen.';
             }
-            // Nach dem Laden muss neu gerechnet werden
-            calculateMetrics();
-            setStatusMessage(`Szenario "${data.name}" geladen.`);
         }
-
-        // Firestore Pfad für öffentliche (teilbare) Daten
-        function getScenarioCollectionRef() {
-            if (!db) {
-                console.error("Datenbank nicht initialisiert.");
-                throw new Error("Datenbank nicht initialisiert.");
-            }
-            // Da wir eine benutzerdefinierte Konfiguration verwenden, ist appId der projectId
-            const appId = auth.app.options.projectId || 'default-project-id';
-            const collectionPath = `artifacts/${appId}/public/data/${SCENARIOS_COLLECTION_NAME}`;
-            return collection(db, collectionPath);
-        }
-
-        // Speichert das aktuelle Szenario
-        window.saveScenario = async function() {
-            if (!isAuthReady || !db) {
-                setStatusMessage('Fehler: Speichern nur in verbundener Umgebung möglich.', true);
+        
+        async function handleAuthSubmit(e) {
+            e.preventDefault();
+            if(authMessage) authMessage.textContent = ''; // Reset message
+            const email = authEmail ? authEmail.value.trim() : '';
+            const password = authPassword ? authPassword.value : '';
+            
+            if (!email || password.length < 6) {
+                displayAuthError('Bitte E-Mail und Passwort (mind. 6 Zeichen) eingeben.');
                 return;
             }
             
-            const saveNameInput = document.getElementById('saveName');
-            const scenarioName = saveNameInput.value.trim();
-
-            if (!scenarioName) {
-                setStatusMessage('Bitte geben Sie einen Namen für das Szenario ein.', true);
-                return;
-            }
+            if(authSubmitBtn) authSubmitBtn.disabled = true;
 
             try {
-                const data = getScenarioData();
-                data.name = scenarioName;
-                
-                // Firestore Dokument-ID ist der Name des Szenarios (für einfache Adressierung)
-                const docId = scenarioName.replace(/[^a-zA-Z0-9\-_]/g, '_'); // Erlaubt nur alphanumerische Zeichen, - und _
-                const scenarioRef = doc(getScenarioCollectionRef(), docId); 
-                await setDoc(scenarioRef, data);
-                
-                setStatusMessage(`Szenario "${scenarioName}" erfolgreich gespeichert.`);
-                saveNameInput.value = ''; // Eingabefeld leeren
-            } catch (e) {
-                console.error("Fehler beim Speichern des Szenarios: ", e);
-                setStatusMessage(`Fehler beim Speichern: ${e.message}`, true);
-            }
-        }
-
-        // Lädt ein ausgewähltes Szenario
-        window.loadScenario = function(scenarioId) {
-            if (!isAuthReady) {
-                 setStatusMessage('Fehler: Laden nur in verbundener Umgebung möglich.', true);
-                 return;
-            }
-            if (!scenarioId) return;
-
-            const selector = document.getElementById('scenarioSelector');
-            const selectedOption = selector.options[selector.selectedIndex];
-            
-            try {
-                // Daten aus dem data-Attribut des Select-Elements lesen
-                const dataString = selectedOption.getAttribute('data-data');
-                const data = dataString ? JSON.parse(dataString) : null;
-                
-                if (data) {
-                    setScenarioData(data);
+                if (isLoginMode) {
+                    // Login
+                    await signInWithEmailAndPassword(auth, email, password);
                 } else {
-                     setStatusMessage('Fehler: Szenario-Daten konnten nicht gefunden werden.', true);
+                    // Registrierung
+                    await createUserWithEmailAndPassword(auth, email, password);
                 }
-            } catch (e) {
-                console.error("Fehler beim Laden des Szenarios: ", e);
-                setStatusMessage(`Fehler beim Laden: ${e.message}`, true);
+                // Bei Erfolg wird onAuthStateChanged getriggert, das die UI umschaltet
+            } catch (error) {
+                console.error("Auth Error:", error);
+                let msg = 'Fehler aufgetreten.';
+                if (error.code === 'auth/user-not-found') msg = 'Benutzer nicht gefunden. Bitte registrieren.';
+                if (error.code === 'auth/wrong-password') msg = 'Falsches Passwort.';
+                if (error.code === 'auth/email-already-in-use') msg = 'E-Mail bereits registriert. Bitte einloggen.';
+                if (error.code === 'auth/invalid-email') msg = 'Ungültige E-Mail-Adresse.';
+                if (error.code === 'auth/weak-password') msg = 'Passwort zu schwach (mind. 6 Zeichen).';
+                
+                displayAuthError(msg);
+            } finally {
+                if(authSubmitBtn) authSubmitBtn.disabled = false;
+            }
+        }
+
+        // NEU: Passwort vergessen Funktion
+        async function handleForgotPassword() {
+            const email = prompt("Bitte geben Sie Ihre E-Mail-Adresse zur Passwort-Zurücksetzung ein:");
+            if (email && auth) {
+                try {
+                    await sendPasswordResetEmail(auth, email);
+                    alert(`Passwort-Zurücksetzungs-E-Mail wurde an ${email} gesendet. Bitte prüfen Sie Ihren Posteingang.`);
+                } catch (error) {
+                    let msg = 'Fehler beim Senden der E-Mail.';
+                    if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-email') {
+                         msg = 'Diese E-Mail-Adresse ist uns nicht bekannt.';
+                    } else if (error.code === 'auth/missing-email') {
+                         msg = 'Bitte geben Sie eine gültige E-Mail-Adresse ein.';
+                    }
+                    alert(msg);
+                    console.error("Forgot Password Error:", error);
+                }
             }
         }
         
-        // Löscht das aktuell ausgewählte Szenario (ohne Bestätigungs-Prompt, da alert/confirm verboten sind)
-        window.deleteScenario = async function() {
-            if (!isAuthReady || !db) {
-                setStatusMessage('Fehler: Löschen nur in verbundener Umgebung möglich.', true);
-                return;
-            }
-
-            const selector = document.getElementById('scenarioSelector');
-            const scenarioId = selector.value;
-            const scenarioName = selector.options[selector.selectedIndex]?.textContent;
-
-            if (!scenarioId) {
-                setStatusMessage('Bitte wählen Sie ein Szenario zum Löschen aus.', true);
-                return;
-            }
-            
-            // WICHTIG: Da alert/confirm verboten ist, wird die Bestätigung übersprungen.
-            // Der User muss wissen, dass der Lösch-Button sofort löscht.
-
+        async function handleLogout() {
             try {
-                const scenarioRef = doc(getScenarioCollectionRef(), scenarioId);
-                await deleteDoc(scenarioRef);
-                setStatusMessage(`Szenario "${scenarioName}" wurde gelöscht.`);
-                selector.value = '';
-                calculateMetrics(); // Re-trigger, um die Liste zu aktualisieren
-            } catch (e) {
-                console.error("Fehler beim Löschen des Szenarios: ", e);
-                setStatusMessage(`Fehler beim Löschen: ${e.message}`, true);
+                await signOut(auth);
+            } catch (error) {
+                console.error("Logout Error:", error);
             }
         }
-        
-        // Listener für Echtzeit-Updates der Szenarien
-        function loadScenariosListener() {
-            if (!db) return; // Wichtig: Sicherstellen, dass db initialisiert wurde
+        window.handleLogout = handleLogout; // Exponiere für den Logout-Button
 
-            const scenariosQuery = query(getScenarioCollectionRef());
-            const selector = document.getElementById('scenarioSelector');
 
-            // HINWEIS: Dieser Listener wird nun direkt in der onAuthStateChanged/catch-Blöcken aufgerufen, 
-            // um zu versuchen, Daten abzurufen, auch wenn die Auth-Routine fehlschlägt.
+        // --- FIRESTORE DATENPFADE ---
 
-            onSnapshot(scenariosQuery, (snapshot) => {
-                const currentSelectedId = selector.value;
-                selector.innerHTML = '<option value="">--- Szenario auswählen ---</option>';
+        function getCustomerPath() {
+            return `artifacts/${appId}/users/${userId}/customers`;
+        }
 
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    const option = document.createElement('option');
-                    option.value = doc.id;
-                    option.textContent = `${data.name} (von ${data.userId.substring(0, 5)}...)`;
-                    option.setAttribute('data-data', JSON.stringify(data)); // Speichere Daten im Element
-                    selector.appendChild(option);
-                });
-                
-                // Wähle das zuvor ausgewählte Szenario wieder aus, falls es noch existiert
-                if (currentSelectedId) {
-                    selector.value = currentSelectedId;
-                }
+        function getEntryPath() {
+            return `artifacts/${appId}/users/${userId}/entries`;
+        }
+        // DOKUMENTATION PFADE ENTFERNT
+
+
+        // --- LISTENERS STARTEN ---
+
+        function startDataListeners() {
+            if (!isAuthReady || !db || !userId) {
+                console.warn("Daten-Listener können nicht gestartet werden: Auth noch nicht bereit.");
+                return;
+            }
+            console.log("3. Starte Daten-Listener für Kunden und Einträge...");
+
+            // 1. Kunden-Listener
+            onSnapshot(collection(db, getCustomerPath()), (snapshot) => {
+                customers = snapshot.docs.map(doc => ({ 
+                    id: doc.id, 
+                    // Setze dailyRate/monthlyRate auf 0, wenn es fehlt
+                    dailyRate: doc.data().dailyRate || 0, 
+                    monthlyRate: doc.data().monthlyRate || 0,
+                    monthlyRateStartMonth: doc.data().monthlyRateStartMonth || '', 
+                    monthlyRateEndMonth: doc.data().monthlyRateEndMonth || '',     
+                    ...doc.data() 
+                }));
+                // SICHERHEIT: Null-Checks hinzugefügt
+                if (customerSelect) renderCustomerSelect(); 
+                if (exportCustomerSelect) renderExportCustomerSelect(); 
+                if (customerManagementListEl) renderCustomerManagementList();
+                if (entriesCustomerFilterEl) renderEntriesCustomerFilter(); // NEU: Filter aktualisieren
+                // Verwende den aktuellen Filterwert
+                if (revenueMonthFilterEl) calculateRevenueSummary(revenueMonthFilterEl.value); 
+                if (revenueMonthFilterEl) renderForecastingTab(revenueMonthFilterEl.value); 
+                checkDailyReminder(); 
             }, (error) => {
-                console.error("Fehler beim Abrufen der Szenarien: ", error);
-                setStatusMessage('Fehler beim Laden der Szenarien-Liste.', true);
+                console.error("Fehler beim Abrufen der Kunden:", error);
+                displayError("Achtung: Kunden konnten nicht geladen werden.");
+            });
+
+            // 2. Zeiteintrag-Listener
+            onSnapshot(collection(db, getEntryPath()), (snapshot) => {
+                entries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), date: doc.data().date || '2000-01-01' }));
+                entries.sort((a, b) => new Date(b.date) - new Date(a.date)); // Sortieren nach Datum (neueste zuerst)
+                if (entriesListEl) renderEntriesList(entriesFilterCustomerId, entriesFilterMonth); // NEU: Mit Monats-Filter rendern
+                // Verwende den aktuellen Filterwert
+                if (revenueMonthFilterEl) calculateRevenueSummary(revenueMonthFilterEl.value); 
+                if (revenueMonthFilterEl) renderForecastingTab(revenueMonthFilterEl.value); 
+                checkDailyReminder(); 
+            }, (error) => {
+                console.error("Fehler beim Abrufen der Einträge:", error);
+                displayError("Achtung: Einträge konnten nicht geladen werden.");
             });
         }
 
 
-        // =================================================================
-        // 3. KALKULATIONS-LOGIK
-        // =================================================================
+        // --- DOKUMENTATION LOGIK ENTFERNT ---
         
-        /**
-         * Führt die Kernberechnung durch und gibt den Logistikkostenanteil in Prozent zurück.
-         * @param {number} aspOverride - Durchschnitts-VK (Brutto) für diese Iteration.
-         * @param {number} returnRateOverride - Retourenquote (%) für diese Iteration.
-         * @returns {number} Logistikkosten in % des Nettoumsatzes.
-         */
-        function getLogisticsCostPercent(aspOverride, returnRateOverride) {
-            // 1. Lesen der FIXEN Eingaben (die sich in der Matrix nicht ändern)
-            const vatRate = parseFloat(document.getElementById('vatRate').value) || 0; 
-            const ipo = parseFloat(document.getElementById('ipo').value) || 1; 
-            const netSoldTarget = parseInt(document.getElementById('netSoldTarget').value) || 0; 
-            const shippingCostOut = parseFloat(document.getElementById('shippingCostOut').value) || 0; 
-            const ipr = parseFloat(document.getElementById('ipr').value) || 1; 
-            const shippingCostReturnShipment = parseFloat(document.getElementById('shippingCostReturnShipment').value) || 0; 
+        
+        // --- KUNDEN LOGIK (CRUD) ---
+
+        async function addCustomer(name, dailyRate, monthlyRate, startMonth, endMonth) {
+            if (!name || !db) return;
+            try {
+                // WICHTIG: dailyRate und monthlyRate können 0 sein (Validierung erfolgt im Event Listener)
+                await addDoc(collection(db, getCustomerPath()), {
+                    name: name,
+                    projects: [],
+                    dailyRate: dailyRate, 
+                    monthlyRate: monthlyRate || 0,
+                    monthlyRateStartMonth: startMonth || '', // NEU
+                    monthlyRateEndMonth: endMonth || '',     // NEU
+                });
+                if(document.getElementById('new-customer-name')) document.getElementById('new-customer-name').value = '';
+                if(document.getElementById('new-customer-rate')) document.getElementById('new-customer-rate').value = '';
+                if(document.getElementById('new-customer-monthly-rate')) document.getElementById('new-customer-monthly-rate').value = ''; 
+                if(document.getElementById('new-monthly-rate-start')) document.getElementById('new-monthly-rate-start').value = ''; // NEU
+                if(document.getElementById('new-monthly-rate-end')) document.getElementById('new-monthly-rate-end').value = '';   // NEU
+                displayError(`Kunde ${name} erfolgreich hinzugefügt.`);
+            } catch (error) {
+                console.error("Fehler beim Hinzufügen des Kunden:", error);
+            }
+        }
+        
+        async function updateCustomerRate(customerId, newRateString) {
+            const newRate = parseFloat(newRateString);
+            if (!customerId || !db || isNaN(newRate) || newRate < 0) return;
+            try {
+                const customerRef = doc(db, getCustomerPath(), customerId);
+                // Hole den bestehenden Kunden, um die monatliche Pauschale zu prüfen
+                const currentCustomer = customers.find(c => c.id === customerId);
+                const monthlyRate = currentCustomer?.monthlyRate || 0;
+
+                // NEUE VALIDIERUNG: Mindestens Tagessatz ODER Monatliche Pauschale muss > 0 sein
+                if (newRate <= 0 && monthlyRate <= 0) {
+                     displayError("Speichern fehlgeschlagen: Der Kunde muss entweder einen Tagessatz ODER eine Monatliche Pauschale besitzen.");
+                     // Laden Sie die Liste neu, um den alten Wert wiederherzustellen
+                     renderCustomerManagementList(); 
+                     return;
+                }
+
+                await setDoc(customerRef, { dailyRate: newRate }, { merge: true });
+                console.log(`Tagessatz für Kunde ${customerId} auf ${newRate} aktualisiert.`);
+            } catch (error) {
+                console.error("Fehler beim Aktualisieren des Tagessatzes:", error);
+            }
+        }
+        
+        // NEU: Funktion zum Aktualisieren der Pauschal-Laufzeit
+        async function updateCustomerFixedRatePeriod(customerId, startMonth, endMonth) {
+            if (!customerId || !db) return;
+            try {
+                const customerRef = doc(db, getCustomerPath(), customerId);
+                await setDoc(customerRef, { 
+                    monthlyRateStartMonth: startMonth, 
+                    monthlyRateEndMonth: endMonth 
+                }, { merge: true });
+                console.log(`Pauschal-Laufzeit für Kunde ${customerId} aktualisiert: ${startMonth} bis ${endMonth}.`);
+            } catch (error) {
+                console.error("Fehler beim Aktualisieren der Pauschal-Laufzeit:", error);
+            }
+        }
+        
+        // Funktion zum Aktualisieren der monatlichen Pauschale im Modal
+        async function updateCustomerMonthlyRate(customerId, newRateString) {
+            const newRate = parseFloat(newRateString);
+            if (!customerId || !db || isNaN(newRate) || newRate < 0) return;
+            try {
+                const customerRef = doc(db, getCustomerPath(), customerId);
+                const currentCustomer = customers.find(c => c.id === customerId);
+                const dailyRate = currentCustomer?.dailyRate || 0;
+                
+                // NEUE VALIDIERUNG: Mindestens Tagessatz ODER Monatliche Pauschale muss > 0 sein
+                if (newRate <= 0 && dailyRate <= 0) {
+                     displayError("Speichern fehlgeschlagen: Der Kunde muss entweder einen Tagessatz ODER eine Monatliche Pauschale besitzen.");
+                     renderCustomerManagementList();
+                     return;
+                }
+
+                await setDoc(customerRef, { monthlyRate: newRate }, { merge: true });
+                console.log(`Monatliche Pauschale für Kunde ${customerId} auf ${newRate} aktualisiert.`);
+            } catch (error) {
+                console.error("Fehler beim Aktualisieren der Pauschale:", error);
+            }
+        }
+
+
+        async function deleteCustomer(customerId) {
+            if (!customerId || !db) return;
+            // Bestätigung sollte in einem Modal erfolgen, hier nur ein schneller JS-Workaround
+            if (confirm('Soll dieser Kunde und alle zugehörigen Daten (Projekte, Einträge) wirklich gelöscht werden?')) {
+                 try {
+                    // ACHTUNG: Firestore Rules müssen allow: delete erlauben!
+                    const customerRef = doc(db, getCustomerPath(), customerId);
+                    await deleteDoc(customerRef);
+                    // (Zugehörige Einträge bleiben in ihrer Kollektion,
+                    // Sie werden aber nicht mehr in der UI angezeigt, da der Kunde fehlt.)
+                } catch (error) {
+                    console.error("Fehler beim Löschen des Kunden:", error);
+                }
+            }
+        }
+
+        // Hilfsfunktion zum Speichern eines Projekts
+        async function saveProject(customerId, projectName, isPauschal) {
+             if (!customerId || !projectName || !db) return;
+            try {
+                const customer = customers.find(c => c.id === customerId);
+                const projectData = customer?.projects || [];
+                
+                // Index des Projekts finden (für Update oder Check)
+                const projectIndex = projectData.findIndex(p => p.name === projectName);
+                
+                let newProjects;
+
+                if (projectIndex >= 0) {
+                    // Projekt aktualisieren (Paaschale togglen)
+                    newProjects = [...projectData];
+                    newProjects[projectIndex] = { name: projectName, isPauschal: isPauschal };
+                } else {
+                    // Neues Projekt hinzufügen
+                    newProjects = [...projectData, { name: projectName, isPauschal: isPauschal }];
+                }
+
+                const customerRef = doc(db, getCustomerPath(), customerId);
+                await setDoc(customerRef, { projects: newProjects }, { merge: true });
+                console.log(`Projekt '${projectName}' (Pauschal: ${isPauschal}) zu Kunde '${customer.name}' hinzugefügt/aktualisiert.`);
             
-            // Detaillierte Logistikkosten (alle pro Artikel/Bestellung/Monat)
-            const orderProcessingCostPerOrder = parseFloat(document.getElementById('orderProcessingCostPerOrder').value) || 0; 
-            const pickPackCostPerItem = parseFloat(document.getElementById('pickPackCostPerItem').value) || 0; 
-            const goodsReceiptCostPerItem = parseFloat(document.getElementById('goodsReceiptCostPerItem').value) || 0;
-            const returnProcessingCostPerItem = parseFloat(document.getElementById('returnProcessingCostPerItem').value) || 0; 
-            const storageCostPerItemPerMonth = parseFloat(document.getElementById('storageCostPerItemPerMonth').value) || 0; 
-            const avgStorageDurationMonths = parseFloat(document.getElementById('avgStorageDurationMonths').value) || 0; 
-
-            // 2. Variable und Hilfsvariablen
-            const asp = aspOverride;
-            const returnRate = returnRateOverride;
-
-            const safeIpo = ipo > 0 ? ipo : 1; 
-            const safeIpr = ipr > 0 ? ipr : 1;
-            const returnFactor = 1 - (returnRate / 100);
-            const vatFactor = 1 + (vatRate / 100);
-            
-            // Netto-Verkaufspreis pro Artikel (ASP exklusive MwSt.)
-            const aspNet = vatFactor > 0 ? asp / vatFactor : 0; 
-
-            // =================================================================
-            // BERECHNUNGEN (Die Ergebnisse werden NICHT im DOM angezeigt, nur genutzt)
-            // =================================================================
-
-            // Brutto bestellte Artikel
-            const orderedItemsGross = returnFactor > 0 ? netSoldTarget / returnFactor : 0; 
-            // Bestellvolumen (Anzahl Outbound Sendungen)
-            const ordersVolume = orderedItemsGross / safeIpo;
-            // Retouren (in Artikeln)
-            const returnItems = orderedItemsGross - netSoldTarget;
-            // Retourensendungen
-            const returnShipments = returnItems / safeIpr; 
-            // Netto verkaufte Artikel (Basis-Input)
-            const netItemsSold = netSoldTarget;
-            // Nettoumsatz (Net Revenue, exkl. MwSt., nach Retouren)
-            const netRevenue = netItemsSold * aspNet;
+            } catch (error) {
+                console.error("Fehler beim Speichern/Aktualisieren des Projekts:", error);
+            }
+        }
 
 
-            // K. Logistikkosten-Komponenten
-            const outboundShippingCost = ordersVolume * shippingCostOut;
-            const returnShippingCost = returnShipments * shippingCostReturnShipment;
-            const totalOrderProcessingCost = ordersVolume * orderProcessingCostPerOrder;
-            const totalPickPackCost = orderedItemsGross * pickPackCostPerItem;
-            const totalGoodsReceiptCost = orderedItemsGross * goodsReceiptCostPerItem;
-            const totalReturnProcessingCost = returnItems * returnProcessingCostPerItem;
-            const totalStorageCost = orderedItemsGross * storageCostPerItemPerMonth * avgStorageDurationMonths;
+        async function addProject(customerId, projectName) {
+            // Standardmäßig kein Pauschal-Projekt
+            await saveProject(customerId, projectName, false); 
+        }
 
-            // Gesamtkosten Logistik & Versand (SUMME)
-            const totalCostEuro = 
-                outboundShippingCost + 
-                returnShippingCost + 
-                totalOrderProcessingCost + 
-                totalPickPackCost + 
-                totalGoodsReceiptCost +
-                totalReturnProcessingCost +
-                totalStorageCost;
+        async function toggleProjectPauschal(customerId, projectName, isPauschal) {
+            // Pauschal-Status togglen
+            await saveProject(customerId, projectName, isPauschal);
+        }
 
-            // Gesamtkosten in % vom Nettoumsatz
-            let totalCostPercent = 0;
-            if (netRevenue > 0) {
-                totalCostPercent = (totalCostEuro / netRevenue) * 100;
+        async function deleteProject(customerId, projectName) {
+            if (!customerId || !projectName || !db) return;
+            try {
+                const customer = customers.find(c => c.id === customerId);
+                if (customer && customer.projects) {
+                    // Projekte sind jetzt Objekte, also filtern wir nach dem Namen
+                    const newProjects = customer.projects.filter(p => p.name !== projectName); 
+                    const customerRef = doc(db, getCustomerPath(), customerId);
+                    await setDoc(customerRef, { projects: newProjects }, { merge: true });
+                }
+            } catch (error) {
+                console.error("Fehler beim Löschen des Projekts:", error);
+            }
+        }
+
+
+        // --- ZEITEN LOGIK (CRUD) ---
+
+        async function addTimeEntry(data) {
+            if (!db) return;
+            try {
+                await addDoc(collection(db, getEntryPath()), data);
+                // Formular zurücksetzen
+                if (entryForm) entryForm.reset();
+                if (customerSelect) customerSelect.value = ''; // Wichtig: Kunde zurücksetzen, damit Rate Display verschwindet
+                if (rateDisplayEl) renderRateDisplay('');
+                if (pauschalDisplayEl) renderPauschalDisplay(false); // Pauschal-Anzeige zurücksetzen
+                if (projectSelect) projectSelect.innerHTML = '<option value="" disabled selected>Thema wählen...</option>';
+                if (projectSelect) projectSelect.disabled = true;
+                if (document.getElementById('entry-date')) document.getElementById('entry-date').valueAsDate = new Date();
+                // Fehlerfeld ausblenden
+                if (errorMessageEl) errorMessageEl.classList.add('hidden');
+                
+                checkDailyReminder(); // NEU: Check nach erfolgreichem Buchen
+            } catch (error) {
+                console.error("Fehler beim Hinzufügen des Eintrags:", error);
+                displayError("Fehler beim Speichern des Eintrags.");
+            }
+        }
+        
+        // NEU: Funktion zum Aktualisieren eines Eintrags
+        async function updateTimeEntry(entryId, data) {
+            if (!db || !entryId) return;
+            try {
+                const entryRef = doc(db, getEntryPath(), entryId);
+                await setDoc(entryRef, data, { merge: true });
+                hideEditModal();
+                displayError(`Eintrag vom ${data.date} erfolgreich aktualisiert.`);
+            } catch (error) {
+                console.error("Fehler beim Aktualisieren des Eintrags:", error);
+                displayError("Fehler beim Aktualisieren des Eintrags.");
+            }
+        }
+
+        async function deleteTimeEntry(entryId) {
+            if (!entryId || !db) return;
+            if (confirm('Soll dieser Zeiteintrag wirklich gelöscht werden?')) {
+                try {
+                    await deleteDoc(doc(db, getEntryPath(), entryId));
+                } catch (error) {
+                    console.error("Fehler beim Löschen des Eintrags:", error);
+                }
+            }
+        }
+        
+        // NEU: Funktion zum Duplizieren eines Eintrags
+        function duplicateEntry(entryId) {
+            const entry = entries.find(e => e.id === entryId);
+            if (!entry) {
+                displayError("Eintrag zum Duplizieren nicht gefunden.");
+                return;
             }
 
-            return totalCostPercent;
+            // 1. Zum Zeiterfassungs-Tab wechseln
+            // WICHTIG: Da der Tracking-Tab entfernt wurde, wechseln wir zum Entries-Tab
+            switchTab('entries'); 
+
+            // 2. Hauptformular füllen (Datum auf heute setzen)
+            if (document.getElementById('entry-date')) document.getElementById('entry-date').valueAsDate = new Date(); 
+            if (document.getElementById('entry-hours')) document.getElementById('entry-hours').value = entry.hours;
+            if (document.getElementById('entry-description')) document.getElementById('entry-description').value = entry.description;
+
+            // 3. Kunde auswählen und Events triggern
+            if (customerSelect) customerSelect.value = entry.customerId;
+            // Manuell das Change-Event auslösen, um Projekte zu laden und Raten anzuzeigen
+            if (customerSelect) customerSelect.dispatchEvent(new Event('change'));
+
+            // 4. Projekt auswählen (muss kurz warten, bis Projekte geladen sind)
+            setTimeout(() => {
+                if (projectSelect) projectSelect.value = entry.projectName;
+                // Manuell das Change-Event auslösen, um Pauschal-Status anzuzeigen
+                if (projectSelect) projectSelect.dispatchEvent(new Event('change'));
+
+                displayError(`Eintrag für '${entry.projectName}' zum Buchen vorbereitet. Datum: Heute.`);
+            }, 50); 
+        }
+        window.duplicateEntry = duplicateEntry;
+
+
+        // --- UMSATZ LOGIK (REVENUE) ---
+
+        function calculateRevenueSummary(monthYear) {
+            // Wenn kein Filter gesetzt ist, nimm den aktuellen Monat
+            if (!monthYear) {
+                 const today = new Date();
+                 monthYear = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+            }
+
+            const [yearStr, monthStr] = monthYear.split('-');
+            const currentMonth = parseInt(monthStr); // 1-basiert
+            const currentYear = parseInt(yearStr);
+            const monthLabel = `${monthStr}.${currentYear}`;
+
+            let totalHoursMonth = 0;
+            let totalRevenueMonth = 0; // Für T&M Stunden
+            let totalMonthlyFixedRevenue = 0; // NEU: Für monatliche Pauschalen
+            const customerSummary = {};
+
+            const filteredEntries = entries.filter(entry => {
+                const entryDate = new Date(entry.date);
+                // Filtern nach dem ausgewählten Monat/Jahr
+                return entryDate.getFullYear() === currentYear && (entryDate.getMonth() + 1) === currentMonth;
+            });
+
+            // NEU: Update des Headers basierend auf dem Filter
+            if (revenueHeaderTextEl) revenueHeaderTextEl.textContent = `Umsatz-Übersicht (${monthLabel})`;
+
+
+            // 1. Monatliche Pauschalen hinzufügen (unabhängig von Stunden)
+            customers.forEach(customer => {
+                const monthlyRate = customer.monthlyRate || 0;
+                const startMonth = customer.monthlyRateStartMonth;
+                const endMonth = customer.monthlyRateEndMonth;
+                
+                // NEU: Nur hinzufügen, wenn Rate > 0 UND der Filtermonat innerhalb der Laufzeit liegt
+                let isFixedRateActive = false;
+                if (monthlyRate > 0 && startMonth && endMonth) {
+                    const filterMonthYear = monthYear; // monthYear ist der YYYY-MM Filterwert
+                    
+                    // Prüfung: Filtermonat muss >= Start und <= Ende sein
+                    if (filterMonthYear >= startMonth && filterMonthYear <= endMonth) {
+                        isFixedRateActive = true;
+                    }
+                }
+
+                if (isFixedRateActive) {
+                    totalMonthlyFixedRevenue += monthlyRate;
+                    
+                    if (!customerSummary[customer.name]) {
+                        customerSummary[customer.name] = { hours: 0, revenue: 0, fixedRevenue: 0 };
+                    }
+                    customerSummary[customer.name].fixedRevenue = monthlyRate;
+                }
+            });
+
+
+            // 2. T&M Einträge verarbeiten
+            filteredEntries.forEach(entry => {
+                const customer = customers.find(c => c.id === entry.customerId);
+                const project = customer?.projects?.find(p => p.name === entry.projectName);
+                const isPauschalProject = project?.isPauschal || false;
+
+                // T&M Umsatz wird nur berechnet, wenn Tagessatz > 0 UND es KEIN Pauschalprojekt ist
+                const calculateTandMRevenue = customer && customer.dailyRate > 0 && !isPauschalProject;
+
+                totalHoursMonth += entry.hours; // Stunden werden immer gezählt (für Dokumentation)
+
+                if (calculateTandMRevenue) {
+                    const hourlyRate = (customer.dailyRate / FULL_DAY_HOURS);
+                    const revenue = entry.hours * hourlyRate;
+
+                    totalRevenueMonth += revenue;
+
+                    const customerName = customer.name;
+                    if (!customerSummary[customerName]) {
+                        customerSummary[customerName] = { hours: 0, revenue: 0, fixedRevenue: 0 };
+                    }
+                    customerSummary[customerName].hours += entry.hours;
+                    customerSummary[customerName].revenue += revenue;
+                }
+            });
+            
+            // Gesamtumsatz ist T&M Stundenumsatz + Fixum
+            const overallTotalRevenue = totalRevenueMonth + totalMonthlyFixedRevenue;
+
+            // NEU: Verfügbare Arbeitszeit berechnen
+            const availableCapacity = calculateMonthlyWorkingDays(currentYear, currentMonth);
+
+            renderRevenueSummary(totalHoursMonth, overallTotalRevenue, customerSummary, monthLabel, totalMonthlyFixedRevenue, availableCapacity);
         }
 
-        /**
-         * Erstellt und füllt die Sensitivitäts-Matrix.
-         */
-        function createSensitivityTable(baseASP, baseReturnRate) {
-            const tableBody = document.getElementById('sensitivityTableBody');
-            const tableHead = document.getElementById('sensitivityTableHead');
-            tableBody.innerHTML = '';
-            tableHead.innerHTML = '';
+        function renderRevenueSummary(totalHours, overallTotalRevenue, summaryDetails, monthLabel, totalMonthlyFixedRevenue, availableCapacity) {
+            
+            // Rufe Forecasting auf, da es dieselben Daten verwendet
+            if (revenueMonthFilterEl) renderForecastingTab(revenueMonthFilterEl.value); 
 
-            // X-Achse (Retourenquote): -5% bis +5% in 1% Schritten
-            const rrSteps = [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5];
-            // Y-Achse (ASP): -10€ bis +10€ in 2€ Schritten
-            const aspDeltas = [-10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10]; 
+            if (totalHours === 0 && overallTotalRevenue === 0 && Object.keys(summaryDetails).length === 0) {
+                if (revenueSummaryEl) revenueSummaryEl.innerHTML = `
+                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-100 text-gray-500 col-span-full">
+                        Keine Zeiteinträge oder keine Tagessätze/Pauschalen für ${monthLabel} gefunden.
+                    </div>
+                `;
+                if (revenueDetailsContainerEl) revenueDetailsContainerEl.classList.add('hidden');
+                lucide.createIcons();
+                return;
+            }
 
-            // 1. Berechne den Basiswert für den Vergleich (Mittelzelle)
-            const baseCostPercent = getLogisticsCostPercent(baseASP, baseReturnRate);
-
-
-            // 2. X-Achse Header (Return Rate)
-            let headerHtml = '<tr><th class="p-2 border bg-gray-200 text-xs font-bold whitespace-normal">VK / Retourenquote (%)</th>';
-            rrSteps.forEach(delta => {
-                const rr = Math.max(0, baseReturnRate + delta); // RR kann nicht negativ sein
-                const colorClass = delta === 0 ? 'bg-blue-300' : 'bg-gray-200';
-                headerHtml += `<th class="p-2 border text-xs font-semibold ${colorClass}">${rr.toFixed(1).replace('.', ',')} %</th>`;
-            });
-            headerHtml += '</tr>';
-            tableHead.innerHTML = headerHtml;
-
-            // 3. Y-Achse und Zellen (ASP)
-            aspDeltas.slice().reverse().forEach(deltaASP => { // Reverse für absteigende Y-Achse
-                const currentASP = Math.max(0.01, baseASP + deltaASP); // ASP muss positiv sein
-                let rowHtml = '<tr>';
+            // NEU: Berechnung der Kapazitätsauslastung
+            const capacityUtilization = availableCapacity.hours > 0 
+                ? (totalHours / availableCapacity.hours) * 100
+                : 0;
+            
+            if (revenueSummaryEl) revenueSummaryEl.innerHTML = `
+                <!-- Card 1: Monatliche Pauschalen (Fixum) -->
+                <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-100">
+                    <p class="text-xs text-yellow-600 font-medium uppercase">Monatliche Pauschalen (Fixum)</p>
+                    <p class="text-xl font-bold text-yellow-800 mt-1">${totalMonthlyFixedRevenue.toFixed(2)} ${CURRENCY}</p>
+                </div>
                 
-                // Y-Achse Zelle (ASP)
-                const aspColorClass = deltaASP === 0 ? 'bg-blue-300 font-bold' : 'bg-gray-200';
-                rowHtml += `<td class="p-2 border text-sm font-bold ${aspColorClass} whitespace-nowrap">${currentASP.toFixed(2).replace('.', ',')} €</td>`;
+                <!-- Card 2: Verfügbare Kapazität -->
+                <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                    <p class="text-xs text-blue-600 font-medium uppercase">Verfügbare Kapazität (8h)</p>
+                    <p class="text-xl font-bold text-blue-800 mt-1">${availableCapacity.days} Tage / ${availableCapacity.hours} h</p>
+                </div>
 
-                // Zellen füllen
-                rrSteps.forEach(deltaRR => {
-                    const currentRR = Math.max(0, baseReturnRate + deltaRR);
-                    
-                    // Berechnung für diese Zelle
-                    const costPercent = getLogisticsCostPercent(currentASP, currentRR);
-                    const diff = costPercent - baseCostPercent;
+                <!-- Card 3: Gesamtstunden (T&M + Pauschal Projekte) -->
+                <div class="bg-indigo-50 p-3 rounded-lg border border-indigo-100">
+                    <p class="text-xs text-indigo-600 font-medium uppercase">Erfasste Stunden</p>
+                    <p class="text-xl font-bold text-indigo-800 mt-1">${totalHours.toFixed(1)} h 
+                        <span class="text-xs text-indigo-500 block">Auslastung: ${capacityUtilization.toFixed(1)}%</span>
+                    </p>
+                </div>
 
-                    // 4. Farbkodierung basierend auf der Differenz zum Basiswert
-                    let cellClass = 'bg-gray-100'; 
+                <!-- Card 4: Gesamtumsatz (T&M + Fixed) (NACH RECHTS VERSCHOBEN) -->
+                <div class="bg-green-50 p-3 rounded-lg border border-green-100">
+                    <p class="text-xs text-green-600 font-medium uppercase">Geschätzter Gesamtumsatz</p>
+                    <p class="text-xl font-bold text-green-800 mt-1">${overallTotalRevenue.toFixed(2)} ${CURRENCY}</p>
+                </div>
+            `;
+
+            if (customerRevenueListEl) customerRevenueListEl.innerHTML = '';
+            if (Object.keys(summaryDetails).length > 0) {
+                if (revenueDetailsContainerEl) revenueDetailsContainerEl.classList.remove('hidden');
+                for (const name in summaryDetails) {
+                    const data = summaryDetails[name];
+                    const listItem = document.createElement('li');
+                    listItem.className = 'flex justify-between p-2 rounded-lg hover:bg-gray-50';
                     
-                    if (deltaASP === 0 && deltaRR === 0) {
-                        cellClass = 'bg-blue-300 font-bold text-blue-900'; // Center cell
-                    } else if (diff > 0.001) { // Kosten sind HÖHER (ROT)
-                        if (diff > 5.0) {
-                            cellClass = 'bg-red-500 text-white font-bold';
-                        } else if (diff > 3.0) {
-                            cellClass = 'bg-red-400 font-bold';
-                        } else if (diff > 1.0) {
-                            cellClass = 'bg-red-300';
-                        } else {
-                            cellClass = 'bg-red-200';
-                        }
-                    } else if (diff < -0.001) { // Kosten sind NIEDRIGER (GRÜN)
-                        const absDiff = Math.abs(diff);
-                        if (absDiff > 5.0) {
-                            cellClass = 'bg-green-500 text-white font-bold';
-                        } else if (absDiff > 3.0) {
-                            cellClass = 'bg-green-400 font-bold';
-                        } else if (absDiff > 1.0) {
-                            cellClass = 'bg-green-300';
-                        } else {
-                            cellClass = 'bg-green-200';
-                        }
-                    } else {
-                         cellClass = 'bg-gray-100'; // Praktisch gleich
+                    let revenueTextParts = [];
+                    if (data.revenue > 0) {
+                         revenueTextParts.push(`T&M: ${data.revenue.toFixed(2)} ${CURRENCY}`);
+                    }
+                    if (data.fixedRevenue > 0) {
+                        revenueTextParts.push(`Pauschale (Fixum): ${data.fixedRevenue.toFixed(2)} ${CURRENCY}`);
                     }
                     
-                    rowHtml += `<td class="p-2 border text-xs text-center ${cellClass}">${costPercent.toFixed(2).replace('.', ',')} %</td>`;
-                });
-                
-                rowHtml += '</tr>';
-                tableBody.innerHTML += rowHtml;
-            });
+                    let hoursDisplay = data.hours > 0 ? `${data.hours.toFixed(1)} h (T&M)` : 'Keine T&M Stunden';
+                    let revenueDisplay = revenueTextParts.length > 0 ? `<span class="font-semibold">${revenueTextParts.join(' + ')}</span>` : `<span class="font-semibold text-red-500">0.00 ${CURRENCY}</span>`;
+                    
+                    listItem.innerHTML = `
+                        <span class="font-medium text-gray-700">${name}</span>
+                        <span class="text-gray-600">${hoursDisplay} / ${revenueDisplay}</span>
+                    `;
+                    if (customerRevenueListEl) customerRevenueListEl.appendChild(listItem);
+                }
+            } else {
+                if (revenueDetailsContainerEl) revenueDetailsContainerEl.classList.add('hidden');
+            }
+            lucide.createIcons();
         }
+        
+        // NEU: Forecasting Rendering Funktion
+        function renderForecastingTab(monthYear) {
+            if (!forecastingSectionEl) return; // Null-Check
 
-        /**
-         * Liest alle Eingabewerte aus dem DOM, führt die Hauptberechnungen durch 
-         * und aktualisiert die Ergebnis-Boxen und die Matrix.
-         */
-        window.calculateMetrics = function() {
-            // 1. Eingaben lesen (für die Hauptanzeige und als Basis für die Matrix)
-            const asp = parseFloat(document.getElementById('asp').value) || 0; 
-            const returnRate = parseFloat(document.getElementById('returnRate').value) || 0; 
-            
-            // 2. Holen der berechneten Metriken für die Hauptanzeige
-            const vatRate = parseFloat(document.getElementById('vatRate').value) || 0; 
-            const ipo = parseFloat(document.getElementById('ipo').value) || 1; 
-            const netSoldTarget = parseInt(document.getElementById('netSoldTarget').value) || 0; 
-            const shippingCostOut = parseFloat(document.getElementById('shippingCostOut').value) || 0; 
-            const ipr = parseFloat(document.getElementById('ipr').value) || 1; 
-            const shippingCostReturnShipment = parseFloat(document.getElementById('shippingCostReturnShipment').value) || 0; 
-            
-            const orderProcessingCostPerOrder = parseFloat(document.getElementById('orderProcessingCostPerOrder').value) || 0; 
-            const pickPackCostPerItem = parseFloat(document.getElementById('pickPackCostPerItem').value) || 0; 
-            const goodsReceiptCostPerItem = parseFloat(document.getElementById('goodsReceiptCostPerItem').value) || 0;
-            const returnProcessingCostPerItem = parseFloat(document.getElementById('returnProcessingCostPerItem').value) || 0; 
-            const storageCostPerItemPerMonth = parseFloat(document.getElementById('storageCostPerItemPerMonth').value) || 0; 
-            const avgStorageDurationMonths = parseFloat(document.getElementById('avgStorageDurationMonths').value) || 0; 
-
-            // Hilfsvariablen
-            const safeIpo = ipo > 0 ? ipo : 1; 
-            const safeIpr = ipr > 0 ? ipr : 1;
-            const returnFactor = 1 - (returnRate / 100);
-            const vatFactor = 1 + (vatRate / 100);
-            
-            // Netto-Verkaufspreis pro Artikel (ASP exklusive MwSt.)
-            const aspNet = vatFactor > 0 ? asp / vatFactor : 0; 
-
-            // =================================================================
-            // HAUPT-BERECHNUNGEN (DOM-Anzeige)
-            // =================================================================
-
-            const orderedItemsGross = returnFactor > 0 ? netSoldTarget / returnFactor : 0; 
-            const ordersVolume = orderedItemsGross / safeIpo;
-            const returnItems = orderedItemsGross - netSoldTarget;
-            const returnShipments = returnItems / safeIpr; 
-            const netItemsSold = netSoldTarget;
-
-            const grossRevenueNetVat = orderedItemsGross * aspNet;
-            const netRevenue = netItemsSold * aspNet;
-
-            // Kosten-Komponenten
-            const outboundShippingCost = ordersVolume * shippingCostOut;
-            const returnShippingCost = returnShipments * shippingCostReturnShipment;
-            const totalOrderProcessingCost = ordersVolume * orderProcessingCostPerOrder;
-            const totalPickPackCost = orderedItemsGross * pickPackCostPerItem;
-            const totalGoodsReceiptCost = orderedItemsGross * goodsReceiptCostPerItem;
-            const totalReturnProcessingCost = returnItems * returnProcessingCostPerItem;
-            const totalStorageCost = orderedItemsGross * storageCostPerItemPerMonth * avgStorageDurationMonths;
-
-            // Gesamtkosten Logistik & Versand (SUMME)
-            const totalCostEuro = 
-                outboundShippingCost + 
-                returnShippingCost + 
-                totalOrderProcessingCost + 
-                totalPickPackCost + 
-                totalGoodsReceiptCost +
-                totalReturnProcessingCost +
-                totalStorageCost;
-
-            let totalCostPercent = 0;
-            if (netRevenue > 0) {
-                totalCostPercent = (totalCostEuro / netRevenue) * 100;
+            if (!monthYear) {
+                forecastingSectionEl.innerHTML = `<div class="text-center py-8 text-gray-500">Bitte wählen Sie einen Monat im Reiter "Analyse & Export".</div>`;
+                return;
             }
 
-            // =================================================================
-            // 3. ERGEBNISSE ANZEIGEN
-            // =================================================================
+            const [yearStr, monthStr] = monthYear.split('-');
+            const currentMonth = parseInt(monthStr); // 1-basiert
+            const currentYear = parseInt(yearStr);
             
-            // Allgemeine Metriken
-            document.getElementById('grossRevenueNetVat').textContent = formatter.format(grossRevenueNetVat);
-            document.getElementById('netRevenue').textContent = formatter.format(netRevenue);
-            document.getElementById('ordersVolume').textContent = numFormatter.format(Math.round(ordersVolume));
-            document.getElementById('netItemsSold').textContent = numFormatter.format(Math.round(netItemsSold));
-            document.getElementById('returnItems').textContent = numFormatter.format(Math.round(returnItems)); 
-            document.getElementById('returnShipmentsDisplay').textContent = numFormatter.format(Math.round(returnShipments)); 
-            document.getElementById('orderedItemsGrossDisplay').textContent = numFormatter.format(Math.round(orderedItemsGross)); 
+            // --- 1. Kapazität und belegte Stunden abrufen ---
+            const availableCapacity = calculateMonthlyWorkingDays(currentYear, currentMonth);
+
+            // Summe der T&M Stunden und Raten für den aktuellen Monat
+            let totalTandMHoursTracked = 0;
+            let totalTandMRevenueTracked = 0;
             
-            // Kostenaufschlüsselung
-            document.getElementById('cost_outbound_shipping').textContent = formatter.format(outboundShippingCost);
-            document.getElementById('cost_return_shipping').textContent = formatter.format(returnShippingCost);
-            document.getElementById('cost_order_processing').textContent = formatter.format(totalOrderProcessingCost);
-            document.getElementById('cost_pick_pack').textContent = formatter.format(totalPickPackCost);
-            document.getElementById('cost_goods_receipt').textContent = formatter.format(totalGoodsReceiptCost);
-            document.getElementById('cost_return_processing').textContent = formatter.format(totalReturnProcessingCost);
-            document.getElementById('cost_storage').textContent = formatter.format(totalStorageCost);
+            // Summe der Fixum-Pauschalen
+            const fixedRevenue = customers.reduce((sum, customer) => {
+                const monthlyRate = customer.monthlyRate || 0;
+                const startMonth = customer.monthlyRateStartMonth;
+                const endMonth = customer.monthlyRateEndMonth;
+                const filterMonthYear = monthYear;
+                
+                if (monthlyRate > 0 && filterMonthYear >= startMonth && filterMonthYear <= endMonth) {
+                    return sum + monthlyRate;
+                }
+                return sum;
+            }, 0);
 
-            // Gesamtkosten
-            document.getElementById('totalCostEuro').textContent = formatter.format(totalCostEuro);
-            document.getElementById('totalCostPercent').textContent = totalCostPercent.toFixed(2).replace('.', ',') + ' %';
+            // T&M Stunden und Umsatz aus Einträgen im aktuellen Monat sammeln
+            const currentMonthEntries = entries.filter(entry => {
+                const entryDate = new Date(entry.date);
+                return entryDate.getFullYear() === currentYear && (entryDate.getMonth() + 1) === currentMonth;
+            });
 
-            // 4. Sensitivitäts-Matrix erstellen
-            createSensitivityTable(asp, returnRate);
+            currentMonthEntries.forEach(entry => {
+                const customer = customers.find(c => c.id === entry.customerId);
+                const project = customer?.projects?.find(p => p.name === entry.projectName);
+                const isPauschalProject = project?.isPauschal || false;
+
+                // Nur T&M Einträge zählen
+                if (customer && customer.dailyRate > 0 && !isPauschalProject) {
+                    const hourlyRate = (customer.dailyRate / FULL_DAY_HOURS);
+                    totalTandMHoursTracked += entry.hours;
+                    totalTandMRevenueTracked += entry.hours * hourlyRate;
+                }
+            });
+            
+            // --- 2. Berechnung der Forecasting-Kennzahlen ---
+            const remainingHours = Math.max(0, availableCapacity.hours - totalTandMHoursTracked);
+            
+            // Durchschnittlicher Stundensatz der GEBUCHTEN T&M-Stunden
+            const averageHourlyRate = totalTandMHoursTracked > 0 ? totalTandMRevenueTracked / totalTandMHoursTracked : 0;
+            
+            // Einfache Prognose: Restkapazität wird zum Durchschnittssatz gebucht
+            const forecastedRevenue = remainingHours * averageHourlyRate;
+            
+            const potentialTotalRevenue = totalTandMRevenueTracked + forecastedRevenue + fixedRevenue;
+
+            const content = `
+                <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                    <i data-lucide="trending-up" class="w-6 h-6 mr-2 text-blue-600"></i>
+                    Finanzprognose T&M & Kapazität (${monthYear})
+                </h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    
+                    <!-- Card 1: Kapazität -->
+                    <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                        <p class="text-xs text-blue-600 font-medium uppercase">Monats-Kapazität (T&M)</p>
+                        <p class="text-xl font-bold text-blue-800 mt-1">${availableCapacity.hours} h</p>
+                        <span class="text-xs text-blue-500 block">${availableCapacity.days} Arbeitstage (HH)</span>
+                    </div>
+
+                    <!-- Card 2: Gebuchte Stunden -->
+                    <div class="bg-indigo-50 p-3 rounded-lg border border-indigo-100">
+                        <p class="text-xs text-indigo-600 font-medium uppercase">Gebuchte T&M Stunden</p>
+                        <p class="text-xl font-bold text-indigo-800 mt-1">${totalTandMHoursTracked.toFixed(1)} h</p>
+                        <span class="text-xs text-indigo-500 block">Restkapazität: ${remainingHours.toFixed(1)} h</span>
+                    </div>
+                    
+                    <!-- Card 3: Prognostizierter T&M Umsatz -->
+                    <div class="bg-purple-50 p-3 rounded-lg border border-purple-100">
+                        <p class="text-xs text-purple-600 font-medium uppercase">Prognose Rest-Kapazität</p>
+                        <p class="text-xl font-bold text-purple-800 mt-1">${forecastedRevenue.toFixed(2)} ${CURRENCY}</p>
+                         <span class="text-xs text-purple-500 block">Ø Stundensatz: ${averageHourlyRate.toFixed(2)} ${CURRENCY}/h</span>
+                    </div>
+
+                    <!-- Card 4: Gesamtprognose -->
+                    <div class="bg-green-50 p-3 rounded-lg border border-green-100">
+                        <p class="text-xs text-green-600 font-medium uppercase">Potenzieller Gesamtumsatz</p>
+                        <p class="text-xl font-bold text-green-800 mt-1">${potentialTotalRevenue.toFixed(2)} ${CURRENCY}</p>
+                        <span class="text-xs text-green-500 block">Fixum enthalten: ${fixedRevenue.toFixed(2)} ${CURRENCY}</span>
+                    </div>
+                </div>
+                
+                <div class="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                    <h4 class="font-semibold text-gray-700">Berechnungshinweis:</h4>
+                    <p class="text-sm text-gray-600 mt-1">Die Prognose geht davon aus, dass die **Restkapazität** (${remainingHours.toFixed(1)} Stunden) zu Ihrem **durchschnittlichen Stundensatz** aller gebuchten T&M-Projekte abgerechnet werden kann. Monatliche Fixum-Pauschalen (${fixedRevenue.toFixed(2)} ${CURRENCY}) werden separat hinzugerechnet, wenn sie in diesem Monat gültig sind.</p>
+                </div>
+            `;
+
+            forecastingSectionEl.innerHTML = content;
+            lucide.createIcons();
         }
 
-        // Starte die Firebase Initialisierung beim Laden der Seite
-        window.onload = initFirebase;
-    </script>
 
+        // --- RENDER FUNKTIONEN ---
+        
+        function renderRateDisplay(customerId) {
+            if (!rateDisplayEl) return; // Null-Check
+            const displayEl = rateDisplayEl.querySelector('span');
+            
+            if (!customerId) {
+                displayEl.innerHTML = `Tagessatz: --- / Stundensatz: ---`;
+                return;
+            }
+
+            const customer = customers.find(c => c.id === customerId);
+            const dailyRate = customer?.dailyRate || 0;
+            const monthlyRate = customer?.monthlyRate || 0; // NEU: Monatliche Pauschale laden
+            let hourlyRate = 0;
+
+            if (dailyRate > 0) {
+                hourlyRate = dailyRate / FULL_DAY_HOURS;
+            }
+            
+            // NEU: Anzeige der Pauschale, falls vorhanden
+            let pauschaleInfo = '';
+            const start = customer.monthlyRateStartMonth;
+            const end = customer.monthlyRateEndMonth;
+
+            if (monthlyRate > 0) {
+                pauschaleInfo = ` + Pauschale: ${monthlyRate.toFixed(2)} ${CURRENCY}/Monat`;
+                if (start && end) {
+                    pauschaleInfo += ` (Laufzeit: ${start} - ${end})`;
+                }
+            }
+
+            displayEl.innerHTML = `
+                Tagessatz: <span class="font-semibold">${dailyRate.toFixed(2)} ${CURRENCY}</span> / 
+                Stundensatz: <span class="font-semibold">${hourlyRate.toFixed(2)} ${CURRENCY}</span>${pauschaleInfo}
+            `;
+        }
+        
+        // NEU: Funktion zur Anzeige des Pauschal-Hinweises
+        function renderPauschalDisplay(isPauschal) {
+            if (!pauschalDisplayEl) return; // Null-Check
+
+            if (isPauschal) {
+                pauschalDisplayEl.classList.remove('hidden');
+            } else {
+                pauschalDisplayEl.classList.add('hidden');
+            }
+        }
+
+
+        function renderCustomerSelect() {
+            if (!customerSelect) return; // FEHLER BEHOBEN: Null-Check
+
+            customerSelect.innerHTML = '<option value="" disabled selected>Kunde wählen...</option>';
+            customers.forEach(customer => {
+                const option = document.createElement('option');
+                option.value = customer.id;
+                option.textContent = customer.name;
+                customerSelect.appendChild(option);
+            });
+            // Wichtig: Rate Display beim initialen Laden/Reset zurücksetzen
+            renderRateDisplay('');
+            renderPauschalDisplay(false);
+        }
+
+        // NEU: Renderfunktion für den Export-Kundenfilter
+        function renderExportCustomerSelect() {
+            if (!exportCustomerSelect) return; // Null-Check
+            
+            exportCustomerSelect.innerHTML = '';
+            
+            // Erste Option: Alle Kunden
+            let allOption = document.createElement('option');
+            allOption.value = 'all';
+            allOption.textContent = 'Alle Kunden';
+            exportCustomerSelect.appendChild(allOption);
+
+            // Kundenspezifische Optionen
+            customers.forEach(customer => {
+                const option = document.createElement('option');
+                option.value = customer.id;
+                option.textContent = customer.name;
+                exportCustomerSelect.appendChild(option);
+            });
+        }
+        
+        // NEU: Renderfunktion für den Einträge-Kundenfilter
+        function renderEntriesCustomerFilter() {
+            if (!entriesCustomerFilterEl) return; // Null-Check
+
+            entriesCustomerFilterEl.innerHTML = '';
+
+            // Erste Option: Alle Kunden
+            let allOption = document.createElement('option');
+            allOption.value = 'all';
+            allOption.textContent = 'Alle Kunden anzeigen';
+            entriesCustomerFilterEl.appendChild(allOption);
+
+            // Kundenspezifische Optionen
+            customers.forEach(customer => {
+                const option = document.createElement('option');
+                option.value = customer.id;
+                option.textContent = customer.name;
+                entriesCustomerFilterEl.appendChild(option);
+            });
+            
+            // Filterwert setzen und Liste neu rendern
+            entriesCustomerFilterEl.value = entriesFilterCustomerId;
+            if (entriesMonthFilterEl) entriesMonthFilterEl.value = entriesFilterMonth;
+        }
+
+
+        function renderProjectSelect(customerId) {
+            if (!projectSelect) return; // Null-Check
+
+            projectSelect.innerHTML = '<option value="" disabled selected>Thema wählen...</option>';
+            projectSelect.disabled = true;
+            renderPauschalDisplay(false); // Pauschal beim Kundenwechsel zurücksetzen
+
+            const customer = customers.find(c => c.id === customerId);
+            if (customer && customer.projects && customer.projects.length > 0) {
+                // Projekte sind jetzt Objekte mit {name, isPauschal}
+                customer.projects.forEach(project => {
+                    const option = document.createElement('option');
+                    option.value = project.name;
+                    option.textContent = project.name + (project.isPauschal ? ' (PAUSCHALE)' : '');
+                    // Speichere den Pauschal-Status im Element
+                    option.dataset.isPauschal = project.isPauschal; 
+                    projectSelect.appendChild(option);
+                });
+                projectSelect.disabled = false;
+            }
+        }
+
+        function renderEntriesList(filterId = 'all', filterMonth = '') {
+            if (!entriesListEl) return; // Null-Check
+            
+            // Filtern nach Kunde
+            let filteredEntries = entries.filter(entry => {
+                return filterId === 'all' || entry.customerId === filterId;
+            });
+            
+            // Filtern nach Monat (YYYY-MM)
+            if (filterMonth) {
+                filteredEntries = filteredEntries.filter(entry => entry.date.startsWith(filterMonth));
+            }
+
+
+            entriesListEl.innerHTML = '';
+            if (filteredEntries.length === 0) {
+                entriesListEl.innerHTML = `<tr><td colspan="5" class="px-6 py-4 text-center text-gray-500 italic">Keine Einträge für diesen Filter vorhanden.</td></tr>`;
+                return;
+            }
+
+            // NEU: Zeige ALLE gefilterten Einträge an
+            filteredEntries.forEach(entry => {
+                const customer = customers.find(c => c.id === entry.customerId);
+                const customerName = customer?.name || 'Unbekannt';
+                const project = customer?.projects?.find(p => p.name === entry.projectName);
+                const isPauschalProject = project?.isPauschal || false;
+                const pauschalTag = isPauschalProject ? '<span class="ml-2 px-2 py-0.5 text-xs font-medium bg-orange-100 text-orange-800 rounded-full">PROJEKT PAUSCHALE</span>' : '';
+
+
+                const row = document.createElement('tr');
+                row.classList.add('hover:bg-gray-50');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${entry.date}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500">${customerName}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500 flex items-center">
+                        <span class="font-semibold">${entry.projectName}</span>${pauschalTag}: ${entry.description}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">${entry.hours}h</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                        <!-- Duplizieren Button -->
+                        <button onclick="window.duplicateEntry('${entry.id}')" class="text-indigo-600 hover:text-indigo-900 transition duration-150 p-1 rounded-full hover:bg-indigo-100">
+                            <i data-lucide="copy" class="w-4 h-4"></i>
+                        </button>
+                        <!-- Bearbeiten Button -->
+                        <button onclick="window.openEditModal('${entry.id}')" class="text-blue-600 hover:text-blue-900 transition duration-150 p-1 rounded-full hover:bg-blue-100">
+                            <i data-lucide="pencil" class="w-4 h-4"></i>
+                        </button>
+                        <!-- Löschen Button -->
+                        <button onclick="window.deleteEntry('${entry.id}')" class="text-red-600 hover:text-red-900 transition duration-150 p-1 rounded-full hover:bg-red-100">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </td>
+                `;
+                entriesListEl.appendChild(row);
+            });
+            lucide.createIcons();
+        }
+
+        function renderCustomerManagementList() {
+            if (!customerManagementListEl) return; // Null-Check
+
+            customerManagementListEl.innerHTML = '';
+            if (customers.length === 0) {
+                if (noCustomersMsgEl) noCustomersMsgEl.classList.remove('hidden');
+                return;
+            }
+            if (noCustomersMsgEl) noCustomersMsgEl.classList.add('hidden');
+
+            customers.forEach(customer => {
+                const dailyRate = customer.dailyRate || 0; 
+                const monthlyRate = customer.monthlyRate || 0; 
+                const startMonth = customer.monthlyRateStartMonth || ''; // NEU
+                const endMonth = customer.monthlyRateEndMonth || '';     // NEU
+
+                const customerDiv = document.createElement('div');
+                customerDiv.className = 'p-3 border border-gray-200 rounded-lg bg-white shadow-sm';
+                
+                // Pauschale Hinweis für die Kundenliste
+                let pauschalCustomerTag = '';
+                if (monthlyRate > 0) {
+                     pauschalCustomerTag = `<span class="ml-2 px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">FIXUM</span>`;
+                }
+
+                customerDiv.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <h5 class="font-bold text-gray-800 flex items-center">${customer.name} ${pauschalCustomerTag}</h5>
+                        <button onclick="window.deleteCustomer('${customer.id}')" class="text-red-500 hover:text-red-700 transition duration-150 p-1 rounded-full hover:bg-red-100">
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+
+                    <!-- Tarife Editierfelder -->
+                    <div class="grid grid-cols-2 gap-4 mb-3">
+                        <div>
+                            <span class="text-sm text-gray-600 block mb-1">Tagessatz:</span>
+                            <div class="flex items-center gap-1">
+                                <input type="number" value="${dailyRate}"
+                                    onchange="window.updateCustomerRate('${customer.id}', this.value)"
+                                    placeholder="Tagessatz" min="0"
+                                    class="w-full p-1 text-sm border border-gray-300 rounded-lg text-right focus:ring-pink-500 focus:border-pink-500">
+                                <span class="text-sm text-gray-600">${CURRENCY}</span>
+                            </div>
+                        </div>
+                         <div>
+                            <span class="text-sm text-gray-600 block mb-1">Monatliche Pauschale:</span>
+                            <div class="flex items-center gap-1">
+                                <input type="number" value="${monthlyRate}"
+                                    onchange="window.updateCustomerMonthlyRate('${customer.id}', this.value)"
+                                    placeholder="Fixum" min="0"
+                                    class="w-full p-1 text-sm border border-gray-300 rounded-lg text-right focus:ring-pink-500 focus:border-pink-500">
+                                <span class="text-sm text-gray-600">${CURRENCY}</span>
+                            </div>
+                            <!-- NEU: Fixum Laufzeit Edit -->
+                            ${monthlyRate > 0 ? `
+                                <div class="mt-2 text-xs p-2 bg-gray-50 rounded-lg border border-gray-200">
+                                    <span class="font-semibold block mb-1">Laufzeit (YYYY-MM):</span>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <input type="month" id="startMonth-${customer.id}" value="${startMonth}"
+                                            onchange="window.updateCustomerFixedRatePeriod('${customer.id}', this.value, document.getElementById('endMonth-${customer.id}').value)"
+                                            class="w-full p-1 border border-gray-300 rounded-lg text-center">
+                                        <input type="month" id="endMonth-${customer.id}" value="${endMonth}"
+                                            onchange="window.updateCustomerFixedRatePeriod('${customer.id}', document.getElementById('startMonth-${customer.id}').value, this.value)"
+                                            class="w-full p-1 border border-gray-300 rounded-lg text-center">
+                                    </div>
+                                    <p class="mt-1 text-red-500 italic">${!startMonth || !endMonth ? 'Laufzeit fehlt!' : ''}</p>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <!-- Projekt hinzufügen -->
+                    <form onsubmit="window.handleProjectFormSubmit(event, '${customer.id}')" class="flex gap-2 mt-2">
+                        <input type="text" placeholder="Neues Projekt/Thema" required class="flex-grow p-1 text-sm border border-gray-300 rounded-lg">
+                        <button type="submit" class="bg-indigo-500 text-white text-sm p-1 rounded-lg hover:bg-indigo-600">Hinzufügen</button>
+                    </form>
+
+                    <!-- Projektliste -->
+                    <div class="mt-2 text-sm space-y-1" id="projects-list-${customer.id}">
+                        ${(customer.projects || []).map(project => `
+                            <div class="flex justify-between items-center p-1 ${project.isPauschal ? 'bg-orange-100' : 'bg-gray-100'} rounded border ${project.isPauschal ? 'border-orange-300' : 'border-gray-200'}">
+                                <span class="${project.isPauschal ? 'font-semibold text-orange-800' : 'text-gray-700'}">${project.name}</span>
+                                <div class="flex items-center gap-2">
+                                    <!-- NEU: Pauschal Checkbox -->
+                                    <label class="flex items-center text-xs text-gray-600 whitespace-nowrap">
+                                        Pauschale:
+                                        <input type="checkbox" ${project.isPauschal ? 'checked' : ''}
+                                            onchange="window.toggleProjectPauschal('${customer.id}', '${project.name}', this.checked)"
+                                            class="ml-1 h-3 w-3 text-pink-600 border-gray-300 rounded focus:ring-pink-500">
+                                    </label>
+                                    <button onclick="window.deleteProject('${customer.id}', '${project.name}')" class="text-red-400 hover:text-red-600 transition duration-150">
+                                        <i data-lucide="minus-circle" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                        ${customer.projects?.length === 0 || !customer.projects ? '<p class="text-gray-500 italic text-xs mt-2">Keine Projekte definiert.</p>' : ''}
+                    </div>
+                `;
+                customerManagementListEl.appendChild(customerDiv);
+            });
+            lucide.createIcons();
+        }
+
+        // --- HILFSFUNKTION FÜR CSV-DOWNLOAD ---
+        function downloadCSV(csvContent, fileName) {
+            try {
+                // Erstelle Blob mit UTF-8 BOM, um Sonderzeichen und Excel-Kompatibilität zu verbessern
+                const BOM = "\uFEFF";
+                const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                
+                const link = document.createElement("a");
+                link.setAttribute("href", url);
+                link.setAttribute("download", fileName);
+                
+                // Klick simulieren
+                document.body.appendChild(link);
+                link.click();
+                
+                // Aufräumen
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                
+                if (exportOutputEl) exportOutputEl.value = `Export erfolgreich: Datei "${fileName}" wurde heruntergeladen.`;
+                if (exportOutputEl) exportOutputEl.classList.add('bg-green-50', 'text-green-700');
+                if (exportOutputEl) exportOutputEl.classList.remove('bg-gray-50', 'text-red-700');
+                
+            } catch (e) {
+                console.error("Fehler beim CSV-Download:", e);
+                if (exportOutputEl) exportOutputEl.value = 'Fehler beim Download. Bitte die Konsole prüfen oder den folgenden Roh-CSV-Inhalt kopieren:\n\n' + csvContent;
+                if (exportOutputEl) exportOutputEl.classList.add('bg-red-50', 'text-red-700');
+                if (exportOutputEl) exportOutputEl.classList.remove('bg-gray-50', 'text-green-700');
+            }
+        }
+
+
+        // --- EXPORT LOGIK ---
+
+        /**
+         * Hauptfunktion zur Erzeugung der Timesheet-Daten (für CSV und HTML)
+         * @param {string} monthYear YYYY-MM
+         * @param {string} customerId (optional) customer ID or 'all'
+         * @returns {{detailedData: Array<Object>, summary: Object, totalHours: number, totalRevenue: number, fixedRevenue: number, error: string, customerName: string}}
+         */
+        function getTimesheetData(monthYear, customerId = 'all') {
+            if (!monthYear) {
+                return { error: 'Bitte wählen Sie einen Monat aus.' };
+            }
+
+            const [year, month] = monthYear.split('-');
+            const targetMonth = parseInt(month);
+            const targetYear = parseInt(year);
+
+            const allEntriesForMonth = entries.filter(entry => {
+                const entryDate = new Date(entry.date);
+                return entryDate.getFullYear() === targetYear && (entryDate.getMonth() + 1) === targetMonth;
+            });
+            
+            // NEUE FILTERUNG NACH KUNDE
+            const filteredEntries = allEntriesForMonth.filter(entry => {
+                return customerId === 'all' || entry.customerId === customerId;
+            });
+
+
+            if (filteredEntries.length === 0 && customerId !== 'all') {
+                const reportCustomerName = customers.find(c => c.id === customerId)?.name || 'Unbekannter Kunde';
+                // Check if only Fixum exists for this customer even without entries
+                const onlyFixedRevenue = getFixedRevenueLines({ fixedRevenue: 0 }, monthYear, customerId);
+                if (onlyFixedRevenue.length > 0) {
+                     // Wenn nur Fixum existiert, wird die detailedData leer sein, aber der Report sollte erstellt werden.
+                } else {
+                    return { error: `Keine Zeiteinträge für Kunde ${reportCustomerName} im Monat ${monthYear} gefunden.` };
+                }
+            } else if (filteredEntries.length === 0 && customerId === 'all') {
+                const onlyFixedRevenue = getFixedRevenueLines({ fixedRevenue: 0 }, monthYear, customerId);
+                if (onlyFixedRevenue.length === 0) {
+                     return { error: `Keine Einträge für ${monthYear} gefunden.` };
+                }
+            }
+
+            let totalHours = 0;
+            let totalRevenue = 0;
+            let totalMonthlyFixedRevenue = 0;
+            const summary = {}; // Für Zusammenfassung nach Kunde/Projekt
+
+            const detailedData = filteredEntries.map(entry => {
+                const customer = customers.find(c => c.id === entry.customerId);
+                const project = customer?.projects?.find(p => p.name === entry.projectName);
+
+                const customerName = customer?.name || 'Unbekannt';
+                const dailyRate = customer?.dailyRate || 0;
+                const isPauschalProject = project?.isPauschal || false;
+                
+                const hourlyRate = (dailyRate > 0 && !isPauschalProject) ? (dailyRate / FULL_DAY_HOURS) : 0;
+                const revenue = entry.hours * hourlyRate;
+
+                // Stunden immer zur Gesamtdokumentation hinzufügen
+                totalHours += entry.hours;
+
+                // T&M Umsatz zur Gesamtberechnung hinzufügen
+                if (!isPauschalProject) {
+                    totalRevenue += revenue;
+                }
+
+                // Daten für die Zusammenfassung vorbereiten
+                const summaryKey = `${customerName} - ${entry.projectName}`;
+                if (!summary[summaryKey]) {
+                    summary[summaryKey] = { hours: 0, revenue: 0, isPauschalProject };
+                }
+                summary[summaryKey].hours += entry.hours;
+                if (!isPauschalProject) {
+                    summary[summaryKey].revenue += revenue;
+                }
+
+                return { ...entry, customerName, revenue, hourlyRate, dailyRate, isPauschalProject };
+            });
+
+            // Monatliche Fixum-Pauschalen separat hinzufügen (unabhängig von Einträgen)
+            const fixedRevenueLines = getFixedRevenueLines({}, monthYear, customerId);
+            totalMonthlyFixedRevenue = fixedRevenueLines.reduce((sum, line) => sum + line.monthlyRate, 0);
+
+            // Find the customer name for the report header
+            const reportCustomerName = customerId === 'all' 
+                ? 'Alle Kunden' 
+                : customers.find(c => c.id === customerId)?.name || 'Unbekannter Kunde';
+
+            return { 
+                detailedData: detailedData.sort((a, b) => new Date(a.date) - new Date(b.date)), // Sortieren nach Datum für Timesheet
+                summary, 
+                totalHours, 
+                totalRevenue, 
+                fixedRevenue: totalMonthlyFixedRevenue,
+                customerName: reportCustomerName,
+                error: null 
+            };
+        }
+        
+        /**
+         * NEU: Erzeugt die Fixum-Zeilen für den Bericht (für HTML und CSV)
+         */
+        function getFixedRevenueLines(data, monthYear, customerId) {
+            let lines = [];
+            
+            customers.forEach(customer => {
+                const startMonth = customer.monthlyRateStartMonth;
+                const endMonth = customer.monthlyRateEndMonth;
+                
+                // 1. Check if the Fixum is active this month
+                if (customer.monthlyRate > 0 && monthYear >= startMonth && monthYear <= endMonth) {
+                    // 2. Check if the customer matches the filter (only if not 'all')
+                    if (customerId === 'all' || customer.id === customerId) {
+                        lines.push({
+                            name: customer.name,
+                            monthlyRate: customer.monthlyRate,
+                            startMonth: startMonth,
+                            endMonth: endMonth
+                        });
+                    }
+                }
+            });
+            return lines;
+        }
+
+
+        function exportMonthlyTimesheet(monthYear, type, customerId) {
+            const data = getTimesheetData(monthYear, customerId);
+
+            if (data.error) {
+                if (exportOutputEl) exportOutputEl.value = data.error;
+                if (exportOutputEl) exportOutputEl.classList.add('bg-red-50', 'text-red-700');
+                if (exportOutputEl) exportOutputEl.classList.remove('bg-gray-50', 'text-green-700');
+                return;
+            }
+
+            const fileName = `Stundenzettel_${data.customerName.replace(/[^a-zA-Z0-9]/g, '')}_${monthYear}_${type}.csv`; // Kundennamen im Dateinamen
+            let csvContent = "";
+
+            // --- CSV Erstellung ---
+
+            const fixedRevenueLines = getFixedRevenueLines(data, monthYear, customerId);
+
+            if (type === 'total') {
+                // Export: Zusammenfassung nach Stunden und Umsatz pro Kunde/Projekt
+                
+                // Header
+                csvContent += `Kunde - Projekt${CSV_SEPARATOR}Projekt-Pauschale${CSV_SEPARATOR}Stunden (h)${CSV_SEPARATOR}Geschätzter Umsatz (T&M) (€)${CSV_SEPARATOR}Hinweis\n`;
+
+                // Datenzeilen (Projekt-spezifisch)
+                for (const key in data.summary) {
+                    const item = data.summary[key];
+                    const hours = item.hours.toFixed(2).replace('.', ',');
+                    const revenue = item.revenue.toFixed(2).replace('.', ',');
+                    const pauschalLabel = item.isPauschalProject ? 'JA' : 'NEIN';
+                    const hint = item.isPauschalProject ? 'Fester Pauschalpreis (Projekt)' : '';
+
+                    csvContent += `${key}${CSV_SEPARATOR}${pauschalLabel}${CSV_SEPARATOR}${hours}${CSV_SEPARATOR}${revenue}${CSV_SEPARATOR}${hint}\n`;
+                }
+                
+                // Monatliche Fixum-Pauschalen separat hinzufügen (falls vorhanden)
+                fixedRevenueLines.forEach(line => {
+                    const fixedRevenue = line.monthlyRate.toFixed(2).replace('.', ',');
+                    csvContent += `\n${line.name} - Fixum (Monatlich)${CSV_SEPARATOR}NEIN${CSV_SEPARATOR}0.00${CSV_SEPARATOR}${fixedRevenue}${CSV_SEPARATOR}Fixum (Kunde - Laufzeit: ${line.startMonth} bis ${line.endMonth})${CSV_SEPARATOR}\n`;
+                });
+                
+                const overallTotalRevenue = data.totalRevenue + data.fixedRevenue;
+
+                // Footer (Gesamt)
+                csvContent += `\nGESAMT (Stunden Dokumentation)${CSV_SEPARATOR}${CSV_SEPARATOR}${data.totalHours.toFixed(2).replace('.', ',')}${CSV_SEPARATOR}${CSV_SEPARATOR}${CSV_SEPARATOR}\n`;
+                csvContent += `GESAMT UMSATZ (T&M + FIXUM)${CSV_SEPARATOR}${CSV_SEPARATOR}${CSV_SEPARATOR}${overallTotalRevenue.toFixed(2).replace('.', ',')}${CSV_SEPARATOR}\n`;
+
+
+            } else {
+                // Export: Detailliert nach Themen/Einträgen (inkl. Umsatz)
+
+                // Header
+                csvContent += `Datum${CSV_SEPARATOR}Kunde${CSV_SEPARATOR}Thema${CSV_SEPARATOR}Projekt-Pauschale${CSV_SEPARATOR}Beschreibung${CSV_SEPARATOR}Stunden (h)${CSV_SEPARATOR}Tagessatz (€)${CSV_SEPARATOR}Stundensatz (€)${CSV_SEPARATOR}Umsatz (T&M) (€)${CSV_SEPARATOR}Hinweis\n`;
+                
+                // Datenzeilen (Einträge)
+                data.detailedData.forEach(item => {
+                    const hours = item.hours.toFixed(2).replace('.', ',');
+                    const pauschalLabel = item.isPauschalProject ? 'JA' : 'NEIN';
+                    const hint = item.isPauschalProject ? 'Pauschal, Satz nicht relevant' : '';
+                    
+                    // Bei Projekt-Pauschale Sätze und T&M Umsatz leer lassen
+                    const dailyRate = item.isPauschalProject ? '' : item.dailyRate.toFixed(2).replace('.', ',');
+                    const hourlyRate = item.isPauschalProject ? '' : item.hourlyRate.toFixed(2).replace('.', ',');
+                    const revenue = item.isPauschalProject ? '' : item.revenue.toFixed(2).replace('.', ',');
+
+                    // Textfelder quoten, falls sie Semikolons enthalten (obwohl hier unwahrscheinlich)
+                    const quote = (text) => `"${text.replace(/"/g, '""')}"`;
+
+                    csvContent += 
+                        `${item.date}${CSV_SEPARATOR}` + 
+                        `${quote(item.customerName)}${CSV_SEPARATOR}` + 
+                        `${quote(item.projectName)}${CSV_SEPARATOR}` +
+                        `${pauschalLabel}${CSV_SEPARATOR}` + 
+                        `${quote(item.description)}${CSV_SEPARATOR}` + 
+                        `${hours}${CSV_SEPARATOR}` +
+                        `${dailyRate}${CSV_SEPARATOR}` +
+                        `${hourlyRate}${CSV_SEPARATOR}` + 
+                        `${revenue}${CSV_SEPARATOR}` +
+                        `${hint}\n`;
+                });
+                
+                // Monatliche Fixum-Pauschalen separat hinzufügen (falls vorhanden)
+                fixedRevenueLines.forEach(line => {
+                    const fixedRevenue = line.monthlyRate.toFixed(2).replace('.', ',');
+                    // Datum, Pauschale JA/NEIN, T&M Umsatz Felder leer lassen
+                    csvContent += `${monthYear}-01${CSV_SEPARATOR}${line.name}${CSV_SEPARATOR}Fixum (Monatlich)${CSV_SEPARATOR}NEIN${CSV_SEPARATOR}Pauschale abgerechnet${CSV_SEPARATOR}0.00${CSV_SEPARATOR}${CSV_SEPARATOR}${CSV_SEPARATOR}${fixedRevenue}${CSV_SEPARATOR}Fixum (Kunde - Laufzeit: ${line.startMonth} bis ${line.endMonth})\n`;
+                });
+                
+                const overallTotalRevenue = data.totalRevenue + data.fixedRevenue;
+
+                // Footer (Gesamt)
+                csvContent += `\nGESAMT (Stunden Dokumentation)${CSV_SEPARATOR}${CSV_SEPARATOR}${CSV_SEPARATOR}${CSV_SEPARATOR}${CSV_SEPARATOR}${data.totalHours.toFixed(2).replace('.', ',')}${CSV_SEPARATOR}${CSV_SEPARATOR}${CSV_SEPARATOR}${CSV_SEPARATOR}\n`;
+                csvContent += `GESAMT UMSATZ (T&M + FIXUM)${CSV_SEPARATOR}${CSV_SEPARATOR}${CSV_SEPARATOR}${CSV_SEPARATOR}${CSV_SEPARATOR}${CSV_SEPARATOR}${CSV_SEPARATOR}${CSV_SEPARATOR}${overallTotalRevenue.toFixed(2).replace('.', ',')}${CSV_SEPARATOR}\n`;
+            }
+
+            // Download starten
+            downloadCSV(csvContent, fileName);
+        }
+        
+        
+        /**
+         * NEU: Generiert die HTML-Vorschau des Timesheets und öffnet das Modal
+         * @param {string} monthYear 
+         * @param {string} type 
+         * @param {string} customerId
+         */
+        function generateTimesheetPreview(monthYear, type, customerId) {
+            const data = getTimesheetData(monthYear, customerId);
+            
+            if (data.error) {
+                if (timesheetPreviewEl) timesheetPreviewEl.innerHTML = `<p class="text-red-500 text-center">${data.error}</p>`;
+                openTimesheetPreviewModal();
+                return;
+            }
+
+            let htmlContent = '';
+            const monthLabel = monthYear.split('-').reverse().join('.');
+            const today = new Date().toLocaleDateString('de-DE');
+            
+            const overallTotalRevenue = data.totalRevenue + data.fixedRevenue;
+            const fixedRevenueLines = getFixedRevenueLines(data, monthYear, customerId);
+            
+            // --- HEADER ---
+            htmlContent += `
+                <div class="mb-6 pb-2 border-b border-gray-400">
+                    <h1 class="text-2xl font-bold text-gray-900 mb-1">Monatsbericht: Zeiterfassung ${monthLabel}</h1>
+                    <p class="text-sm text-gray-600">Kunde: <span class="font-bold">${data.customerName}</span></p>
+                    <p class="text-sm text-gray-600">Erstellt am: ${today}</p>
+                    <p class="text-sm text-gray-600">Bericht für Benutzer ID: ${userId}</p>
+                </div>
+            `;
+            
+            // --- DETAILANSICHT (Immer als Basis für die Tabelle verwenden) ---
+            
+            if (type === 'topic') {
+                // Detaillierte Ansicht (Einträge)
+                htmlContent += `
+                    <h2 class="text-xl font-semibold mb-3 text-gray-800">1. Detaillierte Zeiterfassung nach Einträgen</h2>
+                    <table class="min-w-full border-collapse border border-gray-300">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-600 w-1/12">Datum</th>
+                                <th class="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-600 w-2/12">Kunde</th>
+                                <th class="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-600 w-2/12">Projekt/Thema</th>
+                                <th class="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-600 w-4/12">Beschreibung</th>
+                                <th class="border border-gray-300 px-3 py-2 text-right text-xs font-semibold text-gray-600 w-1/12">Stunden</th>
+                                <th class="border border-gray-300 px-3 py-2 text-right text-xs font-semibold text-gray-600 w-2/12">Umsatz (€)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                data.detailedData.forEach(item => {
+                    const isPauschal = item.isPauschalProject;
+                    const revenueDisplay = isPauschal ? '—' : `${item.revenue.toFixed(2)} ${CURRENCY}`;
+                    const projectLabel = item.projectName + (isPauschal ? ' (Pauschale)' : '');
+
+                    htmlContent += `
+                        <tr class="text-sm ${isPauschal ? 'bg-orange-50' : ''}">
+                            <td class="border border-gray-300 px-3 py-2 font-medium">${item.date}</td>
+                            <td class="border border-gray-300 px-3 py-2">${item.customerName}</td>
+                            <td class="border border-gray-300 px-3 py-2">${projectLabel}</td>
+                            <td class="border border-gray-300 px-3 py-2 text-xs">${item.description}</td>
+                            <td class="border border-gray-300 px-3 py-2 text-right">${item.hours.toFixed(2).replace('.', ',')} h</td>
+                            <td class="border border-gray-300 px-3 py-2 text-right ${isPauschal ? 'text-gray-500' : 'font-semibold'}">${revenueDisplay}</td>
+                        </tr>
+                    `;
+                });
+                
+                htmlContent += `</tbody></table><div class="mt-6"></div>`;
+
+            }
+            
+            // --- ZUSAMMENFASSUNG (Für beide Typen relevant) ---
+            htmlContent += `
+                <h2 class="text-xl font-semibold mb-3 text-gray-800">2. Monatszusammenfassung</h2>
+                <table class="min-w-full border-collapse border border-gray-300">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-600 w-6/12">Kunde / Position</th>
+                            <th class="border border-gray-300 px-3 py-2 text-right text-xs font-semibold text-gray-600 w-3/12">Stunden (h)</th>
+                            <th class="border border-gray-300 px-3 py-2 text-right text-xs font-semibold text-gray-600 w-3/12">Umsatz (€)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            // T&M Stunden/Umsatz nach Projekt
+            for (const key in data.summary) {
+                const item = data.summary[key];
+                const revenueDisplay = item.isPauschalProject ? 'Pauschal (Projekt)' : item.revenue.toFixed(2).replace('.', ',');
+                
+                htmlContent += `
+                    <tr class="text-sm">
+                        <td class="border border-gray-300 px-3 py-2 font-medium">${key}</td>
+                        <td class="border border-gray-300 px-3 py-2 text-right">${item.hours.toFixed(2).replace('.', ',')}</td>
+                        <td class="border border-gray-300 px-3 py-2 text-right ${item.isPauschalProject ? 'text-gray-500' : ''}">${revenueDisplay}</td>
+                    </tr>
+                `;
+            }
+            
+            // Monatliche Fixum-Pauschalen
+            fixedRevenueLines.forEach(line => {
+                htmlContent += `
+                    <tr class="text-sm bg-yellow-50">
+                        <td class="border border-gray-300 px-3 py-2 font-medium">${line.name} (Monatliches Fixum ${line.startMonth}-${line.endMonth})</td>
+                        <td class="border border-gray-300 px-3 py-2 text-right">—</td>
+                        <td class="border border-gray-300 px-3 py-2 text-right font-semibold">${line.monthlyRate.toFixed(2).replace('.', ',')} ${CURRENCY}</td>
+                    </tr>
+                `;
+            });
+            
+            // Footer mit Gesamtsummen
+            htmlContent += `
+                    <tr class="bg-gray-200 font-bold">
+                        <td class="border border-gray-300 px-3 py-2">GESAMT: Stunden Dokumentation</td>
+                        <td class="border border-gray-300 px-3 py-2 text-right">${data.totalHours.toFixed(2).replace('.', ',')} h</td>
+                        <td class="border border-gray-300 px-3 py-2 text-right"></td>
+                    </tr>
+                    <tr class="bg-indigo-100 font-bold">
+                        <td class="border border-gray-300 px-3 py-2">GESAMT UMSATZ (T&M + FIXUM)</td>
+                        <td class="border border-gray-300 px-3 py-2 text-right"></td>
+                        <td class="border border-gray-300 px-3 py-2 text-right">${overallTotalRevenue.toFixed(2).replace('.', ',')} ${CURRENCY}</td>
+                    </tr>
+                </tbody>
+                </table>
+            `;
+
+            if (timesheetPreviewEl) timesheetPreviewEl.innerHTML = htmlContent;
+            openTimesheetPreviewModal();
+        }
+
+
+        // --- DAILY REMINDER LOGIK (NEU) ---
+        
+        function getFormattedDate(date) {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+        
+        function showReminderModal(title, body, mailSubject, mailBody) {
+            if (reminderTitleEl) reminderTitleEl.textContent = title;
+            if (reminderBodyEl) reminderBodyEl.textContent = body;
+            
+            // Setze Mailto Link für den Button (Nutzer muss nur noch die E-Mail-Adresse eintragen und absenden)
+            const mailtoLink = `mailto:Ihre@E-Mail.de?subject=${encodeURIComponent(mailSubject)}&body=${encodeURIComponent(mailBody)}`;
+            if (reminderMailtoBtn) reminderMailtoBtn.onclick = () => {
+                window.location.href = mailtoLink;
+                // Schließe das Modal nach dem Klick
+                hideReminderModal();
+            };
+
+            // Zeige das Modal an (mit Animation)
+            if (reminderModal) {
+                 reminderModal.classList.remove('hidden', 'translate-x-full');
+                 reminderModal.classList.add('translate-x-0');
+            }
+            lucide.createIcons();
+        }
+        
+        function hideReminderModal() {
+            if (reminderModal) reminderModal.classList.remove('translate-x-0');
+            if (reminderModal) reminderModal.classList.add('translate-x-full');
+            setTimeout(() => {
+                if (reminderModal) reminderModal.classList.add('hidden');
+            }, 500);
+        }
+
+        function checkDailyReminder() {
+            // Check wird nur ausgeführt, wenn Daten geladen sind
+            if (!isAuthReady) return;
+
+            const today = new Date();
+            const dayOfWeek = today.getDay(); // 0 (So) bis 6 (Sa)
+
+            // 1. Nur an Arbeitstagen prüfen (Mo-Fr)
+            if (dayOfWeek === 0 || dayOfWeek === 6 || isHoliday(today)) {
+                hideReminderModal();
+                return; 
+            }
+            
+            // 2. Stunden fehlen? Letzte 5 Arbeitstage prüfen
+            let daysMissing = [];
+            let mailContent = "Tägliche Zeiterinnerung: Bitte die Stunden für die folgenden Arbeitstage nachtragen:\n\n";
+            
+            // Letzte 5 Arbeitstage prüfen (inkl. heute)
+            for (let i = 0; i < 7; i++) { // Prüfe bis zu 7 Tage zurück
+                const checkDate = new Date(today.getTime());
+                checkDate.setDate(today.getDate() - i);
+                const checkDateFormatted = getFormattedDate(checkDate);
+                const checkDayOfWeek = checkDate.getDay();
+
+                if (checkDayOfWeek >= 1 && checkDayOfWeek <= 5 && !isHoliday(checkDate)) {
+                    // Ist ein Arbeitstag
+                    const hasEntry = entries.some(entry => entry.date === checkDateFormatted);
+                    if (!hasEntry) {
+                        daysMissing.push(checkDateFormatted);
+                        mailContent += `[ ] Stunden für ${checkDateFormatted} fehlen noch.\n`;
+                    }
+                }
+            }
+            
+            if (daysMissing.length > 0) {
+                 const title = `⚠️ ${daysMissing.length} Tage nicht gebucht!`;
+                 const text = `Es fehlen Einträge (letzter Arbeitstag: ${daysMissing[0]}). Klicken Sie auf den Button, um den Buchungs-Reminder als E-Mail-Entwurf zu senden.`;
+                 
+                 mailContent += "\n\n(Bitte den 'mailto:Ihre@E-Mail.de' Platzhalter durch Ihre Adresse ersetzen.)";
+
+                 showReminderModal(title, text, `Aktion erforderlich: Zeiterfassung fehlt für ${daysMissing.length} Tage`, mailContent);
+            } else {
+                hideReminderModal();
+            }
+        }
+        
+
+
+        // --- EVENT HANDLER ---
+
+        // Exponiere Funktionen für Inline-Events
+        window.deleteEntry = deleteTimeEntry;
+        window.deleteCustomer = deleteCustomer;
+        window.deleteProject = deleteProject;
+        window.updateCustomerRate = updateCustomerRate; 
+        window.updateCustomerMonthlyRate = updateCustomerMonthlyRate; 
+        window.updateCustomerFixedRatePeriod = updateCustomerFixedRatePeriod; 
+        window.toggleProjectPauschal = toggleProjectPauschal; 
+
+        window.handleProjectFormSubmit = (event, customerId) => {
+            event.preventDefault();
+            const input = event.target.querySelector('input[type="text"]');
+            if (input && input.value.trim()) {
+                addProject(customerId, input.value.trim()); // Fügt nicht-pauschales Projekt hinzu
+                input.value = '';
+            }
+        };
+        
+
+        // 1. Initialisierung und Start
+        document.addEventListener('DOMContentLoaded', () => {
+            // Führe Firebase Init aus
+            initFirebase();
+            
+            // Event Listener für Tabs
+            tabButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    switchTab(btn.dataset.tab);
+                });
+            });
+        });
+
+
+        // 2. Allgemeine Event Listener
+        
+        // Funktion zum sicheren Hinzufügen von Event-Listenern (wird im DOMContentLoaded-Block aufgerufen)
+        function addListenersIfElementsExist() {
+             if (customerSelect) customerSelect.addEventListener('change', (e) => {
+                renderProjectSelect(e.target.value);
+                renderRateDisplay(e.target.value); 
+             });
+            
+             if (projectSelect) projectSelect.addEventListener('change', (e) => {
+                const selectedOption = e.target.options[e.target.selectedIndex];
+                const isPauschal = selectedOption.dataset.isPauschal === 'true';
+                renderPauschalDisplay(isPauschal);
+             });
+
+            if (revenueMonthFilterEl) revenueMonthFilterEl.addEventListener('change', (e) => {
+                calculateRevenueSummary(e.target.value);
+                if(exportMonthInput) exportMonthInput.value = e.target.value; 
+            });
+            
+            if (exportMonthInput) exportMonthInput.addEventListener('change', (e) => {
+                if(revenueMonthFilterEl) revenueMonthFilterEl.value = e.target.value;
+                calculateRevenueSummary(e.target.value);
+            });
+            
+            // NEU: Einträge Monats-Filter Listener
+            if (entriesMonthFilterEl) entriesMonthFilterEl.addEventListener('change', (e) => {
+                entriesFilterMonth = e.target.value;
+                renderEntriesList(entriesFilterCustomerId, entriesFilterMonth);
+            });
+            
+            // NEU: Auth Form und Toggle Listener
+            if(toggleAuthModeBtn) toggleAuthModeBtn.addEventListener('click', toggleAuthMode); 
+            if(authForm) authForm.addEventListener('submit', handleAuthSubmit);
+            
+            // NEU: Passwort vergessen
+            if(forgotPasswordBtn) forgotPasswordBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                handleForgotPassword();
+            });
+
+
+            if (entryForm) entryForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                const customerId = customerSelect ? customerSelect.value : '';
+                const projectName = projectSelect ? projectSelect.value : '';
+                const hours = document.getElementById('entry-hours') ? parseFloat(document.getElementById('entry-hours').value) : NaN;
+                const date = document.getElementById('entry-date') ? document.getElementById('entry-date').value : '';
+                const description = document.getElementById('entry-description') ? document.getElementById('entry-description').value.trim() : '';
+                
+                if (!customerId || !projectName || isNaN(hours) || !date || !description) {
+                    displayError('Bitte füllen Sie alle Zeiterfassungsfelder korrekt aus (Kunde, Thema, Stunden, Beschreibung).');
+                    return;
+                }
+                
+                const newEntry = {
+                    customerId: customerId,
+                    projectName: projectName,
+                    hours: hours,
+                    date: date,
+                    description: description,
+                };
+
+                addTimeEntry(newEntry);
+            });
+
+            if (openManageModalBtn) openManageModalBtn.addEventListener('click', () => toggleModal(true));
+            if (closeManageModalBtn) closeManageModalBtn.addEventListener('click', () => toggleModal(false));
+            if (manageModal) manageModal.addEventListener('click', (e) => {
+                if (e.target === manageModal) {
+                    toggleModal(false);
+                }
+            });
+            
+            if (closeEditModalBtn) closeEditModalBtn.addEventListener('click', hideEditModal);
+            if (editEntryModal) editEntryModal.addEventListener('click', (e) => {
+                if (e.target === editEntryModal) {
+                    hideEditModal();
+                }
+            });
+            
+            if (editEntryForm) editEntryForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const entryId = editEntryId ? editEntryId.value : '';
+                const hours = editEntryHours ? parseFloat(editEntryHours.value) : NaN;
+                const date = editEntryDate ? editEntryDate.value : '';
+                const description = editEntryDescription ? editEntryDescription.value.trim() : '';
+
+                if (!entryId || isNaN(hours) || !date || !description) {
+                    displayError('Bitte füllen Sie alle Bearbeitungsfelder korrekt aus.');
+                    return;
+                }
+
+                const originalEntry = entries.find(e => e.id === entryId);
+                if (!originalEntry) {
+                     displayError('Originaler Eintrag zum Speichern nicht gefunden.');
+                     return;
+                }
+
+                const data = {
+                    date: date,
+                    hours: hours,
+                    description: description,
+                };
+                
+                await updateTimeEntry(entryId, data);
+            });
+
+            if (reminderCloseBtn) reminderCloseBtn.addEventListener('click', hideReminderModal);
+            
+            // NEU: Einträge-Filter Listener
+            if (entriesCustomerFilterEl) entriesCustomerFilterEl.addEventListener('change', (e) => {
+                entriesFilterCustomerId = e.target.value;
+                renderEntriesList(entriesFilterCustomerId, entriesFilterMonth);
+            });
+
+
+            if (addCustomerForm) addCustomerForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const customerName = document.getElementById('new-customer-name') ? document.getElementById('new-customer-name').value.trim() : '';
+                const dailyRate = document.getElementById('new-customer-rate') ? parseFloat(document.getElementById('new-customer-rate').value) || 0 : 0;
+                const monthlyRate = document.getElementById('new-customer-monthly-rate') ? parseFloat(document.getElementById('new-customer-monthly-rate').value) || 0 : 0;
+                const startMonth = document.getElementById('new-monthly-rate-start') ? document.getElementById('new-monthly-rate-start').value : ''; // NEU
+                const endMonth = document.getElementById('new-monthly-rate-end') ? document.getElementById('new-monthly-rate-end').value : '';     // NEU
+                
+                if (!customerName) {
+                    displayError("Bitte geben Sie einen Kundennamen ein.");
+                    return;
+                }
+                
+                if (dailyRate <= 0 && monthlyRate <= 0) {
+                    displayError("FEHLER: Bitte geben Sie für den Kunden entweder einen Tagessatz ODER eine Monatliche Pauschale > 0 ein.");
+                    return;
+                }
+                 if (monthlyRate > 0 && (!startMonth || !endMonth)) {
+                    displayError("FEHLER: Wenn eine Monatliche Pauschale gesetzt ist, müssen Start- und End-Monat angegeben werden.");
+                    return;
+                }
+                
+                addCustomer(customerName, dailyRate, monthlyRate, startMonth, endMonth);
+            });
+
+            if (exportButton) exportButton.addEventListener('click', () => {
+                const monthYear = exportMonthInput ? exportMonthInput.value : '';
+                const type = exportTypeSelect ? exportTypeSelect.value : '';
+                const customerId = exportCustomerSelect ? exportCustomerSelect.value : ''; // NEU
+                exportMonthlyTimesheet(monthYear, type, customerId);
+            });
+            
+            if (previewButton) previewButton.addEventListener('click', () => {
+                const monthYear = exportMonthInput ? exportMonthInput.value : '';
+                const type = exportTypeSelect ? exportTypeSelect.value : '';
+                const customerId = exportCustomerSelect ? exportCustomerSelect.value : ''; // NEU
+                generateTimesheetPreview(monthYear, type, customerId);
+            });
+            
+            if (closePreviewModalBtn) closePreviewModalBtn.addEventListener('click', closeTimesheetPreviewModal);
+            
+            if (printButton) printButton.addEventListener('click', () => {
+                window.print();
+            });
+        }
+        
+        // Führe die Funktion nach dem DOMContentLoaded-Event aus
+        document.addEventListener('DOMContentLoaded', addListenersIfElementsExist);
+
+    </script>
 </body>
 </html>
