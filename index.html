@@ -210,13 +210,17 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : "consultancy-board-v4";
+        
+        /**
+         * WICHTIG: Diese ID darf sich nicht mehr ändern, sonst "verschwinden" die Daten (da sie in einem neuen Pfad liegen würden).
+         */
+        const appId = "consultancy-workflow-stable-v1";
 
         // Globaler State
         let userId = null;
         let customers = [];
         let tasks = [];
-        let timeLogs = []; // NEU: Sammlung für die Report-Buchungen
+        let timeLogs = []; 
         let pendingTaskId = null;
         let isLoginMode = true;
         let isSeeding = false;
@@ -391,7 +395,6 @@
             const currentMonth = now.getMonth();
             const currentYear = now.getFullYear();
 
-            // NEU: Filtere Zeitbuchungen statt Tasks
             const monthLogs = timeLogs.filter(log => {
                 if (!log.timestamp) return false;
                 const d = new Date(log.timestamp);
@@ -485,7 +488,6 @@
                     pendingTaskId = id;
                     document.getElementById('time-modal').classList.remove('hidden');
                 } else {
-                    // Falls wir aus "Fertig" zurückschieben, bleibt die Buchung im Report
                     await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { status });
                 }
             });
@@ -501,7 +503,6 @@
             if (dur && pendingTaskId) {
                 const task = tasks.find(t => t.id === pendingTaskId);
                 
-                // NEU: Erstelle eine separate Zeitbuchung für den Report
                 await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'timeLogs'), {
                     taskId: task.id,
                     taskTitle: task.title,
@@ -510,7 +511,6 @@
                     timestamp: new Date().toISOString()
                 });
 
-                // Update den Task-Status auf "done"
                 await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', pendingTaskId), {
                     status: 'done'
                 });
