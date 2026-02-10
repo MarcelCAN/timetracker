@@ -168,7 +168,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
-        import { getFirestore, doc, deleteDoc, setDoc, onSnapshot, collection, addDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+        import { getFirestore, doc, deleteDoc, setDoc, onSnapshot, collection, addDoc, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
         // Firebase Config
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{"apiKey": "AIzaSyDramsPfqWtBGdvHyMAos0nhyT0t4EMkAg","authDomain": "timetracker-7bf2a.firebaseapp.com","projectId": "timetracker-7bf2a","storageBucket": "timetracker-7bf2a.firebasestorage.app","messagingSenderId": "3152109841","appId": "1:3152109841:web:4e83e101949907c056acb0"}');
@@ -176,11 +176,14 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : "consultancy-board-v2";
+        
+        // Konstante appId für GitHub Pages (damit die Daten dieselben bleiben)
+        const appId = "consultancy-board-v2";
 
         let customers = [];
         let tasks = [];
         let pendingTaskId = null;
+        let isSeeding = false;
 
         const colors = [
             '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', 
@@ -190,7 +193,6 @@
         // --- AUTH & INITIALISIERUNG ---
         const init = async () => {
             try {
-                // Regel 3: Zuerst Token probieren, dann Anonym
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
@@ -222,30 +224,54 @@
         const startListeners = () => {
             if (!auth.currentUser) return;
 
-            // Regel 1: Strenger Pfad
-            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'customers'), (snap) => {
+            // Regel 1: Strenger Pfad /artifacts/{appId}/public/data/{collectionName}
+            const customerCol = collection(db, 'artifacts', appId, 'public', 'data', 'customers');
+            const taskCol = collection(db, 'artifacts', appId, 'public', 'data', 'tasks');
+
+            onSnapshot(customerCol, async (snap) => {
                 customers = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                if (customers.length === 0) seedCustomers();
+                
+                // Erstelle Kunden nur, wenn die Liste wirklich leer ist
+                if (customers.length === 0 && !isSeeding) {
+                    console.log("Keine Kunden gefunden, starte Initialisierung...");
+                    await seedCustomers();
+                }
+                
                 renderCustomers();
                 renderSelectors();
                 renderReports();
-            }, (err) => console.error("Firestore error:", err));
+            }, (err) => {
+                console.error("Firestore customer error:", err);
+                if (err.code === 'permission-denied') {
+                    showError("Zugriff verweigert. Bitte prüfen Sie die Firestore-Sicherheitsregeln.");
+                }
+            });
 
-            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'tasks'), (snap) => {
+            onSnapshot(taskCol, (snap) => {
                 tasks = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 renderBoard();
                 renderReports();
-            }, (err) => console.error("Firestore error:", err));
+            }, (err) => console.error("Firestore task error:", err));
         };
 
         const seedCustomers = async () => {
-            if (!auth.currentUser) return;
+            if (!auth.currentUser || isSeeding) return;
+            isSeeding = true;
             const defaults = ["BBG", "ANWR", "bonprix", "BOL", "SGD", "Tradebyte"];
-            for (let i = 0; i < defaults.length; i++) {
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'customers'), {
-                    name: defaults[i],
-                    color: colors[i % colors.length]
-                });
+            const customerCol = collection(db, 'artifacts', appId, 'public', 'data', 'customers');
+            
+            try {
+                for (let i = 0; i < defaults.length; i++) {
+                    await addDoc(customerCol, {
+                        name: defaults[i],
+                        color: colors[i % colors.length]
+                    });
+                }
+                console.log("Kunden erfolgreich initialisiert.");
+            } catch (e) {
+                console.error("Fehler beim Erstellen der Initial-Kunden:", e);
+            } finally {
+                isSeeding = false;
             }
         };
 
@@ -253,6 +279,7 @@
 
         const renderCustomers = () => {
             const list = document.getElementById('customer-list');
+            if (!list) return;
             list.innerHTML = customers.map(c => `
                 <div class="flex items-center justify-between p-2 rounded-xl border border-gray-100 bg-gray-50 group hover:border-blue-200 transition">
                     <div class="flex items-center text-sm font-medium text-gray-700">
@@ -269,10 +296,13 @@
 
         const renderSelectors = () => {
             const select = document.getElementById('task-customer');
+            if (!select) return;
             const savedValue = select.value;
             select.innerHTML = '<option value="" disabled selected>Kunde wählen...</option>' + 
                 customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-            select.value = savedValue;
+            if (savedValue && customers.some(c => c.id === savedValue)) {
+                select.value = savedValue;
+            }
         };
 
         const renderBoard = () => {
@@ -282,13 +312,15 @@
                 done: document.getElementById('col-done')
             };
 
-            Object.values(columns).forEach(c => c.innerHTML = '');
+            Object.values(columns).forEach(c => { if(c) c.innerHTML = ''; });
+            const counts = { backlog: 0, progress: 0, done: 0 };
 
             tasks.forEach(task => {
                 const customer = customers.find(c => c.id === task.customerId);
                 const col = columns[task.status];
                 if (!col) return;
 
+                counts[task.status]++;
                 const card = document.createElement('div');
                 card.className = "task-card bg-white p-3 rounded-xl shadow-sm border border-gray-200 border-l-4 group";
                 card.style.borderLeftColor = customer ? customer.color : '#cbd5e1';
@@ -316,11 +348,18 @@
 
                 col.appendChild(card);
             });
+
+            // Update Header Counts
+            if(document.getElementById('count-backlog')) document.getElementById('count-backlog').textContent = counts.backlog;
+            if(document.getElementById('count-progress')) document.getElementById('count-progress').textContent = counts.progress;
+            if(document.getElementById('count-done')) document.getElementById('count-done').textContent = counts.done;
+            
             lucide.createIcons();
         };
 
         const renderReports = () => {
             const container = document.getElementById('monthly-stats');
+            if (!container) return;
             const now = new Date();
             const currentMonth = now.getMonth();
             const currentYear = now.getFullYear();
@@ -364,14 +403,18 @@
         window.deleteCustomer = async (id) => {
             if (!auth.currentUser) return;
             if (confirm("Kunden wirklich löschen?")) {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', id));
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', id));
+                } catch (e) { console.error(e); }
             }
         };
 
         window.deleteTask = async (id) => {
             if (!auth.currentUser) return;
             if (confirm("Task löschen?")) {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'tasks', id));
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'tasks', id));
+                } catch (e) { console.error(e); }
             }
         };
 
@@ -379,11 +422,13 @@
             e.preventDefault();
             if (!auth.currentUser) return;
             const name = document.getElementById('cust-name').value;
-            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'customers'), {
-                name,
-                color: colors[customers.length % colors.length]
-            });
-            e.target.reset();
+            try {
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'customers'), {
+                    name,
+                    color: colors[customers.length % colors.length]
+                });
+                e.target.reset();
+            } catch (e) { console.error(e); }
         });
 
         document.getElementById('task-form').addEventListener('submit', async (e) => {
@@ -391,13 +436,15 @@
             if (!auth.currentUser) return;
             const title = document.getElementById('task-title').value;
             const customerId = document.getElementById('task-customer').value;
-            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'tasks'), {
-                title,
-                customerId,
-                status: 'backlog',
-                createdAt: new Date().toISOString()
-            });
-            e.target.reset();
+            try {
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'tasks'), {
+                    title,
+                    customerId,
+                    status: 'backlog',
+                    createdAt: new Date().toISOString()
+                });
+                e.target.reset();
+            } catch (e) { console.error(e); }
         });
 
         const zones = document.querySelectorAll('.drop-zone');
@@ -414,17 +461,21 @@
                 zone.classList.remove('drop-zone-active');
                 const id = e.dataTransfer.getData('text/plain');
                 const newStatus = zone.dataset.status;
+                if (!id) return;
 
                 if (newStatus === 'done') {
                     const task = tasks.find(t => t.id === id);
+                    if (!task) return;
                     document.getElementById('time-modal-task-name').textContent = `Aufgabe: ${task.title}`;
                     document.getElementById('task-duration').value = "";
                     pendingTaskId = id;
                     document.getElementById('time-modal').classList.remove('hidden');
                 } else {
-                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'tasks', id), {
-                        status: newStatus
-                    });
+                    try {
+                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'tasks', id), {
+                            status: newStatus
+                        });
+                    } catch (e) { console.error(e); }
                 }
             });
         });
@@ -436,15 +487,18 @@
 
         document.getElementById('save-time').addEventListener('click', async () => {
             if (!auth.currentUser) return;
-            const dur = document.getElementById('task-duration').value;
+            const durInput = document.getElementById('task-duration');
+            const dur = durInput ? durInput.value : null;
             if (dur && pendingTaskId) {
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'tasks', pendingTaskId), {
-                    status: 'done',
-                    duration: dur,
-                    completedAt: new Date().toISOString()
-                });
-                document.getElementById('time-modal').classList.add('hidden');
-                pendingTaskId = null;
+                try {
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'tasks', pendingTaskId), {
+                        status: 'done',
+                        duration: dur,
+                        completedAt: new Date().toISOString()
+                    });
+                    document.getElementById('time-modal').classList.add('hidden');
+                    pendingTaskId = null;
+                } catch (e) { console.error(e); }
             } else {
                 alert("Bitte eine Dauer eingeben.");
             }
