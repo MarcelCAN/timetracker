@@ -204,18 +204,19 @@
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
         import { getFirestore, doc, deleteDoc, setDoc, onSnapshot, collection, addDoc, updateDoc, getDocs, query } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
-        // Firebase Config (Bleibt wie zuvor)
+        // Firebase Config
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{"apiKey": "AIzaSyDramsPfqWtBGdvHyMAos0nhyT0t4EMkAg","authDomain": "timetracker-7bf2a.firebaseapp.com","projectId": "timetracker-7bf2a","storageBucket": "timetracker-7bf2a.firebasestorage.app","messagingSenderId": "3152109841","appId": "1:3152109841:web:4e83e101949907c056acb0"}');
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : "consultancy-board-v3";
+        const appId = typeof __app_id !== 'undefined' ? __app_id : "consultancy-board-v4";
 
         // Globaler State
         let userId = null;
         let customers = [];
         let tasks = [];
+        let timeLogs = []; // NEU: Sammlung für die Report-Buchungen
         let pendingTaskId = null;
         let isLoginMode = true;
         let isSeeding = false;
@@ -225,7 +226,6 @@
         // --- AUTH LOGIK ---
 
         const initAuth = async () => {
-            // Zuerst Check auf Canvas-Token
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                 try {
                     await signInWithCustomToken(auth, __initial_auth_token);
@@ -285,9 +285,9 @@
         const startDataListeners = () => {
             if (!userId) return;
 
-            // REGEL 1: Privater Pfad für User-Daten
             const customerCol = collection(db, 'artifacts', appId, 'users', userId, 'customers');
             const taskCol = collection(db, 'artifacts', appId, 'users', userId, 'tasks');
+            const logCol = collection(db, 'artifacts', appId, 'users', userId, 'timeLogs');
 
             onSnapshot(customerCol, async (snap) => {
                 customers = snap.docs.map(d => ({id: d.id, ...d.data()}));
@@ -295,13 +295,17 @@
                 renderCustomers();
                 renderSelectors();
                 renderReports();
-            }, (err) => console.error("Firestore customer listener error", err));
+            });
 
             onSnapshot(taskCol, (snap) => {
                 tasks = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 renderBoard();
+            });
+
+            onSnapshot(logCol, (snap) => {
+                timeLogs = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 renderReports();
-            }, (err) => console.error("Firestore task listener error", err));
+            });
         };
 
         const seedInitialCustomers = async () => {
@@ -371,12 +375,6 @@
                         </button>
                     </div>
                     <p class="text-sm font-semibold text-gray-800 leading-snug">${task.title}</p>
-                    ${task.duration ? `
-                        <div class="mt-3 flex items-center justify-between text-[10px] text-gray-400 font-bold border-t pt-2 border-gray-50">
-                            <span class="flex items-center"><i data-lucide="clock" class="w-3 h-3 mr-1"></i> ${task.duration}h</span>
-                            <span>${new Date(task.completedAt).toLocaleDateString()}</span>
-                        </div>
-                    ` : ''}
                 `;
 
                 card.addEventListener('dragstart', (e) => {
@@ -393,17 +391,18 @@
             const currentMonth = now.getMonth();
             const currentYear = now.getFullYear();
 
-            const monthTasks = tasks.filter(t => {
-                if (t.status !== 'done' || !t.completedAt) return false;
-                const d = new Date(t.completedAt);
+            // NEU: Filtere Zeitbuchungen statt Tasks
+            const monthLogs = timeLogs.filter(log => {
+                if (!log.timestamp) return false;
+                const d = new Date(log.timestamp);
                 return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
             });
 
             const reportData = customers.map(c => {
-                const cTasks = monthTasks.filter(t => t.customerId === c.id);
-                const total = cTasks.reduce((sum, t) => sum + (parseFloat(t.duration) || 0), 0);
-                return { name: c.name, color: c.color, tasks: cTasks, total };
-            }).filter(r => r.total > 0 || r.tasks.length > 0);
+                const cLogs = monthLogs.filter(l => l.customerId === c.id);
+                const total = cLogs.reduce((sum, l) => sum + (parseFloat(l.duration) || 0), 0);
+                return { name: c.name, color: c.color, logs: cLogs, total };
+            }).filter(r => r.total > 0);
 
             if (reportData.length === 0) {
                 container.innerHTML = '<div class="text-slate-500 text-xs italic py-4 text-center">Keine Buchungen in diesem Monat.</div>';
@@ -420,7 +419,10 @@
                         <div class="text-xl font-black text-white">${r.total.toFixed(2)}h</div>
                     </div>
                     <ul class="text-[10px] space-y-1 text-slate-400 border-t border-slate-700 pt-2">
-                        ${r.tasks.map(t => `<li class="flex items-center"><i data-lucide="chevron-right" class="w-3 h-3 mr-1 text-slate-600"></i> ${t.title}</li>`).join('')}
+                        ${r.logs.map(l => `<li class="flex justify-between items-center">
+                            <span><i data-lucide="chevron-right" class="w-3 h-3 inline mr-1 text-slate-600"></i> ${l.taskTitle}</span>
+                            <span class="font-bold text-slate-300 ml-2">${l.duration}h</span>
+                        </li>`).join('')}
                     </ul>
                 </div>
             `).join('');
@@ -430,7 +432,7 @@
         // --- AKTIONEN ---
 
         window.deleteCustomer = async (id) => {
-            if (confirm("Kunden und zugehörige Aufgaben wirklich löschen?")) {
+            if (confirm("Kunden wirklich löschen?")) {
                 await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'customers', id));
             }
         };
@@ -483,6 +485,7 @@
                     pendingTaskId = id;
                     document.getElementById('time-modal').classList.remove('hidden');
                 } else {
+                    // Falls wir aus "Fertig" zurückschieben, bleibt die Buchung im Report
                     await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { status });
                 }
             });
@@ -496,11 +499,22 @@
         document.getElementById('save-time').addEventListener('click', async () => {
             const dur = document.getElementById('task-duration').value;
             if (dur && pendingTaskId) {
-                await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', pendingTaskId), {
-                    status: 'done',
+                const task = tasks.find(t => t.id === pendingTaskId);
+                
+                // NEU: Erstelle eine separate Zeitbuchung für den Report
+                await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'timeLogs'), {
+                    taskId: task.id,
+                    taskTitle: task.title,
+                    customerId: task.customerId,
                     duration: dur,
-                    completedAt: new Date().toISOString()
+                    timestamp: new Date().toISOString()
                 });
+
+                // Update den Task-Status auf "done"
+                await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', pendingTaskId), {
+                    status: 'done'
+                });
+
                 document.getElementById('time-modal').classList.add('hidden');
                 pendingTaskId = null;
             } else { alert("Dauer fehlt!"); }
