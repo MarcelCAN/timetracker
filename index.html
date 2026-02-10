@@ -16,20 +16,25 @@
             font-family: 'Inter', sans-serif; 
             background-color: #f8fafc;
             overflow-x: hidden;
+            min-height: 100vh;
         }
 
         .column-container {
-            height: calc(100vh - 120px);
+            height: auto;
+            min-height: calc(100vh - 160px);
         }
 
         .drop-zone {
-            min-height: 100px;
+            min-height: 150px;
             transition: all 0.2s ease;
+            border: 2px solid transparent;
         }
 
         .drop-zone-active {
-            background-color: #e2e8f0;
-            border: 2px dashed #94a3b8;
+            background-color: #f1f5f9;
+            border-color: #94a3b8;
+            border-style: dashed;
+            border-radius: 1rem;
         }
 
         .task-card {
@@ -40,254 +45,286 @@
         .task-card:active { cursor: grabbing; }
 
         .customer-dot {
-            width: 12px;
-            height: 12px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
             display: inline-block;
+        }
+        
+        #login-center {
+            min-height: calc(100vh - 4rem);
         }
     </style>
     <script type="module" src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="p-4">
+<body class="p-4 md:p-6">
 
-    <!-- Kopfzeile -->
-    <header class="mb-6 flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-gray-200">
-        <div class="flex items-center space-x-3">
-            <div class="bg-indigo-600 p-2 rounded-xl">
-                <i data-lucide="layout-grid" class="text-white w-6 h-6"></i>
-            </div>
-            <h1 class="text-xl font-bold text-gray-900">Consultancy Workflow</h1>
-        </div>
-        <div id="status-indicator" class="text-xs font-medium text-gray-400 flex items-center">
-            <span id="sync-dot" class="relative flex h-2 w-2 mr-2 hidden">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-            </span>
-            <span id="sync-text">Initialisiere Authentifizierung...</span>
-        </div>
-    </header>
+    <div id="app" class="max-w-[1600px] mx-auto space-y-6">
 
-    <!-- Hauptgitter -->
-    <div id="main-grid" class="grid grid-cols-1 md:grid-cols-5 gap-4 column-container hidden">
-        
-        <!-- TEIL 1: Kundenverwaltung -->
-        <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col">
-            <h3 class="font-bold text-gray-700 mb-4 flex items-center border-b pb-2 text-sm uppercase tracking-wider">
-                <i data-lucide="users" class="w-4 h-4 mr-2 text-blue-500"></i> Kunden
-            </h3>
-            <form id="customer-form" class="mb-4">
-                <div class="flex gap-2">
-                    <input type="text" id="cust-name" placeholder="Kunde..." required class="flex-grow p-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
-                    <button type="submit" class="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600">
-                        <i data-lucide="plus" class="w-4 h-4"></i>
-                    </button>
+        <!-- Header -->
+        <header class="flex flex-col sm:flex-row justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-gray-200">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-600 p-2 rounded-xl">
+                    <i data-lucide="layout-grid" class="text-white w-6 h-6"></i>
                 </div>
-            </form>
-            <div id="customer-list" class="space-y-2 overflow-y-auto flex-grow pr-1">
-                <!-- Kunden werden hier geladen -->
+                <h1 class="text-xl font-bold text-gray-900">Consultancy Workflow</h1>
+            </div>
+            <div id="auth-status-container" class="mt-4 sm:mt-0 flex items-center space-x-4">
+                <div id="user-info" class="text-sm font-medium text-gray-500 hidden">
+                    <!-- Wird von JS gefüllt -->
+                </div>
+                <button id="logout-btn" class="hidden bg-red-50 text-red-600 px-3 py-1 rounded-lg text-sm font-bold hover:bg-red-100 transition">Logout</button>
+            </div>
+        </header>
+
+        <!-- Lade-Indikator -->
+        <div id="loading-indicator" class="text-center py-20">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+            <p class="mt-4 text-gray-500 font-medium">Daten werden synchronisiert...</p>
+        </div>
+
+        <!-- Authentifizierungs-Bereich -->
+        <div id="login-center" class="hidden flex items-center justify-center">
+            <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md border border-gray-100">
+                <h2 id="auth-title" class="text-2xl font-bold text-gray-800 text-center mb-6">Willkommen</h2>
+                <form id="auth-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">E-Mail</label>
+                        <input type="email" id="auth-email" required class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Passwort</label>
+                        <input type="password" id="auth-password" required class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                    </div>
+                    <p id="auth-message" class="text-sm text-red-500 text-center"></p>
+                    <button type="submit" id="auth-submit-btn" class="w-full bg-indigo-600 text-white p-3 rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg">Login</button>
+                </form>
+                <div class="mt-6 text-center space-y-3">
+                    <button id="toggle-auth-mode" class="text-sm text-indigo-600 hover:underline">Noch kein Konto? Hier registrieren</button>
+                    <br>
+                    <button id="forgot-password-btn" class="text-xs text-gray-400 hover:text-indigo-600 transition">Passwort vergessen?</button>
+                </div>
             </div>
         </div>
 
-        <!-- TEIL 2: Backlog -->
-        <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col">
-            <h3 class="font-bold text-gray-700 mb-4 flex items-center border-b pb-2 text-sm uppercase tracking-wider">
-                <i data-lucide="list-todo" class="w-4 h-4 mr-2 text-gray-500"></i> Backlog
-            </h3>
-            <form id="task-form" class="mb-4 space-y-2 bg-gray-50 p-3 rounded-xl">
-                <input type="text" id="task-title" placeholder="Was ist zu tun?" required class="w-full p-2 text-sm border border-gray-300 rounded-lg outline-none">
-                <select id="task-customer" required class="w-full p-2 text-sm border border-gray-300 rounded-lg outline-none bg-white">
-                    <option value="" disabled selected>Kunde wählen...</option>
-                </select>
-                <button type="submit" class="w-full bg-indigo-600 text-white p-2 rounded-lg font-bold text-xs hover:bg-indigo-700">TASK ANLEGEN</button>
-            </form>
-            <div id="col-backlog" class="drop-zone space-y-3 overflow-y-auto flex-grow pr-1" data-status="backlog">
-                <!-- Aufgaben hier -->
-            </div>
-        </div>
+        <!-- Hauptinhalt (Dashboard) -->
+        <div id="main-content" class="hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 column-container">
+                
+                <!-- SPALTE 1: Kundenverwaltung -->
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col">
+                    <h3 class="font-bold text-gray-700 mb-4 flex items-center border-b pb-2 text-xs uppercase tracking-widest">
+                        <i data-lucide="users" class="w-4 h-4 mr-2 text-blue-500"></i> Kunden
+                    </h3>
+                    <form id="customer-form" class="mb-4">
+                        <div class="flex gap-2">
+                            <input type="text" id="cust-name" placeholder="Neuer Kunde..." required class="flex-grow p-2 text-sm border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                            <button type="submit" class="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition">
+                                <i data-lucide="plus" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </form>
+                    <div id="customer-list" class="space-y-2 overflow-y-auto flex-grow pr-1 max-h-[60vh]">
+                        <!-- Kundenliste -->
+                    </div>
+                </div>
 
-        <!-- TEIL 3: In Bearbeitung -->
-        <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col">
-            <h3 class="font-bold text-orange-600 mb-4 flex items-center border-b pb-2 text-sm uppercase tracking-wider">
-                <i data-lucide="play" class="w-4 h-4 mr-2 text-orange-500"></i> In Arbeit
-            </h3>
-            <div id="col-progress" class="drop-zone space-y-3 overflow-y-auto flex-grow pr-1" data-status="progress">
-                <!-- Aufgaben hier -->
-            </div>
-        </div>
+                <!-- SPALTE 2: Backlog -->
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col">
+                    <h3 class="font-bold text-gray-700 mb-4 flex items-center border-b pb-2 text-xs uppercase tracking-widest">
+                        <i data-lucide="list-todo" class="w-4 h-4 mr-2 text-gray-500"></i> Backlog
+                    </h3>
+                    <form id="task-form" class="mb-4 space-y-2 bg-gray-50 p-3 rounded-xl">
+                        <input type="text" id="task-title" placeholder="Aufgabe beschreiben..." required class="w-full p-2 text-sm border border-gray-300 rounded-lg outline-none">
+                        <select id="task-customer" required class="w-full p-2 text-sm border border-gray-300 rounded-lg outline-none bg-white">
+                            <option value="" disabled selected>Kunde wählen...</option>
+                        </select>
+                        <button type="submit" class="w-full bg-gray-800 text-white p-2 rounded-lg font-bold text-xs hover:bg-black transition">TASK ERSTELLEN</button>
+                    </form>
+                    <div id="col-backlog" class="drop-zone space-y-3 overflow-y-auto flex-grow pr-1" data-status="backlog">
+                        <!-- Tasks -->
+                    </div>
+                </div>
 
-        <!-- TEIL 4: Erledigt -->
-        <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col">
-            <h3 class="font-bold text-green-600 mb-4 flex items-center border-b pb-2 text-sm uppercase tracking-wider">
-                <i data-lucide="check-circle-2" class="w-4 h-4 mr-2 text-green-500"></i> Erledigt
-            </h3>
-            <div id="col-done" class="drop-zone space-y-3 overflow-y-auto flex-grow pr-1" data-status="done">
-                <!-- Aufgaben hier -->
-            </div>
-        </div>
+                <!-- SPALTE 3: In Bearbeitung -->
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col">
+                    <h3 class="font-bold text-orange-600 mb-4 flex items-center border-b pb-2 text-xs uppercase tracking-widest">
+                        <i data-lucide="play" class="w-4 h-4 mr-2 text-orange-500"></i> Aktiv
+                    </h3>
+                    <div id="col-progress" class="drop-zone space-y-3 overflow-y-auto flex-grow pr-1" data-status="progress">
+                        <!-- Tasks -->
+                    </div>
+                </div>
 
-        <!-- TEIL 5: Analyse -->
-        <div class="bg-indigo-900 p-4 rounded-2xl shadow-lg border border-indigo-950 flex flex-col text-white">
-            <h3 class="font-bold text-indigo-200 mb-4 flex items-center border-b border-indigo-800 pb-2 text-sm uppercase tracking-wider">
-                <i data-lucide="bar-chart-3" class="w-4 h-4 mr-2"></i> Report <span id="current-month-year">...</span>
-            </h3>
-            <div id="monthly-stats" class="space-y-4 overflow-y-auto flex-grow pr-1">
-                <!-- Statistiken hier -->
+                <!-- SPALTE 4: Erledigt -->
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col">
+                    <h3 class="font-bold text-green-600 mb-4 flex items-center border-b pb-2 text-xs uppercase tracking-widest">
+                        <i data-lucide="check-circle" class="w-4 h-4 mr-2 text-green-500"></i> Fertig
+                    </h3>
+                    <div id="col-done" class="drop-zone space-y-3 overflow-y-auto flex-grow pr-1" data-status="done">
+                        <!-- Tasks -->
+                    </div>
+                </div>
+
+                <!-- SPALTE 5: Monatliche Analyse -->
+                <div class="bg-slate-900 p-4 rounded-2xl shadow-lg border border-slate-800 flex flex-col text-white">
+                    <h3 class="font-bold text-slate-400 mb-4 flex items-center border-b border-slate-800 pb-2 text-xs uppercase tracking-widest">
+                        <i data-lucide="bar-chart-3" class="w-4 h-4 mr-2"></i> Report <span id="report-month" class="ml-1 text-white">...</span>
+                    </h3>
+                    <div id="monthly-stats" class="space-y-4 overflow-y-auto flex-grow pr-1">
+                        <!-- Reports -->
+                    </div>
+                </div>
+
             </div>
         </div>
 
     </div>
 
-    <!-- Modal für Dauer -->
-    <div id="time-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
-        <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-sm">
+    <!-- ZEITERFASSUNGS MODAL -->
+    <div id="time-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-70 flex items-center justify-center p-4 z-50">
+        <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-sm border border-gray-200">
             <h2 class="text-xl font-bold mb-4 flex items-center text-gray-800">
                 <i data-lucide="clock" class="mr-2 text-indigo-600"></i> Dauer eintragen
             </h2>
-            <p class="text-sm text-gray-500 mb-4" id="time-modal-task-name"></p>
-            <div class="mb-4">
-                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Stunden (z.B. 1.5)</label>
-                <input type="number" id="task-duration" step="0.25" min="0" placeholder="0.00" class="w-full p-3 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-lg font-bold">
+            <p class="text-sm text-gray-500 mb-6" id="time-modal-task-name"></p>
+            <div class="mb-6">
+                <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Stunden (z.B. 0.75 oder 2)</label>
+                <input type="number" id="task-duration" step="0.25" min="0" placeholder="0.00" class="w-full p-4 border border-gray-200 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-100 text-2xl font-black transition">
             </div>
-            <div class="flex space-x-3">
-                <button id="cancel-time" class="flex-grow p-3 text-gray-500 font-bold hover:bg-gray-100 rounded-xl transition">Abbrechen</button>
-                <button id="save-time" class="flex-grow p-3 bg-indigo-600 text-white font-bold rounded-xl shadow-md hover:bg-indigo-700 transition">Abschließen</button>
+            <div class="grid grid-cols-2 gap-3">
+                <button id="cancel-time" class="p-4 text-gray-400 font-bold hover:bg-gray-50 rounded-2xl transition">Abbrechen</button>
+                <button id="save-time" class="p-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg hover:bg-indigo-700 transition">Buchen</button>
             </div>
         </div>
-    </div>
-
-    <!-- Fehler-Overlay -->
-    <div id="error-overlay" class="hidden fixed inset-0 bg-white bg-opacity-90 flex flex-col items-center justify-center p-8 z-[100] text-center">
-        <div class="bg-red-100 p-4 rounded-full mb-4">
-            <i data-lucide="alert-triangle" class="text-red-600 w-12 h-12"></i>
-        </div>
-        <h2 class="text-2xl font-bold text-gray-800 mb-2">Berechtigungsfehler</h2>
-        <p id="error-message-text" class="text-gray-600 max-w-md mb-6"></p>
-        <button onclick="window.location.reload()" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg">Seite neu laden</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
-        import { getFirestore, doc, deleteDoc, setDoc, onSnapshot, collection, addDoc, updateDoc, getDocs } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+        import { getFirestore, doc, deleteDoc, setDoc, onSnapshot, collection, addDoc, updateDoc, getDocs, query } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
-        // Firebase Konfiguration
+        // Firebase Config (Bleibt wie zuvor)
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{"apiKey": "AIzaSyDramsPfqWtBGdvHyMAos0nhyT0t4EMkAg","authDomain": "timetracker-7bf2a.firebaseapp.com","projectId": "timetracker-7bf2a","storageBucket": "timetracker-7bf2a.firebasestorage.app","messagingSenderId": "3152109841","appId": "1:3152109841:web:4e83e101949907c056acb0"}');
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : "consultancy-board-v2";
+        const appId = typeof __app_id !== 'undefined' ? __app_id : "consultancy-board-v3";
 
+        // Globaler State
+        let userId = null;
         let customers = [];
         let tasks = [];
         let pendingTaskId = null;
+        let isLoginMode = true;
         let isSeeding = false;
 
-        const colors = [
-            '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', 
-            '#EC4899', '#06B6D4', '#F97316', '#14B8A6', '#6366F1'
-        ];
+        const colors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316', '#14B8A6', '#6366F1'];
 
-        // --- AUTH & INITIALISIERUNG ---
-        const init = async () => {
-            // REGEL 3: Authentifizierung zuerst aufrufen
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+        // --- AUTH LOGIK ---
+
+        const initAuth = async () => {
+            // Zuerst Check auf Canvas-Token
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                try {
                     await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (error) {
-                console.error("Auth error:", error);
-                showError("Authentifizierung fehlgeschlagen. Bitte aktivieren Sie die anonyme Anmeldung in der Firebase-Konsole (Authentication > Sign-in method).");
+                } catch(e) { console.error("Token Auth failed", e); }
             }
 
             onAuthStateChanged(auth, (user) => {
                 if (user) {
-                    // REGEL 3: Erst nach Auth Firestore Operationen erlauben
-                    document.getElementById('sync-dot').classList.remove('hidden');
-                    document.getElementById('sync-text').textContent = 'Live-Sync aktiv';
-                    document.getElementById('main-grid').classList.remove('hidden');
-                    document.getElementById('current-month-year').textContent = new Intl.DateTimeFormat('de-DE', { month: 'short', year: 'numeric' }).format(new Date());
-                    startListeners();
+                    userId = user.uid;
+                    document.getElementById('loading-indicator').classList.add('hidden');
+                    document.getElementById('login-center').classList.add('hidden');
+                    document.getElementById('main-content').classList.remove('hidden');
+                    document.getElementById('logout-btn').classList.remove('hidden');
+                    document.getElementById('user-info').classList.remove('hidden');
+                    document.getElementById('user-info').textContent = user.email;
+                    document.getElementById('report-month').textContent = new Intl.DateTimeFormat('de-DE', { month: 'short', year: 'numeric' }).format(new Date());
+                    startDataListeners();
+                } else {
+                    userId = null;
+                    document.getElementById('loading-indicator').classList.add('hidden');
+                    document.getElementById('main-content').classList.add('hidden');
+                    document.getElementById('logout-btn').classList.add('hidden');
+                    document.getElementById('user-info').classList.add('hidden');
+                    document.getElementById('login-center').classList.remove('hidden');
                 }
+                lucide.createIcons();
             });
-            lucide.createIcons();
         };
 
-        const showError = (msg) => {
-            document.getElementById('error-overlay').classList.remove('hidden');
-            document.getElementById('error-message-text').textContent = msg;
-            lucide.createIcons();
+        const handleAuthSubmit = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value;
+            const pass = document.getElementById('auth-password').value;
+            const msg = document.getElementById('auth-message');
+            msg.textContent = "";
+
+            try {
+                if (isLoginMode) {
+                    await signInWithEmailAndPassword(auth, email, pass);
+                } else {
+                    await createUserWithEmailAndPassword(auth, email, pass);
+                }
+            } catch (err) {
+                msg.textContent = "Fehler: " + err.message;
+            }
         };
 
-        const startListeners = () => {
-            if (!auth.currentUser) return; // REGEL 3 Guard
+        const toggleAuthMode = () => {
+            isLoginMode = !isLoginMode;
+            document.getElementById('auth-title').textContent = isLoginMode ? "Willkommen zurück" : "Konto erstellen";
+            document.getElementById('auth-submit-btn').textContent = isLoginMode ? "Login" : "Registrieren";
+            document.getElementById('toggle-auth-mode').textContent = isLoginMode ? "Noch kein Konto? Hier registrieren" : "Bereits ein Konto? Login";
+        };
 
-            // REGEL 1: Strenge Pfade einhalten
-            const customerCol = collection(db, 'artifacts', appId, 'public', 'data', 'customers');
-            const taskCol = collection(db, 'artifacts', appId, 'public', 'data', 'tasks');
+        // --- FIRESTORE LISTENERS ---
+
+        const startDataListeners = () => {
+            if (!userId) return;
+
+            // REGEL 1: Privater Pfad für User-Daten
+            const customerCol = collection(db, 'artifacts', appId, 'users', userId, 'customers');
+            const taskCol = collection(db, 'artifacts', appId, 'users', userId, 'tasks');
 
             onSnapshot(customerCol, async (snap) => {
                 customers = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                
-                // Kunden initialisieren, falls keine vorhanden
-                if (customers.length === 0 && !isSeeding) {
-                    await seedCustomers();
-                }
-                
+                if (customers.length === 0 && !isSeeding) await seedInitialCustomers();
                 renderCustomers();
                 renderSelectors();
                 renderReports();
-            }, (err) => {
-                console.error("Firestore customer error:", err);
-                if (err.code === 'permission-denied') {
-                    showError("Zugriff verweigert. Dies liegt oft an einem falschen Pfad oder fehlender Auth. Pfad: artifacts/" + appId + "/public/data/customers");
-                }
-            });
+            }, (err) => console.error("Firestore customer listener error", err));
 
             onSnapshot(taskCol, (snap) => {
                 tasks = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 renderBoard();
                 renderReports();
-            }, (err) => {
-                console.error("Firestore task error:", err);
-            });
+            }, (err) => console.error("Firestore task listener error", err));
         };
 
-        const seedCustomers = async () => {
-            if (!auth.currentUser || isSeeding) return;
+        const seedInitialCustomers = async () => {
+            if (isSeeding) return;
             isSeeding = true;
             const defaults = ["BBG", "ANWR", "bonprix", "BOL", "SGD", "Tradebyte"];
-            const customerCol = collection(db, 'artifacts', appId, 'public', 'data', 'customers');
-            
+            const customerCol = collection(db, 'artifacts', appId, 'users', userId, 'customers');
             try {
-                // Erst prüfen, ob zwischenzeitlich Kunden erstellt wurden
-                const check = await getDocs(customerCol);
-                if (check.empty) {
-                    for (let i = 0; i < defaults.length; i++) {
-                        await addDoc(customerCol, {
-                            name: defaults[i],
-                            color: colors[i % colors.length]
-                        });
-                    }
+                for (let i = 0; i < defaults.length; i++) {
+                    await addDoc(customerCol, { name: defaults[i], color: colors[i % colors.length] });
                 }
-            } catch (e) {
-                console.error("Fehler beim Seeding:", e);
-            } finally {
-                isSeeding = false;
-            }
+            } catch (e) { console.error("Seeding failed", e); }
+            finally { isSeeding = false; }
         };
 
         // --- RENDERING ---
 
         const renderCustomers = () => {
             const list = document.getElementById('customer-list');
-            if (!list) return;
             list.innerHTML = customers.map(c => `
-                <div class="flex items-center justify-between p-2 rounded-xl border border-gray-100 bg-gray-50 group hover:border-blue-200 transition">
-                    <div class="flex items-center text-sm font-medium text-gray-700">
-                        <span class="customer-dot mr-2" style="background-color: ${c.color}"></span>
+                <div class="flex items-center justify-between p-3 rounded-xl border border-gray-100 bg-gray-50 group hover:border-blue-200 transition">
+                    <div class="flex items-center text-sm font-bold text-gray-700">
+                        <span class="customer-dot mr-2 shadow-sm" style="background-color: ${c.color}"></span>
                         ${c.name}
                     </div>
                     <button onclick="window.deleteCustomer('${c.id}')" class="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition">
@@ -300,62 +337,58 @@
 
         const renderSelectors = () => {
             const select = document.getElementById('task-customer');
-            if (!select) return;
-            const savedValue = select.value;
+            const current = select.value;
             select.innerHTML = '<option value="" disabled selected>Kunde wählen...</option>' + 
                 customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-            if (savedValue && customers.some(c => c.id === savedValue)) {
-                select.value = savedValue;
-            }
+            select.value = current;
         };
 
         const renderBoard = () => {
-            const columns = {
+            const cols = {
                 backlog: document.getElementById('col-backlog'),
                 progress: document.getElementById('col-progress'),
                 done: document.getElementById('col-done')
             };
-
-            Object.values(columns).forEach(c => { if(c) c.innerHTML = ''; });
+            Object.values(cols).forEach(c => c.innerHTML = '');
 
             tasks.forEach(task => {
                 const customer = customers.find(c => c.id === task.customerId);
-                const col = columns[task.status];
-                if (!col) return;
+                const container = cols[task.status];
+                if (!container) return;
 
                 const card = document.createElement('div');
-                card.className = "task-card bg-white p-3 rounded-xl shadow-sm border border-gray-200 border-l-4 group";
+                card.className = "task-card bg-white p-4 rounded-2xl shadow-sm border border-gray-200 border-l-[6px] group";
                 card.style.borderLeftColor = customer ? customer.color : '#cbd5e1';
                 card.draggable = true;
-                card.dataset.id = task.id;
                 
                 card.innerHTML = `
-                    <div class="flex justify-between items-start mb-1">
-                        <span class="text-[10px] font-bold uppercase" style="color: ${customer ? customer.color : '#64748b'}">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-[10px] font-black uppercase tracking-widest" style="color: ${customer ? customer.color : '#64748b'}">
                             ${customer ? customer.name : 'Unbekannt'}
                         </span>
-                        <div class="flex space-x-1 opacity-0 group-hover:opacity-100 transition">
-                             <button onclick="window.deleteTask('${task.id}')" class="text-gray-400 hover:text-red-500"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
-                        </div>
+                        <button onclick="window.deleteTask('${task.id}')" class="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition">
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                        </button>
                     </div>
-                    <p class="text-sm font-semibold text-gray-800">${task.title}</p>
-                    ${task.duration ? `<div class="mt-2 flex items-center text-[10px] text-gray-400 font-bold bg-gray-50 p-1 rounded">
-                        <i data-lucide="clock" class="w-3 h-3 mr-1"></i> ${task.duration}h am ${new Date(task.completedAt).toLocaleDateString()}
-                    </div>` : ''}
+                    <p class="text-sm font-semibold text-gray-800 leading-snug">${task.title}</p>
+                    ${task.duration ? `
+                        <div class="mt-3 flex items-center justify-between text-[10px] text-gray-400 font-bold border-t pt-2 border-gray-50">
+                            <span class="flex items-center"><i data-lucide="clock" class="w-3 h-3 mr-1"></i> ${task.duration}h</span>
+                            <span>${new Date(task.completedAt).toLocaleDateString()}</span>
+                        </div>
+                    ` : ''}
                 `;
 
                 card.addEventListener('dragstart', (e) => {
                     e.dataTransfer.setData('text/plain', task.id);
                 });
-
-                col.appendChild(card);
+                container.appendChild(card);
             });
             lucide.createIcons();
         };
 
         const renderReports = () => {
             const container = document.getElementById('monthly-stats');
-            if (!container) return;
             const now = new Date();
             const currentMonth = now.getMonth();
             const currentYear = now.getFullYear();
@@ -366,28 +399,28 @@
                 return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
             });
 
-            const report = customers.map(c => {
+            const reportData = customers.map(c => {
                 const cTasks = monthTasks.filter(t => t.customerId === c.id);
-                const totalDuration = cTasks.reduce((sum, t) => sum + (parseFloat(t.duration) || 0), 0);
-                return { name: c.name, color: c.color, tasks: cTasks, total: totalDuration };
+                const total = cTasks.reduce((sum, t) => sum + (parseFloat(t.duration) || 0), 0);
+                return { name: c.name, color: c.color, tasks: cTasks, total };
             }).filter(r => r.total > 0 || r.tasks.length > 0);
 
-            if (report.length === 0) {
-                container.innerHTML = '<p class="text-indigo-400 text-xs italic">Noch keine Daten für diesen Monat.</p>';
+            if (reportData.length === 0) {
+                container.innerHTML = '<div class="text-slate-500 text-xs italic py-4 text-center">Keine Buchungen in diesem Monat.</div>';
                 return;
             }
 
-            container.innerHTML = report.map(r => `
-                <div class="bg-indigo-800 bg-opacity-40 p-3 rounded-xl border border-indigo-700">
-                    <div class="flex justify-between items-center mb-2">
-                        <div class="flex items-center font-bold">
+            container.innerHTML = reportData.map(r => `
+                <div class="bg-slate-800 bg-opacity-50 p-4 rounded-2xl border border-slate-700">
+                    <div class="flex justify-between items-center mb-3">
+                        <div class="flex items-center font-bold text-sm">
                             <span class="w-2 h-2 rounded-full mr-2" style="background-color: ${r.color}"></span>
                             ${r.name}
                         </div>
-                        <div class="text-lg font-black text-white">${r.total.toFixed(2)}h</div>
+                        <div class="text-xl font-black text-white">${r.total.toFixed(2)}h</div>
                     </div>
-                    <ul class="text-[10px] space-y-1 text-indigo-200">
-                        ${r.tasks.map(t => `<li class="flex items-center"><i data-lucide="chevron-right" class="w-2 h-2 mr-1"></i> ${t.title}</li>`).join('')}
+                    <ul class="text-[10px] space-y-1 text-slate-400 border-t border-slate-700 pt-2">
+                        ${r.tasks.map(t => `<li class="flex items-center"><i data-lucide="chevron-right" class="w-3 h-3 mr-1 text-slate-600"></i> ${t.title}</li>`).join('')}
                     </ul>
                 </div>
             `).join('');
@@ -397,81 +430,60 @@
         // --- AKTIONEN ---
 
         window.deleteCustomer = async (id) => {
-            if (!auth.currentUser) return;
-            if (confirm("Kunden wirklich löschen?")) {
-                try {
-                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', id));
-                } catch (e) { console.error(e); }
+            if (confirm("Kunden und zugehörige Aufgaben wirklich löschen?")) {
+                await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'customers', id));
             }
         };
 
         window.deleteTask = async (id) => {
-            if (!auth.currentUser) return;
-            if (confirm("Task löschen?")) {
-                try {
-                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'tasks', id));
-                } catch (e) { console.error(e); }
+            if (confirm("Aufgabe löschen?")) {
+                await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id));
             }
         };
 
         document.getElementById('customer-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            if (!auth.currentUser) return;
             const name = document.getElementById('cust-name').value;
-            try {
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'customers'), {
-                    name,
-                    color: colors[customers.length % colors.length]
-                });
-                e.target.reset();
-            } catch (e) { console.error(e); }
+            await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'customers'), {
+                name,
+                color: colors[customers.length % colors.length]
+            });
+            e.target.reset();
         });
 
         document.getElementById('task-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            if (!auth.currentUser) return;
             const title = document.getElementById('task-title').value;
             const customerId = document.getElementById('task-customer').value;
-            try {
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'tasks'), {
-                    title,
-                    customerId,
-                    status: 'backlog',
-                    createdAt: new Date().toISOString()
-                });
-                e.target.reset();
-            } catch (e) { console.error(e); }
+            await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'tasks'), {
+                title,
+                customerId,
+                status: 'backlog',
+                createdAt: new Date().toISOString()
+            });
+            e.target.reset();
         });
 
-        const zones = document.querySelectorAll('.drop-zone');
-        zones.forEach(zone => {
-            zone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                zone.classList.add('drop-zone-active');
-            });
-            zone.addEventListener('dragleave', () => {
-                zone.classList.remove('drop-zone-active');
-            });
+        // --- DRAG & DROP ---
+
+        document.querySelectorAll('.drop-zone').forEach(zone => {
+            zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('drop-zone-active'); });
+            zone.addEventListener('dragleave', () => zone.classList.remove('drop-zone-active'));
             zone.addEventListener('drop', async (e) => {
                 e.preventDefault();
                 zone.classList.remove('drop-zone-active');
                 const id = e.dataTransfer.getData('text/plain');
-                const newStatus = zone.dataset.status;
+                const status = zone.dataset.status;
                 if (!id) return;
 
-                if (newStatus === 'done') {
+                if (status === 'done') {
                     const task = tasks.find(t => t.id === id);
-                    if (!task) return;
-                    document.getElementById('time-modal-task-name').textContent = `Aufgabe: ${task.title}`;
+                    document.getElementById('time-modal-task-name').textContent = `Projekt: ${task.title}`;
                     document.getElementById('task-duration').value = "";
                     pendingTaskId = id;
                     document.getElementById('time-modal').classList.remove('hidden');
                 } else {
-                    try {
-                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'tasks', id), {
-                            status: newStatus
-                        });
-                    } catch (e) { console.error(e); }
+                    await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { status });
                 }
             });
         });
@@ -482,25 +494,32 @@
         });
 
         document.getElementById('save-time').addEventListener('click', async () => {
-            if (!auth.currentUser) return;
-            const durInput = document.getElementById('task-duration');
-            const dur = durInput ? durInput.value : null;
+            const dur = document.getElementById('task-duration').value;
             if (dur && pendingTaskId) {
-                try {
-                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'tasks', pendingTaskId), {
-                        status: 'done',
-                        duration: dur,
-                        completedAt: new Date().toISOString()
-                    });
-                    document.getElementById('time-modal').classList.add('hidden');
-                    pendingTaskId = null;
-                } catch (e) { console.error(e); }
-            } else {
-                alert("Bitte eine Dauer eingeben.");
-            }
+                await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', pendingTaskId), {
+                    status: 'done',
+                    duration: dur,
+                    completedAt: new Date().toISOString()
+                });
+                document.getElementById('time-modal').classList.add('hidden');
+                pendingTaskId = null;
+            } else { alert("Dauer fehlt!"); }
         });
 
-        window.onload = init;
+        // Auth Event Listeners
+        document.getElementById('auth-form').addEventListener('submit', handleAuthSubmit);
+        document.getElementById('toggle-auth-mode').addEventListener('click', toggleAuthMode);
+        document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
+        document.getElementById('forgot-password-btn').addEventListener('click', async () => {
+            const email = document.getElementById('auth-email').value;
+            if (!email) return alert("E-Mail für Reset eingeben.");
+            try {
+                await sendPasswordResetEmail(auth, email);
+                alert("Reset-Link gesendet!");
+            } catch(e) { alert(e.message); }
+        });
+
+        window.onload = initAuth;
     </script>
 </body>
 </html>
