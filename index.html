@@ -6,7 +6,7 @@
     <title>Consultancy Workflow Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
         
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
@@ -39,7 +39,7 @@
 
         .task-card {
             cursor: grab;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.2s ease;
         }
 
         .task-card:active { cursor: grabbing; }
@@ -53,6 +53,11 @@
         
         #login-center {
             min-height: calc(100vh - 4rem);
+        }
+
+        .priority-high {
+            border-right: 4px solid #ef4444 !important;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
         }
     </style>
     <script type="module" src="https://unpkg.com/lucide@latest"></script>
@@ -131,16 +136,13 @@
                         <i data-lucide="list-todo" class="w-4 h-4 mr-2 text-gray-500"></i> Backlog
                     </h3>
                     <form id="task-form" class="mb-4 space-y-2 bg-gray-50 p-3 rounded-xl border border-gray-100 shadow-inner">
-                        <input type="text" id="task-title" placeholder="Was ist zu tun?" required class="w-full p-2 text-sm border border-gray-300 rounded-lg outline-none">
-                        <div class="flex gap-2">
-                             <input type="date" id="task-date-init" class="w-1/2 p-2 text-xs border border-gray-300 rounded-lg outline-none bg-white">
-                             <select id="task-customer" required class="w-1/2 p-2 text-xs border border-gray-300 rounded-lg outline-none bg-white">
-                                <option value="" disabled selected>Mandant...</option>
-                             </select>
-                        </div>
+                        <input type="text" id="task-title" placeholder="Aufgabe beschreiben..." required class="w-full p-2 text-sm border border-gray-300 rounded-lg outline-none">
+                        <select id="task-customer" required class="w-full p-2 text-xs border border-gray-300 rounded-lg outline-none bg-white">
+                            <option value="" disabled selected>Mandant wählen...</option>
+                        </select>
                         <button type="submit" class="w-full bg-slate-800 text-white p-2 rounded-lg font-bold text-xs hover:bg-black transition">TASK ERSTELLEN</button>
                     </form>
-                    <div id="col-backlog" class="drop-zone space-y-3 overflow-y-auto flex-grow pr-1" data-status="backlog"></div>
+                    <div id="col-backlog" class="drop-zone space-y-6 overflow-y-auto flex-grow pr-1" data-status="backlog"></div>
                 </div>
 
                 <!-- SPALTE 3: In Bearbeitung -->
@@ -148,7 +150,7 @@
                     <h3 class="font-bold text-orange-600 mb-4 flex items-center border-b pb-2 text-xs uppercase tracking-widest">
                         <i data-lucide="play" class="w-4 h-4 mr-2 text-orange-500"></i> Aktiv
                     </h3>
-                    <div id="col-progress" class="drop-zone space-y-3 overflow-y-auto flex-grow pr-1" data-status="progress"></div>
+                    <div id="col-progress" class="drop-zone space-y-6 overflow-y-auto flex-grow pr-1" data-status="progress"></div>
                 </div>
 
                 <!-- SPALTE 4: Erledigt -->
@@ -156,7 +158,7 @@
                     <h3 class="font-bold text-green-600 mb-4 flex items-center border-b pb-2 text-xs uppercase tracking-widest">
                         <i data-lucide="check-circle" class="w-4 h-4 mr-2 text-green-500"></i> Fertig
                     </h3>
-                    <div id="col-done" class="drop-zone space-y-3 overflow-y-auto flex-grow pr-1" data-status="done"></div>
+                    <div id="col-done" class="drop-zone space-y-6 overflow-y-auto flex-grow pr-1" data-status="done"></div>
                 </div>
 
                 <!-- SPALTE 5: Report -->
@@ -180,10 +182,6 @@
                 <div>
                     <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Titel</label>
                     <input type="text" id="edit-task-title" required class="w-full p-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Datum</label>
-                    <input type="date" id="edit-task-date" required class="w-full p-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <button type="button" onclick="closeEditModal()" class="p-4 text-gray-400 font-bold hover:bg-gray-50 rounded-2xl transition">Abbrechen</button>
@@ -222,12 +220,12 @@
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
         import { getFirestore, doc, deleteDoc, setDoc, onSnapshot, collection, addDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
-        // Firebase Konfiguration
+        // Firebase Config
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{"apiKey": "AIzaSyDramsPfqWtBGdvHyMAos0nhyT0t4EMkAg","authDomain": "timetracker-7bf2a.firebaseapp.com","projectId": "timetracker-7bf2a","storageBucket": "timetracker-7bf2a.firebasestorage.app","messagingSenderId": "3152109841","appId": "1:3152109841:web:4e83e101949907c056acb0"}');
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = "consultancy-workflow-stable-v1";
+        const appId = "consultancy-workflow-stable-v1"; // Bleibt stabil für Daten-Persistenz
 
         // Globaler State
         let userId = null;
@@ -240,8 +238,7 @@
 
         const colors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316', '#14B8A6', '#6366F1'];
 
-        // --- AUTH FUNKTIONEN ---
-
+        // --- AUTH & LISTENERS ---
         async function initAuth() {
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                 try { await signInWithCustomToken(auth, __initial_auth_token); } catch(e) {}
@@ -253,9 +250,8 @@
                     document.getElementById('login-center').classList.add('hidden');
                     document.getElementById('main-content').classList.remove('hidden');
                     document.getElementById('logout-btn').classList.remove('hidden');
-                    const userInfo = document.getElementById('user-info');
-                    userInfo.classList.remove('hidden');
-                    userInfo.textContent = user.email;
+                    document.getElementById('user-info').classList.remove('hidden');
+                    document.getElementById('user-info').textContent = user.email;
                     document.getElementById('report-month').textContent = new Intl.DateTimeFormat('de-DE', { month: 'short', year: 'numeric' }).format(new Date());
                     startDataListeners();
                 } else {
@@ -270,36 +266,7 @@
             });
         }
 
-        async function handleAuthSubmit(e) {
-            e.preventDefault();
-            const email = document.getElementById('auth-email').value;
-            const pass = document.getElementById('auth-password').value;
-            const msg = document.getElementById('auth-message');
-            msg.textContent = "";
-
-            try {
-                if (isLoginMode) {
-                    await signInWithEmailAndPassword(auth, email, pass);
-                } else {
-                    await createUserWithEmailAndPassword(auth, email, pass);
-                }
-            } catch (err) {
-                msg.textContent = "Fehler: " + err.message;
-            }
-        }
-
-        function toggleAuthMode() {
-            isLoginMode = !isLoginMode;
-            document.getElementById('auth-title').textContent = isLoginMode ? "Willkommen zurück" : "Konto erstellen";
-            document.getElementById('auth-submit-btn').textContent = isLoginMode ? "Login" : "Registrieren";
-            document.getElementById('toggle-auth-mode').textContent = isLoginMode ? "Noch kein Konto? Hier registrieren" : "Bereits ein Konto? Login";
-        }
-
-        // --- FIRESTORE LISTENERS ---
-
         function startDataListeners() {
-            if (!userId) return;
-
             onSnapshot(collection(db, 'artifacts', appId, 'users', userId, 'customers'), async (snap) => {
                 customers = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 if (customers.length === 0 && !isSeeding) await seedInitialCustomers();
@@ -327,70 +294,85 @@
             } finally { isSeeding = false; }
         }
 
-        // --- RENDERING ---
-
-        function renderCustomers() {
-            const list = document.getElementById('customer-list');
-            list.innerHTML = customers.map(c => `
-                <div class="flex items-center justify-between p-3 rounded-xl border border-gray-100 bg-gray-50 group hover:border-blue-200 transition">
-                    <div class="flex items-center text-sm font-bold text-gray-700"><span class="customer-dot mr-2 shadow-sm" style="background-color: ${c.color}"></span>${c.name}</div>
-                    <button onclick="window.deleteCustomer('${c.id}')" class="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                </div>
-            `).join('');
-            lucide.createIcons();
-        }
-
-        function renderSelectors() {
-            const s = document.getElementById('task-customer');
-            const cur = s.value;
-            s.innerHTML = '<option value="" disabled selected>Mandant...</option>' + customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-            s.value = cur;
-        }
-
+        // --- BOARD RENDERING (MIT GRUPPIERUNG) ---
         function renderBoard() {
             const cols = { backlog: document.getElementById('col-backlog'), progress: document.getElementById('col-progress'), done: document.getElementById('col-done') };
             Object.values(cols).forEach(c => c.innerHTML = '');
 
-            tasks.sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(task => {
-                const customer = customers.find(c => c.id === task.customerId);
-                const container = cols[task.status];
-                if (!container) return;
-
-                const card = document.createElement('div');
-                card.className = "task-card bg-white p-4 rounded-2xl shadow-sm border border-gray-200 border-l-[6px] group relative";
-                card.style.borderLeftColor = customer ? customer.color : '#cbd5e1';
-                card.draggable = true;
+            // Erstelle Gruppen in jeder Spalte
+            Object.keys(cols).forEach(status => {
+                const container = cols[status];
                 
-                card.innerHTML = `
-                    <div class="flex justify-between items-start mb-2">
-                        <span class="text-[9px] font-black uppercase tracking-widest" style="color: ${customer ? customer.color : '#64748b'}">
-                            ${customer ? customer.name : 'Mandant'}
-                        </span>
-                        <div class="flex space-x-2 opacity-0 group-hover:opacity-100 transition">
-                             <button onclick="window.openEditModal('${task.id}')" class="text-slate-400 hover:text-indigo-600"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
-                             <button onclick="window.deleteTask('${task.id}')" class="text-slate-400 hover:text-red-500"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
-                        </div>
-                    </div>
-                    <p class="text-sm font-semibold text-gray-800 leading-snug">${task.title}</p>
-                    <div class="flex justify-between items-center mt-3 pt-2 border-t border-gray-50">
-                        <span class="text-[9px] text-gray-400 font-bold">${task.date ? new Date(task.date).toLocaleDateString() : '---'}</span>
-                        ${task.status === 'progress' ? `
-                            <div class="flex items-center space-x-1">
-                                <input type="number" step="0.25" placeholder="h" value="${task.currentDuration || ''}" 
-                                    onchange="window.updateTaskHours('${task.id}', this.value)"
-                                    class="w-12 p-1 text-[10px] font-black text-indigo-600 bg-indigo-50 rounded border-none focus:ring-1 focus:ring-indigo-300 text-center outline-none">
-                                <i data-lucide="clock" class="w-3 h-3 text-indigo-400"></i>
-                            </div>
-                        ` : ''}
-                    </div>
-                `;
+                // Filtere Tasks dieser Spalte
+                const statusTasks = tasks.filter(t => t.status === status);
+                
+                // Gruppiere nach Kunde
+                const grouped = customers.map(c => {
+                    return {
+                        customer: c,
+                        tasks: statusTasks.filter(t => t.customerId === c.id)
+                    };
+                }).filter(group => group.tasks.length > 0);
 
-                card.addEventListener('dragstart', (e) => e.dataTransfer.setData('text/plain', task.id));
-                container.appendChild(card);
+                // Hänge Tasks ohne bekannten Kunden an
+                const unknownTasks = statusTasks.filter(t => !customers.find(c => c.id === t.customerId));
+                if (unknownTasks.length > 0) {
+                    grouped.push({ customer: { name: 'Unbekannt', color: '#cbd5e1' }, tasks: unknownTasks });
+                }
+
+                grouped.forEach(group => {
+                    const groupEl = document.createElement('div');
+                    groupEl.className = "space-y-2 mb-4";
+                    groupEl.innerHTML = `
+                        <div class="flex items-center space-x-2 px-1 mb-1">
+                            <span class="w-1.5 h-1.5 rounded-full" style="background-color: ${group.customer.color}"></span>
+                            <span class="text-[10px] font-black uppercase text-slate-400 tracking-wider">${group.customer.name}</span>
+                        </div>
+                    `;
+                    
+                    group.tasks.sort((a,b) => (b.isHighPriority ? 1 : 0) - (a.isHighPriority ? 1 : 0)).forEach(task => {
+                        const card = document.createElement('div');
+                        card.className = `task-card bg-white p-4 rounded-2xl shadow-sm border border-gray-200 border-l-[6px] group relative ${task.isHighPriority ? 'priority-high' : ''}`;
+                        card.style.borderLeftColor = group.customer.color;
+                        card.draggable = true;
+                        
+                        card.innerHTML = `
+                            <div class="flex justify-between items-start mb-2">
+                                <button onclick="window.togglePriority('${task.id}', ${!task.isHighPriority})" 
+                                        class="p-1 rounded-lg transition ${task.isHighPriority ? 'text-red-500 bg-red-50' : 'text-slate-300 hover:text-red-400'}">
+                                    <i data-lucide="zap" class="w-3.5 h-3.5 fill-current"></i>
+                                </button>
+                                <div class="flex space-x-2 opacity-0 group-hover:opacity-100 transition">
+                                     <button onclick="window.openEditModal('${task.id}')" class="text-slate-400 hover:text-indigo-600"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+                                     <button onclick="window.deleteTask('${task.id}')" class="text-slate-400 hover:text-red-500"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+                                </div>
+                            </div>
+                            <p class="text-sm font-semibold text-gray-800 leading-snug">${task.title}</p>
+                            <div class="flex justify-between items-center mt-3 pt-2 border-t border-gray-50">
+                                <span class="text-[9px] text-gray-400 font-bold flex items-center">
+                                    <i data-lucide="calendar" class="w-2.5 h-2.5 mr-1"></i>
+                                    ${task.date ? new Date(task.date).toLocaleDateString() : '---'}
+                                </span>
+                                ${task.status === 'progress' ? `
+                                    <div class="flex items-center space-x-1">
+                                        <input type="number" step="0.25" placeholder="h" value="${task.currentDuration || ''}" 
+                                            onchange="window.updateTaskHours('${task.id}', this.value)"
+                                            class="w-12 p-1 text-[10px] font-black text-indigo-600 bg-indigo-50 rounded border-none focus:ring-1 focus:ring-indigo-300 text-center outline-none">
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `;
+
+                        card.addEventListener('dragstart', (e) => e.dataTransfer.setData('text/plain', task.id));
+                        groupEl.appendChild(card);
+                    });
+                    container.appendChild(groupEl);
+                });
             });
             lucide.createIcons();
         }
 
+        // --- REPORT & ACTIONS ---
         function renderReports() {
             const container = document.getElementById('monthly-stats');
             const now = new Date();
@@ -400,7 +382,7 @@
             });
 
             const reportData = customers.map(c => {
-                const cLogs = monthLogs.filter(l => l.customerId === c.id).sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
+                const cLogs = monthLogs.filter(l => l.customerId === c.id).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
                 const total = cLogs.reduce((sum, l) => sum + (parseFloat(l.duration) || 0), 0);
                 return { id: c.id, name: c.name, color: c.color, logs: cLogs, total };
             }).filter(r => r.total > 0);
@@ -418,7 +400,7 @@
                             ${r.name}
                         </div>
                         <div class="flex items-center space-x-2">
-                            <button onclick="window.exportCustomerCSV('${r.id}')" title="Excel-Export" class="p-1 hover:bg-slate-700 rounded transition text-slate-400 hover:text-white"><i data-lucide="download" class="w-4 h-4"></i></button>
+                            <button onclick="window.exportCustomerCSV('${r.id}')" class="p-1 text-slate-400 hover:text-white transition"><i data-lucide="download" class="w-4 h-4"></i></button>
                             <div class="text-lg font-black text-white">${r.total.toFixed(2)}h</div>
                         </div>
                     </div>
@@ -428,8 +410,8 @@
                             <div class="truncate mr-2"><span class="text-slate-500 mr-1">${new Date(l.timestamp).toLocaleDateString()}</span> ${l.taskTitle}</div>
                             <div class="flex items-center space-x-2 flex-shrink-0">
                                 <span class="font-bold text-slate-300">${l.duration}h</span>
-                                <button onclick="window.editLog('${l.id}', '${l.duration}')" class="opacity-0 group-hover/log:opacity-100 text-slate-600 hover:text-indigo-400 transition"><i data-lucide="pencil" class="w-3 h-3"></i></button>
-                                <button onclick="window.deleteLog('${l.id}')" class="opacity-0 group-hover/log:opacity-100 text-slate-600 hover:text-red-500 transition"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
+                                <button onclick="window.editLog('${l.id}', '${l.duration}')" class="opacity-0 group-hover/log:opacity-100 text-slate-600 hover:text-indigo-400"><i data-lucide="pencil" class="w-3 h-3"></i></button>
+                                <button onclick="window.deleteLog('${l.id}')" class="opacity-0 group-hover/log:opacity-100 text-slate-600 hover:text-red-500"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
                             </div>
                         </li>`).join('')}
                     </ul>
@@ -438,23 +420,9 @@
             lucide.createIcons();
         }
 
-        // --- GLOBALE WINDOW FUNKTIONEN ---
-
-        window.exportCustomerCSV = (custId) => {
-            const customer = customers.find(c => c.id === custId);
-            const now = new Date();
-            const logs = timeLogs.filter(l => l.customerId === custId && new Date(l.timestamp).getMonth() === now.getMonth());
-            
-            let csv = "\uFEFFDatum;Projekt;Dauer (h)\n";
-            logs.forEach(l => {
-                csv += `${new Date(l.timestamp).toLocaleDateString()};"${l.taskTitle.replace(/"/g, '""')}";${l.duration.toString().replace('.', ',')}\n`;
-            });
-
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = `Stundennachweis_${customer.name}_${now.getMonth()+1}_${now.getFullYear()}.csv`;
-            link.click();
+        // --- GLOBAL ACTIONS ---
+        window.togglePriority = async (id, val) => {
+            await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { isHighPriority: val });
         };
 
         window.updateTaskHours = async (id, val) => {
@@ -465,7 +433,6 @@
             const task = tasks.find(t => t.id === id);
             document.getElementById('edit-task-id').value = id;
             document.getElementById('edit-task-title').value = task.title;
-            document.getElementById('edit-task-date').value = task.date;
             document.getElementById('edit-task-modal').classList.remove('hidden');
         };
 
@@ -474,13 +441,26 @@
         window.deleteCustomer = async (id) => { if (confirm("Kunden löschen?")) await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'customers', id)); };
         window.deleteTask = async (id) => { if (confirm("Task löschen?")) await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id)); };
         window.deleteLog = async (id) => { if (confirm("Buchung löschen?")) await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'timeLogs', id)); };
+        
         window.editLog = async (id, cur) => {
             const n = prompt("Dauer korrigieren:", cur);
             if (n !== null && !isNaN(parseFloat(n))) await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'timeLogs', id), { duration: parseFloat(n) });
         };
 
-        // --- EVENT LISTENERS ---
+        window.exportCustomerCSV = (custId) => {
+            const customer = customers.find(c => c.id === custId);
+            const now = new Date();
+            const logs = timeLogs.filter(l => l.customerId === custId && new Date(l.timestamp).getMonth() === now.getMonth());
+            let csv = "\uFEFFDatum;Projekt;Dauer (h)\n";
+            logs.forEach(l => { csv += `${new Date(l.timestamp).toLocaleDateString()};"${l.taskTitle.replace(/"/g, '""')}";${l.duration.toString().replace('.', ',')}\n`; });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `Report_${customer.name}_${now.getMonth()+1}_${now.getFullYear()}.csv`;
+            link.click();
+        };
 
+        // --- EVENT LISTENERS ---
         document.getElementById('auth-form').addEventListener('submit', handleAuthSubmit);
         document.getElementById('toggle-auth-mode').addEventListener('click', toggleAuthMode);
         document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
@@ -488,17 +468,6 @@
         document.getElementById('forgot-password-btn').addEventListener('click', async () => {
             const email = document.getElementById('auth-email').value;
             if (email) { await sendPasswordResetEmail(auth, email); alert("E-Mail gesendet!"); }
-            else { alert("Bitte E-Mail eingeben."); }
-        });
-
-        document.getElementById('edit-task-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const id = document.getElementById('edit-task-id').value;
-            await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), {
-                title: document.getElementById('edit-task-title').value,
-                date: document.getElementById('edit-task-date').value
-            });
-            window.closeEditModal();
         });
 
         document.getElementById('customer-form').addEventListener('submit', async (e) => {
@@ -510,16 +479,26 @@
 
         document.getElementById('task-form').addEventListener('submit', async (e) => {
             e.preventDefault();
+            const today = new Date().toISOString().split('T')[0];
             await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'tasks'), {
                 title: document.getElementById('task-title').value,
                 customerId: document.getElementById('task-customer').value,
-                date: document.getElementById('task-date-init').value,
+                date: today,
                 status: 'backlog',
+                isHighPriority: false,
                 currentDuration: 0,
                 createdAt: new Date().toISOString()
             });
             e.target.reset();
-            document.getElementById('task-date-init').valueAsDate = new Date();
+        });
+
+        document.getElementById('edit-task-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('edit-task-id').value;
+            await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), {
+                title: document.getElementById('edit-task-title').value
+            });
+            closeEditModal();
         });
 
         document.querySelectorAll('.drop-zone').forEach(zone => {
@@ -536,9 +515,15 @@
                 if (status === 'done') {
                     document.getElementById('time-modal-task-name').textContent = `Buchung für: ${task.title}`;
                     document.getElementById('task-duration').value = task.currentDuration || "";
-                    document.getElementById('log-date').value = task.date || new Date().toISOString().split('T')[0];
+                    document.getElementById('log-date').value = new Date().toISOString().split('T')[0];
                     pendingTaskId = id;
                     document.getElementById('time-modal').classList.remove('hidden');
+                } else if (status === 'progress') {
+                    // Update Datum auf HEUTE, wenn in Aktiv geschoben
+                    await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { 
+                        status: status,
+                        date: new Date().toISOString().split('T')[0]
+                    });
                 } else {
                     await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { status });
                 }
@@ -561,11 +546,42 @@
             }
         });
 
-        window.onload = () => {
-            const dateInput = document.getElementById('task-date-init');
-            if (dateInput) dateInput.valueAsDate = new Date();
-            initAuth();
+        const renderSelectors = () => {
+            const s = document.getElementById('task-customer');
+            const cur = s.value;
+            s.innerHTML = '<option value="" disabled selected>Mandant wählen...</option>' + customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            s.value = cur;
         };
+
+        const renderCustomers = () => {
+            document.getElementById('customer-list').innerHTML = customers.map(c => `
+                <div class="flex items-center justify-between p-3 rounded-xl border border-gray-100 bg-gray-50 group hover:border-blue-200 transition">
+                    <div class="flex items-center text-sm font-bold text-gray-700"><span class="customer-dot mr-2 shadow-sm" style="background-color: ${c.color}"></span>${c.name}</div>
+                    <button onclick="window.deleteCustomer('${c.id}')" class="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                </div>
+            `).join('');
+        };
+
+        async function handleAuthSubmit(e) {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value;
+            const pass = document.getElementById('auth-password').value;
+            const msg = document.getElementById('auth-message');
+            msg.textContent = "";
+            try {
+                if (isLoginMode) { await signInWithEmailAndPassword(auth, email, pass); }
+                else { await createUserWithEmailAndPassword(auth, email, pass); }
+            } catch (err) { msg.textContent = "Fehler: " + err.message; }
+        }
+
+        function toggleAuthMode() {
+            isLoginMode = !isLoginMode;
+            document.getElementById('auth-title').textContent = isLoginMode ? "Willkommen zurück" : "Konto erstellen";
+            document.getElementById('auth-submit-btn').textContent = isLoginMode ? "Login" : "Registrieren";
+            document.getElementById('toggle-auth-mode').textContent = isLoginMode ? "Noch kein Konto? Hier registrieren" : "Bereits ein Konto? Login";
+        }
+
+        window.onload = initAuth;
     </script>
 </body>
 </html>
