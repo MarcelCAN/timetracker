@@ -202,6 +202,30 @@
         </div>
     </div>
 
+    <!-- MODAL: TASK EDIT -->
+    <div id="edit-task-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-70 flex items-center justify-center p-4 z-50">
+        <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-md border border-gray-200">
+            <h2 class="text-xl font-bold mb-4 flex items-center text-gray-800">Task bearbeiten</h2>
+            <form id="edit-task-form" class="space-y-4">
+                <input type="hidden" id="edit-task-id">
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Titel</label>
+                    <input type="text" id="edit-task-title" required class="w-full p-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-semibold">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Themen-Zuordnung</label>
+                    <select id="edit-task-project" class="w-full p-3 border border-gray-200 rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                        <option value="">Kein Thema zugeordnet</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <button type="button" onclick="window.closeEditModal()" class="p-4 text-gray-400 font-bold hover:bg-gray-50 rounded-2xl transition">Abbrechen</button>
+                    <button type="submit" class="p-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg hover:bg-indigo-700 transition">Speichern</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- MODAL: PROJEKT DETAILS & NOTIZEN -->
     <div id="project-detail-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-80 flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col md:flex-row">
@@ -220,7 +244,7 @@
                     <textarea id="pd-desc" rows="3" class="w-full p-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-indigo-100 text-sm"></textarea>
                 </section>
 
-                <!-- Neues Notiz-System -->
+                <!-- Notiz-System -->
                 <section class="space-y-4">
                     <div class="flex justify-between items-center border-b border-slate-100 pb-2">
                         <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Notizen & Protokoll</h4>
@@ -229,7 +253,6 @@
                         </button>
                     </div>
                     
-                    <!-- Eingabe für neue/editierte Notiz -->
                     <div id="note-editor" class="hidden bg-yellow-50 p-4 rounded-2xl space-y-3 border border-yellow-100">
                         <textarea id="note-input" rows="3" placeholder="Gedanken, Protokolle, Ergebnisse..." class="w-full bg-transparent border-none outline-none text-sm placeholder-yellow-600 text-yellow-900"></textarea>
                         <div class="flex justify-end space-x-2">
@@ -238,10 +261,7 @@
                         </div>
                     </div>
 
-                    <!-- Liste der Notizen -->
-                    <div id="pd-notes-list" class="space-y-3">
-                        <!-- Gerenderte Notizen -->
-                    </div>
+                    <div id="pd-notes-list" class="space-y-3"></div>
                 </section>
 
                 <div class="flex justify-end gap-3 pt-6 border-t border-slate-100">
@@ -251,11 +271,25 @@
             </div>
 
             <!-- Rechte Seite: Tasks -->
-            <div class="p-8 bg-slate-50 md:w-1/3 overflow-y-auto">
-                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 flex items-center">
-                    <i data-lucide="list-checks" class="w-4 h-4 mr-2"></i> Zugeordnete Tasks
-                </h4>
-                <div id="pd-tasks-list" class="space-y-3"></div>
+            <div class="p-8 bg-slate-50 md:w-1/3 overflow-y-auto space-y-6">
+                <section>
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center">
+                        <i data-lucide="link" class="w-4 h-4 mr-2"></i> Tasks verknüpfen
+                    </h4>
+                    <div class="flex gap-2">
+                        <select id="pd-link-task-select" class="flex-grow p-2 text-xs border border-slate-200 rounded-lg bg-white outline-none focus:ring-1 focus:ring-indigo-400">
+                            <option value="">Task wählen...</option>
+                        </select>
+                        <button id="pd-link-task-btn" class="bg-slate-800 text-white p-2 rounded-lg hover:bg-black transition"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                    </div>
+                </section>
+
+                <section>
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center">
+                        <i data-lucide="list-checks" class="w-4 h-4 mr-2"></i> Projekt-Tasks
+                    </h4>
+                    <div id="pd-tasks-list" class="space-y-3"></div>
+                </section>
             </div>
         </div>
     </div>
@@ -372,9 +406,9 @@
             const ps = document.getElementById('proj-customer');
             const ts = document.getElementById('task-project');
             
-            const cList = '<option value="" disabled selected>Kunde wählen...</option>' + customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-            if (cs) cs.innerHTML = cList;
-            if (ps) ps.innerHTML = '<option value="" disabled selected>Kunde wählen...</option>' + customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            const cOptions = '<option value="" disabled selected>Kunde wählen...</option>' + customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            if (cs) cs.innerHTML = cOptions;
+            if (ps) ps.innerHTML = cOptions;
             
             if (cs) {
                 cs.onchange = (e) => {
@@ -404,8 +438,6 @@
                                 return `
                                     <div class="project-card p-5 rounded-lg flex flex-col space-y-3" onclick="window.openProjectDetails('${p.id}')">
                                         <h4 class="font-bold text-slate-800 leading-tight">${p.title}</h4>
-                                        
-                                        <!-- Task Preview inside Card -->
                                         ${pTasks.length > 0 ? `
                                             <div class="space-y-1 pt-2 border-t border-yellow-200">
                                                 ${pTasks.slice(0, 3).map(t => `
@@ -424,7 +456,7 @@
                                     </div>
                                 `;
                             }).join('')}
-                            ${cProjs.length === 0 ? '<div class="text-[10px] text-slate-400 italic px-2">Keine Themen angelegt.</div>' : ''}
+                            ${cProjs.length === 0 ? '<div class="text-[10px] text-slate-400 italic px-2 py-8 text-center border-2 border-dashed border-slate-100 rounded-xl">Keine Themen</div>' : ''}
                         </div>
                     </div>
                 `;
@@ -439,11 +471,8 @@
             Object.keys(cols).forEach(status => {
                 const container = cols[status];
                 if (!container) return;
-
                 const statusTasks = tasks.filter(t => t.status === status);
-                const grouped = customers.map(c => ({
-                    c, tasks: statusTasks.filter(t => t.customerId === c.id)
-                })).filter(g => g.tasks.length > 0);
+                const grouped = customers.map(c => ({ c, tasks: statusTasks.filter(t => t.customerId === c.id) })).filter(g => g.tasks.length > 0);
 
                 grouped.forEach(g => {
                     const gEl = document.createElement('div');
@@ -463,6 +492,7 @@
                                 <span class="text-[8px] font-black text-indigo-400 uppercase truncate max-w-[150px]">${project ? project.title : ''}</span>
                                 <div class="flex space-x-1 opacity-0 group-hover:opacity-100 transition">
                                      <button onclick="window.togglePriority('${t.id}', ${!t.isHighPriority})"><i data-lucide="zap" class="w-3 h-3 ${t.isHighPriority ? 'text-red-500 fill-current' : 'text-slate-300'}"></i></button>
+                                     <button onclick="window.openEditModal('${t.id}')"><i data-lucide="pencil" class="w-3 h-3 text-slate-300 hover:text-indigo-500"></i></button>
                                      <button onclick="window.deleteTask('${t.id}')" class="text-slate-300 hover:text-red-500"><i data-lucide="x" class="w-3 h-3"></i></button>
                                 </div>
                             </div>
@@ -496,7 +526,7 @@
             
             // Render Notes List
             const notes = p.notes || [];
-            document.getElementById('pd-notes-list').innerHTML = notes.map((n, idx) => `
+            document.getElementById('pd-notes-list').innerHTML = notes.map((n) => `
                 <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-100 group/note">
                     <div class="flex justify-between items-start mb-1">
                         <span class="text-[8px] font-bold text-yellow-600 uppercase tracking-tighter">${new Date(n.date).toLocaleString()}</span>
@@ -509,18 +539,46 @@
                 </div>
             `).join('') || '<div class="text-[11px] text-slate-400 italic py-4 text-center">Noch keine Notizen vorhanden.</div>';
             
-            // Render Tasks
+            // Handle Task Linking Select
+            const linkSelect = document.getElementById('pd-link-task-select');
+            // Show all tasks of this customer that are NOT already in this project
+            const availableTasks = tasks.filter(t => t.customerId === p.customerId && t.projectId !== id);
+            linkSelect.innerHTML = '<option value="">Task wählen...</option>' + availableTasks.map(t => `<option value="${t.id}">${t.title} [${t.status}]</option>`).join('');
+
+            // Render Task List
             const pTasks = tasks.filter(t => t.projectId === id);
             document.getElementById('pd-tasks-list').innerHTML = pTasks.map(t => `
                 <div class="p-3 bg-white rounded-xl shadow-sm text-xs flex justify-between items-center border-l-4" style="border-left-color: ${t.status === 'done' ? '#22c55e' : t.status === 'progress' ? '#fb923c' : '#cbd5e1'}">
                     <span class="font-bold text-slate-700 truncate mr-2">${t.title}</span>
-                    <span class="px-2 py-0.5 rounded-full ${t.status === 'done' ? 'bg-green-100 text-green-600' : t.status === 'progress' ? 'bg-orange-100 text-orange-600' : 'bg-slate-100 text-slate-400'} font-black uppercase text-[8px] whitespace-nowrap">${t.status}</span>
+                    <div class="flex items-center space-x-2">
+                        <span class="px-2 py-0.5 rounded-full ${t.status === 'done' ? 'bg-green-100 text-green-600' : t.status === 'progress' ? 'bg-orange-100 text-orange-600' : 'bg-slate-100 text-slate-400'} font-black uppercase text-[8px] whitespace-nowrap">${t.status}</span>
+                        <button onclick="window.unlinkTask('${t.id}')" class="text-slate-300 hover:text-red-500 transition" title="Verknüpfung lösen"><i data-lucide="link-2-off" class="w-3 h-3"></i></button>
+                    </div>
                 </div>
             `).join('') || '<div class="text-[10px] italic text-slate-400">Keine verknüpften Tasks.</div>';
             
             document.getElementById('project-detail-modal').classList.remove('hidden');
             lucide.createIcons();
         };
+
+        window.openEditModal = (id) => {
+            const task = tasks.find(t => t.id === id);
+            if (!task) return;
+            activeProjectId = null; // Important to reset
+            
+            document.getElementById('edit-task-id').value = id;
+            document.getElementById('edit-task-title').value = task.title;
+            
+            // Populate Project Dropdown based on Customer of the Task
+            const projSelect = document.getElementById('edit-task-project');
+            const availableProjects = projects.filter(p => p.customerId === task.customerId);
+            projSelect.innerHTML = '<option value="">Kein Thema zugeordnet</option>' + availableProjects.map(p => `<option value="${p.id}">${p.title}</option>`).join('');
+            projSelect.value = task.projectId || "";
+            
+            document.getElementById('edit-task-modal').classList.remove('hidden');
+        };
+
+        window.closeEditModal = () => document.getElementById('edit-task-modal').classList.add('hidden');
 
         // --- NOTE LOGIC ---
         window.prepareNewNote = () => {
@@ -530,9 +588,7 @@
             document.getElementById('save-note-btn').textContent = "Notiz speichern";
         };
 
-        window.cancelNote = () => {
-            document.getElementById('note-editor').classList.add('hidden');
-        };
+        window.cancelNote = () => document.getElementById('note-editor').classList.add('hidden');
 
         window.editNote = (id) => {
             const p = projects.find(p => p.id === activeProjectId);
@@ -549,13 +605,11 @@
             if (!text) return;
             const p = projects.find(p => p.id === activeProjectId);
             let notes = [...(p.notes || [])];
-
             if (editingNoteId) {
                 notes = notes.map(n => n.id === editingNoteId ? { ...n, text, date: new Date().toISOString() } : n);
             } else {
                 notes.unshift({ id: Date.now().toString(), text, date: new Date().toISOString() });
             }
-
             await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'projects', activeProjectId), { notes });
             document.getElementById('note-editor').classList.add('hidden');
         };
@@ -571,7 +625,6 @@
             const container = document.getElementById('monthly-stats');
             const now = new Date();
             const logs = timeLogs.filter(l => new Date(l.timestamp).getMonth() === now.getMonth());
-
             container.innerHTML = customers.map(c => {
                 const cLogs = logs.filter(l => l.customerId === c.id);
                 const total = cLogs.reduce((sum, l) => sum + (parseFloat(l.duration) || 0), 0);
@@ -587,7 +640,7 @@
                         </div>
                     </div>
                 `;
-            }).join('') || '<div class="text-center text-slate-500 py-10">Keine Buchungsdaten in diesem Monat.</div>';
+            }).join('') || '<div class="text-center text-slate-500 py-10">Keine Daten.</div>';
             lucide.createIcons();
         }
 
@@ -598,24 +651,37 @@
             if(hasData && !confirm("Dieser Kunde hat noch Projekte oder Tasks. Wirklich alles löschen?")) return;
             if(confirm("Löschen bestätigen?")) await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'customers', id)); 
         };
-        
         window.deleteTask = async (id) => { if(confirm("Task löschen?")) await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id)); };
+        window.unlinkTask = async (id) => { if(confirm("Verknüpfung zu diesem Thema lösen?")) await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { projectId: "" }); };
         window.togglePriority = async (id, v) => { await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { isHighPriority: v }); };
         window.updateHours = async (id, v) => { await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { currentDuration: parseFloat(v) || 0 }); };
 
         document.getElementById('pd-save-main-btn').onclick = async () => {
-            await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'projects', activeProjectId), {
-                desc: document.getElementById('pd-desc').value
-            });
+            await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'projects', activeProjectId), { desc: document.getElementById('pd-desc').value });
             alert("Änderungen gespeichert!");
         };
 
         document.getElementById('pd-delete-btn').onclick = async () => {
-            if(confirm("Das ganze Thema löschen? Die verknüpften Tasks bleiben im Board (ohne Zuordnung).")){
+            if(confirm("Thema löschen? Tasks bleiben im Board.")){
                 await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'projects', activeProjectId));
                 document.getElementById('project-detail-modal').classList.add('hidden');
                 activeProjectId = null;
             }
+        };
+
+        document.getElementById('pd-link-task-btn').onclick = async () => {
+            const taskId = document.getElementById('pd-link-task-select').value;
+            if (!taskId || !activeProjectId) return;
+            await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', taskId), { projectId: activeProjectId });
+        };
+
+        document.getElementById('edit-task-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('edit-task-id').value;
+            const title = document.getElementById('edit-task-title').value;
+            const projectId = document.getElementById('edit-task-project').value;
+            await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { title, projectId });
+            window.closeEditModal();
         };
 
         document.getElementById('project-create-form').onsubmit = async (e) => {
@@ -648,39 +714,27 @@
         // --- DRAG & DROP ---
         let pendingId = null;
         document.querySelectorAll('.drop-zone').forEach(z => {
-            z.ondragover = (e) => { 
-                e.preventDefault(); 
-                e.dataTransfer.dropEffect = "move";
-                z.classList.add('drop-zone-active'); 
-            };
+            z.ondragover = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; z.classList.add('drop-zone-active'); };
             z.ondragleave = () => z.classList.remove('drop-zone-active');
             z.ondrop = async (e) => {
                 e.preventDefault();
                 z.classList.remove('drop-zone-active');
-                
                 const id = e.dataTransfer.getData('text/plain');
                 if (!id) return;
-                
                 const status = z.dataset.status;
                 const t = tasks.find(x => x.id === id);
                 if (!t) return;
-
-                try {
-                    if(status === 'done') {
-                        document.getElementById('time-modal-task-name').textContent = t.title;
-                        document.getElementById('task-duration').value = t.currentDuration || '';
-                        document.getElementById('log-date').value = new Date().toISOString().split('T')[0];
-                        pendingId = id;
-                        document.getElementById('time-modal').classList.remove('hidden');
-                    } else if (status === 'progress') {
-                        await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { 
-                            status, 
-                            date: new Date().toISOString().split('T')[0] 
-                        });
-                    } else {
-                        await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { status });
-                    }
-                } catch (err) { console.error("Drop failed:", err); }
+                if(status === 'done') {
+                    document.getElementById('time-modal-task-name').textContent = t.title;
+                    document.getElementById('task-duration').value = t.currentDuration || '';
+                    document.getElementById('log-date').value = new Date().toISOString().split('T')[0];
+                    pendingId = id;
+                    document.getElementById('time-modal').classList.remove('hidden');
+                } else if (status === 'progress') {
+                    await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { status, date: new Date().toISOString().split('T')[0] });
+                } else {
+                    await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { status });
+                }
             };
         });
 
@@ -692,10 +746,10 @@
                 await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'timeLogs'), { taskId: t.id, taskTitle: t.title, customerId: t.customerId, duration: dur, timestamp: date });
                 await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', pendingId), { status: 'done', currentDuration: 0 });
                 document.getElementById('time-modal').classList.add('hidden');
-            } else { alert("Bitte Dauer eingeben."); }
+            }
         };
 
-        // UI Tabs & General
+        // Tabs
         document.querySelectorAll('.tab-btn').forEach(b => b.onclick = () => {
             document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
             b.classList.add('active');
@@ -727,7 +781,6 @@
         window.deleteTask = (id) => deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id));
         window.togglePriority = (id, v) => updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { isHighPriority: v });
         window.updateHours = (id, v) => updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { currentDuration: parseFloat(v) || 0 });
-        
         window.exportCSV = (custId) => {
             const customer = customers.find(c => c.id === custId);
             const now = new Date();
