@@ -38,13 +38,32 @@
         }
         .task-card:active { cursor: grabbing; }
 
+        /* Modernes Post-it Design */
         .project-card {
-            background: #fffde7; /* Post-it Gelb */
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            border-bottom: 3px solid #fbc02d;
+            background: #fffde7; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-bottom: 2px solid #fbc02d;
             transition: all 0.2s ease;
+            position: relative;
         }
-        .project-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .project-card:hover { 
+            transform: scale(1.02); 
+            box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.1); 
+            z-index: 10;
+        }
+        
+        .project-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 0 0 15px 15px;
+            border-color: transparent transparent #fbc02d transparent;
+            opacity: 0.3;
+        }
 
         .tab-btn {
             padding: 0.75rem 1.5rem;
@@ -63,9 +82,12 @@
             box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1) !important;
         }
 
-        .project-column {
-            min-width: 320px;
-            max-width: 380px;
+        /* Responsive Grid für die Landkarte statt Flex-Row */
+        .project-grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 2rem;
+            align-items: start;
         }
     </style>
     <script type="module" src="https://unpkg.com/lucide@latest"></script>
@@ -91,7 +113,7 @@
         <!-- Navigation -->
         <nav id="nav-tabs" class="hidden flex space-x-2 border-b border-gray-200">
             <button class="tab-btn active" data-tab="board">Board (Planung)</button>
-            <button class="tab-btn" data-tab="projects">Projekte (Landkarte)</button>
+            <button class="tab-btn" data-tab="projects">Landkarte (Themen)</button>
             <button class="tab-btn" data-tab="analysis">Report & Export</button>
             <button class="tab-btn" data-tab="management">Kundenstamm</button>
         </nav>
@@ -115,16 +137,16 @@
             </div>
         </div>
 
-        <!-- CONTENT -->
+        <!-- MAIN CONTENT -->
         <div id="main-content" class="hidden space-y-6">
 
             <!-- TAB: BOARD -->
             <div id="tab-board" class="tab-content grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Spalte 1: Backlog -->
+                <!-- Column 1: Backlog -->
                 <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col">
                     <h3 class="font-bold text-slate-700 mb-4 flex items-center border-b pb-2 text-xs uppercase tracking-widest">Backlog</h3>
-                    <form id="task-form" class="mb-4 space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                        <input type="text" id="task-title" placeholder="Aufgabe..." required class="w-full p-2 text-sm border border-slate-300 rounded-lg outline-none">
+                    <form id="task-form" class="mb-4 space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-100 shadow-inner">
+                        <input type="text" id="task-title" placeholder="Was ist zu tun?" required class="w-full p-2 text-sm border border-slate-300 rounded-lg outline-none">
                         <div class="flex gap-2">
                              <select id="task-customer" required class="w-1/2 p-2 text-xs border border-slate-300 rounded-lg outline-none bg-white">
                                 <option value="" disabled selected>Kunde...</option>
@@ -138,36 +160,39 @@
                     <div id="col-backlog" class="drop-zone space-y-6 overflow-y-auto" data-status="backlog"></div>
                 </div>
 
-                <!-- Spalte 2: Aktiv -->
+                <!-- Column 2: Aktiv -->
                 <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col">
-                    <h3 class="font-bold text-orange-600 mb-4 flex items-center border-b pb-2 text-xs uppercase tracking-widest">Aktiv</h3>
+                    <h3 class="font-bold text-orange-600 mb-4 flex items-center border-b pb-2 text-xs uppercase tracking-widest">In Bearbeitung</h3>
                     <div id="col-progress" class="drop-zone space-y-6 overflow-y-auto" data-status="progress"></div>
                 </div>
 
-                <!-- Spalte 3: Fertig -->
+                <!-- Column 3: Fertig -->
                 <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col">
                     <h3 class="font-bold text-green-600 mb-4 flex items-center border-b pb-2 text-xs uppercase tracking-widest">Fertig</h3>
                     <div id="col-done" class="drop-zone space-y-6 overflow-y-auto" data-status="done"></div>
                 </div>
             </div>
 
-            <!-- TAB: PROJEKTE -->
+            <!-- TAB: PROJEKTE / LANDKARTE -->
             <div id="tab-projects" class="tab-content hidden space-y-6">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-2xl font-bold text-slate-800">Projekt-Landkarte</h2>
-                    <button id="open-project-modal" class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition flex items-center shadow-md">
+                <div class="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                    <div>
+                        <h2 class="text-2xl font-black text-slate-800 tracking-tight">Themen-Landkarte</h2>
+                        <p class="text-sm text-slate-500">Übersicht aller Projekte gruppiert nach Mandanten</p>
+                    </div>
+                    <button id="open-project-modal" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition flex items-center shadow-lg">
                         <i data-lucide="plus-circle" class="w-5 h-5 mr-2"></i> Neues Thema
                     </button>
                 </div>
-                <div id="project-board-view" class="flex space-x-6 overflow-x-auto pb-6 items-start">
-                    <!-- Spalten = Kunden -->
+                <div id="project-board-view" class="project-grid-container">
+                    <!-- Grid-Kacheln für Kunden werden hier gerendert -->
                 </div>
             </div>
 
             <!-- TAB: ANALYSIS -->
             <div id="tab-analysis" class="tab-content hidden grid grid-cols-1 lg:grid-cols-2 gap-6">
                  <div class="bg-slate-900 p-6 rounded-3xl shadow-xl text-white">
-                    <h3 class="font-bold text-slate-400 mb-4 flex items-center border-b border-slate-800 pb-2 text-xs uppercase tracking-widest">Monatsreport</h3>
+                    <h3 class="font-bold text-slate-400 mb-4 flex items-center border-b border-slate-800 pb-2 text-xs uppercase tracking-widest">Monatsabrechnung</h3>
                     <div id="monthly-stats" class="space-y-4"></div>
                  </div>
             </div>
@@ -197,41 +222,46 @@
                     <input type="text" id="edit-task-title" required class="w-full p-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Gehört zu Thema</label>
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Themen-Zuordnung</label>
                     <select id="edit-task-project" class="w-full p-3 border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-indigo-500">
                         <option value="">Keine Zuordnung</option>
                     </select>
                 </div>
                 <div class="grid grid-cols-2 gap-3 pt-2">
-                    <button type="button" onclick="window.closeEditModal()" class="p-4 text-slate-400 font-bold hover:bg-slate-50 rounded-2xl">Abbrechen</button>
+                    <button type="button" onclick="window.closeEditModal()" class="p-4 text-slate-400 font-bold hover:bg-slate-50 rounded-2xl transition">Abbrechen</button>
                     <button type="submit" class="p-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg hover:bg-indigo-700 transition">Speichern</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- MODAL: PROJEKT DETAILS -->
+    <!-- MODAL: PROJEKT DETAILS & NOTIZEN -->
     <div id="project-detail-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-80 flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col md:flex-row">
+            <!-- Linke Seite: Details & Notizen -->
             <div class="p-8 md:w-2/3 overflow-y-auto space-y-6 border-r border-slate-100">
                 <div class="flex justify-between items-start">
                     <div>
-                        <span id="pd-customer" class="text-xs font-black uppercase text-indigo-500 tracking-widest">Kunde</span>
-                        <h2 id="pd-title" class="text-3xl font-bold text-slate-800 mt-1">Themen-Post-it</h2>
+                        <span id="pd-customer" class="text-[10px] font-black uppercase text-indigo-500 tracking-widest">Mandant</span>
+                        <h2 id="pd-title" class="text-3xl font-black text-slate-800 mt-1">Projektname</h2>
                     </div>
-                    <button onclick="document.getElementById('project-detail-modal').classList.add('hidden')" class="text-slate-300 hover:text-slate-600"><i data-lucide="x-circle" class="w-8 h-8"></i></button>
+                    <button onclick="document.getElementById('project-detail-modal').classList.add('hidden')" class="text-slate-300 hover:text-slate-600 transition"><i data-lucide="x-circle" class="w-8 h-8"></i></button>
                 </div>
+
                 <section class="space-y-2">
                     <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Beschreibung</h4>
                     <textarea id="pd-desc" rows="3" class="w-full p-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-indigo-100 text-sm"></textarea>
                 </section>
+
+                <!-- Notizen -->
                 <section class="space-y-4">
                     <div class="flex justify-between items-center border-b border-slate-100 pb-2">
-                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Notizen</h4>
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Protokoll & Notizen</h4>
                         <button onclick="window.prepareNewNote()" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center">
                             <i data-lucide="plus" class="w-3 h-3 mr-1"></i> Neue Notiz
                         </button>
                     </div>
+                    
                     <div id="note-editor" class="hidden bg-yellow-50 p-4 rounded-2xl space-y-3 border border-yellow-100">
                         <textarea id="note-input" rows="3" placeholder="..." class="w-full bg-transparent border-none outline-none text-sm text-yellow-900"></textarea>
                         <div class="flex justify-end space-x-2">
@@ -241,11 +271,14 @@
                     </div>
                     <div id="pd-notes-list" class="space-y-3"></div>
                 </section>
+
                 <div class="flex justify-end gap-3 pt-6 border-t border-slate-100">
                     <button id="pd-save-main-btn" class="bg-indigo-600 text-white px-8 py-2.5 rounded-xl font-bold shadow-md hover:bg-indigo-700 transition">Speichern</button>
-                    <button id="pd-delete-btn" class="text-red-400 text-[10px] font-bold px-4 py-2 hover:text-red-600 transition uppercase tracking-widest">Löschen</button>
+                    <button id="pd-delete-btn" class="text-red-400 text-[10px] font-bold px-4 py-2 hover:text-red-600 transition uppercase tracking-widest">Projekt löschen</button>
                 </div>
             </div>
+
+            <!-- Rechte Seite: Tasks Verknüpfung -->
             <div class="p-8 bg-slate-50 md:w-1/3 overflow-y-auto space-y-6">
                 <section>
                     <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center"><i data-lucide="link" class="w-4 h-4 mr-2"></i> Tasks verknüpfen</h4>
@@ -265,7 +298,7 @@
     <!-- MODAL: ZEITBUCHUNG -->
     <div id="time-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-70 flex items-center justify-center p-4 z-50">
         <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-sm border border-gray-200">
-            <h2 class="text-xl font-bold mb-4 flex items-center text-gray-800"><i data-lucide="clock" class="mr-2 text-indigo-600"></i> Dauer eintragen</h2>
+            <h2 class="text-xl font-bold mb-4 flex items-center text-gray-800"><i data-lucide="clock" class="mr-2 text-indigo-600"></i> Buchen</h2>
             <p id="time-modal-task-name" class="text-xs text-slate-500 mb-6 font-bold uppercase"></p>
             <div class="space-y-4 mb-6">
                 <div>
@@ -287,14 +320,14 @@
     <!-- MODAL: THEMA ERSTELLEN -->
     <div id="project-create-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-70 flex items-center justify-center p-4 z-50">
         <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-md">
-            <h2 class="text-xl font-bold mb-4">Neues Post-it</h2>
+            <h2 class="text-xl font-bold mb-4">Neues Post-it Thema</h2>
             <form id="project-create-form" class="space-y-4">
                 <input type="text" id="proj-title" placeholder="Titel..." required class="w-full p-3 border border-gray-300 rounded-xl outline-none">
                 <select id="proj-customer" required class="w-full p-3 border border-gray-300 rounded-xl bg-white"></select>
-                <textarea id="proj-desc" placeholder="Details..." rows="3" class="w-full p-3 border border-gray-300 rounded-xl"></textarea>
+                <textarea id="proj-desc" placeholder="Kurzbeschreibung..." rows="3" class="w-full p-3 border border-gray-300 rounded-xl"></textarea>
                 <div class="flex gap-3">
                     <button type="button" onclick="document.getElementById('project-create-modal').classList.add('hidden')" class="w-1/2 p-3 text-slate-400 font-bold">Abbrechen</button>
-                    <button type="submit" class="w-1/2 p-3 bg-indigo-600 text-white font-bold rounded-2xl">Anlegen</button>
+                    <button type="submit" class="w-1/2 p-3 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg hover:bg-indigo-700">Anlegen</button>
                 </div>
             </form>
         </div>
@@ -397,7 +430,7 @@
             const cs = document.getElementById('task-customer');
             const ps = document.getElementById('proj-customer');
             const ts = document.getElementById('task-project');
-            const cOpts = '<option value="" disabled selected>Wählen...</option>' + customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            const cOpts = '<option value="" disabled selected>Kunde...</option>' + customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
             if (cs) cs.innerHTML = cOpts;
             if (ps) ps.innerHTML = cOpts;
             if (cs) {
@@ -411,26 +444,43 @@
         function renderProjects() {
             const view = document.getElementById('project-board-view');
             if (!view) return;
+
+            // NEU: Kunden werden in einem Responsive Grid dargestellt
             view.innerHTML = customers.map(c => {
                 const cProjs = projects.filter(p => p.customerId === c.id);
                 return `
-                    <div class="project-column flex flex-col space-y-4 flex-shrink-0">
-                        <div class="flex items-center space-x-2 px-2 pb-2 border-b border-slate-200">
-                            <span class="w-3 h-3 rounded-full" style="background-color: ${c.color}"></span>
-                            <h3 class="text-sm font-black uppercase tracking-widest text-slate-600 truncate">${c.name}</h3>
+                    <div class="project-column bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col space-y-5">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                            <div class="flex items-center space-x-2">
+                                <span class="w-3 h-3 rounded-full shadow-sm" style="background-color: ${c.color}"></span>
+                                <h3 class="text-sm font-black uppercase tracking-widest text-slate-600 truncate max-w-[200px]">${c.name}</h3>
+                            </div>
+                            <span class="text-[10px] bg-indigo-50 text-indigo-500 font-black px-2 py-0.5 rounded-full">${cProjs.length}</span>
                         </div>
-                        <div class="space-y-4">
+                        <div class="grid grid-cols-1 gap-4">
                             ${cProjs.map(p => {
                                 const pTasks = tasks.filter(t => t.projectId === p.id);
+                                const doneTasks = pTasks.filter(t => t.status === 'done').length;
                                 return `
-                                    <div class="project-card p-5 rounded-lg flex flex-col space-y-3" onclick="window.openProjectDetails('${p.id}')">
+                                    <div class="project-card p-5 rounded-2xl flex flex-col space-y-3" onclick="window.openProjectDetails('${p.id}')">
                                         <h4 class="font-bold text-slate-800 leading-tight">${p.title}</h4>
-                                        <div class="space-y-1 pt-2 border-t border-yellow-200">
-                                            ${pTasks.slice(0, 3).map(t => `<div class="flex items-center text-[9px] text-slate-500 truncate"><span class="w-1.5 h-1.5 rounded-full mr-1 ${t.status === 'done' ? 'bg-green-500' : 'bg-orange-400'}"></span>${t.title}</div>`).join('')}
+                                        <div class="space-y-1.5 pt-2 border-t border-yellow-200">
+                                            ${pTasks.slice(0, 3).map(t => `
+                                                <div class="flex items-center text-[10px] text-slate-500 truncate">
+                                                    <span class="w-1.5 h-1.5 rounded-full mr-2 ${t.status === 'done' ? 'bg-green-500' : 'bg-orange-400'}"></span>
+                                                    <span class="truncate">${t.title}</span>
+                                                </div>
+                                            `).join('')}
+                                            ${pTasks.length > 3 ? `<div class="text-[9px] font-black text-yellow-700 pl-3.5">+ ${pTasks.length - 3} weitere</div>` : ''}
+                                        </div>
+                                        <div class="flex justify-between items-center text-[9px] font-black uppercase text-yellow-700 pt-1">
+                                            <span>Progress</span>
+                                            <span>${doneTasks}/${pTasks.length} Fertig</span>
                                         </div>
                                     </div>
                                 `;
                             }).join('')}
+                            ${cProjs.length === 0 ? '<div class="text-center py-10 border-2 border-dashed border-slate-50 rounded-2xl text-[10px] text-slate-400 font-bold uppercase tracking-wider">Keine Themen</div>' : ''}
                         </div>
                     </div>
                 `;
@@ -450,14 +500,14 @@
 
                 grouped.forEach(g => {
                     const gEl = document.createElement('div');
-                    gEl.className = "space-y-2 mb-6 pointer-events-none"; // Header ist passiv
-                    gEl.innerHTML = `<div class="text-[9px] font-black uppercase text-slate-300 ml-1">${g.c.name}</div>`;
+                    gEl.className = "space-y-2 mb-8";
+                    gEl.innerHTML = `<div class="text-[10px] font-black uppercase text-slate-300 ml-1 tracking-widest pointer-events-none">${g.c.name}</div>`;
                     container.appendChild(gEl);
                     
-                    g.tasks.forEach(t => {
+                    g.tasks.sort((a,b) => (b.isHighPriority ? 1 : 0) - (a.isHighPriority ? 1 : 0)).forEach(t => {
                         const project = projects.find(p => p.id === t.projectId);
                         const card = document.createElement('div');
-                        card.className = `task-card bg-white p-4 rounded-2xl shadow-sm border border-slate-200 border-l-[6px] group relative pointer-events-auto ${t.isHighPriority ? 'priority-high' : ''}`;
+                        card.className = `task-card bg-white p-4 rounded-2xl shadow-sm border border-slate-200 border-l-[6px] group relative ${t.isHighPriority ? 'priority-high' : ''}`;
                         card.style.borderLeftColor = g.c.color;
                         card.draggable = true;
                         card.setAttribute('data-id', t.id);
@@ -473,7 +523,7 @@
                             <p class="text-sm font-bold text-slate-800 leading-tight">${t.title}</p>
                             <div class="mt-3 flex justify-between items-center text-[9px] text-slate-400 font-bold border-t pt-2 border-slate-50">
                                 <span>${t.date ? new Date(t.date).toLocaleDateString() : ''}</span>
-                                ${status === 'progress' ? `<input type="number" step="0.25" placeholder="h" value="${t.currentDuration || ''}" onchange="window.updateHours('${t.id}', this.value)" class="w-10 bg-indigo-50 text-indigo-600 rounded text-center">` : ''}
+                                ${status === 'progress' ? `<input type="number" step="0.25" placeholder="h" value="${t.currentDuration || ''}" onchange="window.updateHours('${t.id}', this.value)" class="w-10 bg-indigo-50 text-indigo-600 rounded text-center focus:ring-1 focus:ring-indigo-300 outline-none transition">` : ''}
                             </div>
                         `;
                         card.addEventListener('dragstart', (e) => {
@@ -501,22 +551,23 @@
                     <div class="flex justify-between items-start mb-1">
                         <span class="text-[8px] font-bold text-yellow-600 uppercase tracking-tighter">${new Date(n.date).toLocaleString()}</span>
                         <div class="flex space-x-2 opacity-0 group-hover/note:opacity-100 transition">
-                             <button onclick="window.editNote('${n.id}')"><i data-lucide="pencil" class="w-3 h-3"></i></button>
-                             <button onclick="window.deleteNote('${n.id}')"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
+                             <button onclick="window.editNote('${n.id}')" class="text-yellow-600 hover:text-indigo-600 transition"><i data-lucide="pencil" class="w-3 h-3"></i></button>
+                             <button onclick="window.deleteNote('${n.id}')" class="text-yellow-600 hover:text-red-500 transition"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
                         </div>
                     </div>
-                    <p class="text-sm text-yellow-900 whitespace-pre-wrap">${n.text}</p>
+                    <p class="text-sm text-yellow-900 whitespace-pre-wrap leading-relaxed">${n.text}</p>
                 </div>
-            `).join('') || '<div class="text-center text-slate-300 py-4 italic text-xs">Keine Notizen.</div>';
+            `).join('') || '<div class="text-center text-slate-300 py-6 italic text-xs">Noch keine Protokolle.</div>';
+            
             const availableTasks = tasks.filter(t => t.customerId === p.customerId && t.projectId !== id);
             document.getElementById('pd-link-task-select').innerHTML = '<option value="">Task wählen...</option>' + availableTasks.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
             const pTasks = tasks.filter(t => t.projectId === id);
             document.getElementById('pd-tasks-list').innerHTML = pTasks.map(t => `
-                <div class="p-3 bg-white rounded-xl shadow-sm text-xs flex justify-between items-center border-l-4" style="border-left-color: ${t.status === 'done' ? '#22c55e' : '#fb923c'}">
+                <div class="p-3 bg-white rounded-xl shadow-sm text-xs flex justify-between items-center border-l-4" style="border-left-color: ${t.status === 'done' ? '#22c55e' : t.status === 'progress' ? '#fb923c' : '#cbd5e1'}">
                     <span class="font-bold text-slate-700 truncate mr-2">${t.title}</span>
-                    <button onclick="window.unlinkTask('${t.id}')" class="text-slate-300 hover:text-red-500"><i data-lucide="link-2-off" class="w-3 h-3"></i></button>
+                    <button onclick="window.unlinkTask('${t.id}')" class="text-slate-300 hover:text-red-500 transition"><i data-lucide="link-2-off" class="w-3 h-3"></i></button>
                 </div>
-            `).join('') || '<div class="text-[10px] italic text-slate-300">Keine Tasks.</div>';
+            `).join('') || '<div class="text-[10px] italic text-slate-300">Keine verknüpften Tasks.</div>';
             document.getElementById('project-detail-modal').classList.remove('hidden');
             lucide.createIcons();
         };
@@ -554,18 +605,19 @@
             window.cancelNote();
         };
         window.deleteNote = async (id) => {
+            if(!confirm("Notiz löschen?")) return;
             const p = projects.find(p => p.id === activeProjectId);
             await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'projects', activeProjectId), { notes: p.notes.filter(n => n.id !== id) });
         };
-        window.deleteCustomer = async (id) => { if(confirm("Löschen?")) await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'customers', id)); };
-        window.deleteTask = async (id) => { if(confirm("Löschen?")) await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id)); };
+        window.deleteCustomer = async (id) => { if(confirm("Mandanten wirklich löschen?")) await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'customers', id)); };
+        window.deleteTask = async (id) => { if(confirm("Task löschen?")) await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id)); };
         window.unlinkTask = async (id) => { await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { projectId: "" }); };
         window.togglePriority = async (id, v) => { await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { isHighPriority: v }); };
         window.updateHours = async (id, v) => { await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { currentDuration: parseFloat(v) || 0 }); };
 
         document.getElementById('pd-save-main-btn').onclick = async () => {
             await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'projects', activeProjectId), { desc: document.getElementById('pd-desc').value });
-            alert("Gespeichert.");
+            alert("Projekt-Details gespeichert.");
         };
         document.getElementById('pd-link-task-btn').onclick = async () => {
             const tId = document.getElementById('pd-link-task-select').value;
@@ -617,7 +669,8 @@
         });
 
         document.getElementById('save-time').onclick = async () => {
-            const dur = parseFloat(document.getElementById('task-duration').value);
+            const durValue = document.getElementById('task-duration').value;
+            const dur = parseFloat(durValue);
             const date = document.getElementById('log-date').value;
             const t = tasks.find(x => x.id === pendingDropId);
             if(!isNaN(dur) && pendingDropId) {
@@ -625,7 +678,7 @@
                 await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', pendingDropId), { status: 'done', currentDuration: 0 });
                 document.getElementById('time-modal').classList.add('hidden');
                 pendingDropId = null;
-            }
+            } else { alert("Bitte Dauer eingeben."); }
         };
 
         function renderReports() {
@@ -636,8 +689,16 @@
                 const cLogs = logs.filter(l => l.customerId === c.id);
                 const total = cLogs.reduce((sum, l) => sum + (parseFloat(l.duration) || 0), 0);
                 if (total === 0) return '';
-                return `<div class="bg-slate-800 bg-opacity-40 p-4 rounded-2xl border border-slate-700 flex justify-between items-center"><span class="font-bold text-slate-200">${c.name}</span><span class="text-xl font-black text-white">${total.toFixed(2)}h</span></div>`;
-            }).join('') || '<div class="text-center text-slate-500 py-10">Keine Daten.</div>';
+                return `
+                    <div class="bg-slate-800 bg-opacity-40 p-4 rounded-2xl border border-slate-700 flex justify-between items-center group transition hover:bg-opacity-60">
+                        <span class="font-bold text-slate-200">${c.name}</span>
+                        <div class="flex items-center space-x-3">
+                             <button onclick="window.exportCSV('${c.id}')" class="p-1.5 text-slate-400 hover:text-white transition" title="Export CSV"><i data-lucide="download" class="w-4 h-4"></i></button>
+                             <span class="text-xl font-black text-white">${total.toFixed(2)}h</span>
+                        </div>
+                    </div>`;
+            }).join('') || '<div class="text-center text-slate-500 py-10 text-xs font-black uppercase tracking-widest">Keine Daten verfügbar</div>';
+            lucide.createIcons();
         }
 
         document.querySelectorAll('.tab-btn').forEach(b => b.onclick = () => {
@@ -652,7 +713,7 @@
         document.getElementById('auth-form').onsubmit = handleAuthSubmit;
         document.getElementById('toggle-auth-mode').onclick = () => { isLoginMode = !isLoginMode; document.getElementById('auth-title').textContent = isLoginMode ? 'Anmelden' : 'Registrieren'; document.getElementById('auth-submit-btn').textContent = isLoginMode ? 'Login' : 'Registrieren'; };
         document.getElementById('logout-btn').onclick = () => signOut(auth);
-        document.getElementById('cancel-time').onclick = () => document.getElementById('time-modal').classList.add('hidden');
+        document.getElementById('cancel-time').onclick = () => { document.getElementById('time-modal').classList.add('hidden'); pendingDropId = null; };
 
         async function handleAuthSubmit(e) {
             e.preventDefault();
@@ -667,6 +728,20 @@
         window.deleteTask = (id) => deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id));
         window.togglePriority = (id, v) => updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { isHighPriority: v });
         window.updateHours = (id, v) => updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { currentDuration: parseFloat(v) || 0 });
+        window.exportCSV = (custId) => {
+            const customer = customers.find(c => c.id === custId);
+            const now = new Date();
+            const logs = timeLogs.filter(l => l.customerId === custId && new Date(l.timestamp).getMonth() === now.getMonth());
+            let csv = "\uFEFFDatum;Projekt;Dauer (h)\n";
+            logs.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp)).forEach(l => { 
+                csv += `${new Date(l.timestamp).toLocaleDateString()};"${l.taskTitle.replace(/"/g, '""')}";${l.duration.toString().replace('.', ',')}\n`; 
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `Leistungsnachweis_${customer.name}_${now.getMonth()+1}_${now.getFullYear()}.csv`;
+            link.click();
+        };
     </script>
 </body>
 </html>
