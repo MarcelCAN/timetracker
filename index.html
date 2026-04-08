@@ -20,16 +20,16 @@
         }
 
         .drop-zone {
-            min-height: 150px;
+            min-height: 200px;
             transition: all 0.2s ease;
             border: 2px solid transparent;
         }
 
         .drop-zone-active {
             background-color: #f1f5f9;
-            border-color: #94a3b8;
+            border-color: #4f46e5;
             border-style: dashed;
-            border-radius: 1rem;
+            border-radius: 1.5rem;
         }
 
         .task-card {
@@ -40,8 +40,8 @@
 
         .project-card {
             background: #fffde7; /* Post-it Gelb */
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            border-bottom: 2px solid #fbc02d;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border-bottom: 3px solid #fbc02d;
             transition: all 0.2s ease;
         }
         .project-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
@@ -59,12 +59,13 @@
         }
 
         .priority-high {
-            border-right: 4px solid #ef4444 !important;
+            border-right: 5px solid #ef4444 !important;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1) !important;
         }
 
         .project-column {
-            min-width: 300px;
-            max-width: 350px;
+            min-width: 320px;
+            max-width: 380px;
         }
     </style>
     <script type="module" src="https://unpkg.com/lucide@latest"></script>
@@ -89,18 +90,18 @@
 
         <!-- Navigation -->
         <nav id="nav-tabs" class="hidden flex space-x-2 border-b border-gray-200">
-            <button class="tab-btn active" data-tab="board">Board (TagesgeschÃ¤ft)</button>
-            <button class="tab-btn" data-tab="projects">Landkarte (Themen)</button>
+            <button class="tab-btn active" data-tab="board">Board (Planung)</button>
+            <button class="tab-btn" data-tab="projects">Projekte (Landkarte)</button>
             <button class="tab-btn" data-tab="analysis">Report & Export</button>
             <button class="tab-btn" data-tab="management">Kundenstamm</button>
         </nav>
 
-        <!-- Lade-Indikator -->
+        <!-- Loading -->
         <div id="loading-indicator" class="text-center py-20">
             <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
         </div>
 
-        <!-- Login -->
+        <!-- Auth -->
         <div id="login-center" class="hidden flex items-center justify-center py-10">
             <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md border border-gray-100">
                 <h2 id="auth-title" class="text-2xl font-bold text-slate-800 text-center mb-6">Anmelden</h2>
@@ -110,51 +111,47 @@
                     <p id="auth-message" class="text-sm text-red-500 text-center"></p>
                     <button type="submit" id="auth-submit-btn" class="w-full bg-indigo-600 text-white p-3 rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg">Login</button>
                 </form>
-                <button id="toggle-auth-mode" class="w-full mt-4 text-sm text-indigo-600 hover:underline">Neuen Account registrieren</button>
+                <button id="toggle-auth-mode" class="w-full mt-4 text-sm text-indigo-600 hover:underline">Account erstellen</button>
             </div>
         </div>
 
-        <!-- MAIN CONTENT -->
+        <!-- CONTENT -->
         <div id="main-content" class="hidden space-y-6">
 
             <!-- TAB: BOARD -->
             <div id="tab-board" class="tab-content grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Column 1: Backlog -->
+                <!-- Spalte 1: Backlog -->
                 <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col">
                     <h3 class="font-bold text-slate-700 mb-4 flex items-center border-b pb-2 text-xs uppercase tracking-widest">Backlog</h3>
-                    <form id="task-form" class="mb-4 space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-100 shadow-inner">
-                        <input type="text" id="task-title" placeholder="Was ist zu tun?" required class="w-full p-2 text-sm border border-slate-300 rounded-lg outline-none">
+                    <form id="task-form" class="mb-4 space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <input type="text" id="task-title" placeholder="Aufgabe..." required class="w-full p-2 text-sm border border-slate-300 rounded-lg outline-none">
                         <div class="flex gap-2">
                              <select id="task-customer" required class="w-1/2 p-2 text-xs border border-slate-300 rounded-lg outline-none bg-white">
                                 <option value="" disabled selected>Kunde...</option>
                              </select>
                              <select id="task-project" class="w-1/2 p-2 text-xs border border-slate-300 rounded-lg outline-none bg-white">
-                                <option value="">Thema (optional)</option>
+                                <option value="">Projekt (opt.)</option>
                              </select>
                         </div>
-                        <div class="flex gap-3 items-center py-1">
-      <label class="flex items-center gap-1 text-xs text-red-500 font-bold cursor-pointer"><input type="checkbox" id="task-urgent" class="rounded accent-red-500"> Dringend</label>
-      <label class="flex items-center gap-1 text-xs text-amber-600 font-bold cursor-pointer"><input type="checkbox" id="task-waiting" class="rounded accent-amber-500"> Wiedervorlage</label>
-    </div>
-    <button type="submit" class="w-full bg-slate-800 text-white p-2 rounded-lg font-bold text-xs hover:bg-black transition uppercase">Task anlegen</button>
+                        <button type="submit" class="w-full bg-slate-800 text-white p-2 rounded-lg font-bold text-xs hover:bg-black transition">TASK ANLEGEN</button>
                     </form>
                     <div id="col-backlog" class="drop-zone space-y-6 overflow-y-auto" data-status="backlog"></div>
                 </div>
 
-                <!-- Column 2: Aktiv -->
+                <!-- Spalte 2: Aktiv -->
                 <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col">
-                    <h3 class="font-bold text-orange-600 mb-4 flex items-center border-b pb-2 text-xs uppercase tracking-widest">In Bearbeitung</h3>
+                    <h3 class="font-bold text-orange-600 mb-4 flex items-center border-b pb-2 text-xs uppercase tracking-widest">Aktiv</h3>
                     <div id="col-progress" class="drop-zone space-y-6 overflow-y-auto" data-status="progress"></div>
                 </div>
 
-                <!-- Column 3: Fertig -->
+                <!-- Spalte 3: Fertig -->
                 <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col">
-                    <h3 class="font-bold text-green-600 mb-4 flex items-center border-b pb-2 text-xs uppercase tracking-widest">Erledigt</h3>
+                    <h3 class="font-bold text-green-600 mb-4 flex items-center border-b pb-2 text-xs uppercase tracking-widest">Fertig</h3>
                     <div id="col-done" class="drop-zone space-y-6 overflow-y-auto" data-status="done"></div>
                 </div>
             </div>
 
-            <!-- TAB: PROJEKTE/THEMEN -->
+            <!-- TAB: PROJEKTE -->
             <div id="tab-projects" class="tab-content hidden space-y-6">
                 <div class="flex justify-between items-center">
                     <h2 class="text-2xl font-bold text-slate-800">Projekt-Landkarte</h2>
@@ -163,14 +160,14 @@
                     </button>
                 </div>
                 <div id="project-board-view" class="flex space-x-6 overflow-x-auto pb-6 items-start">
-                    <!-- Spalten fÃ¼r Kunden werden hier gerendert -->
+                    <!-- Spalten = Kunden -->
                 </div>
             </div>
 
             <!-- TAB: ANALYSIS -->
             <div id="tab-analysis" class="tab-content hidden grid grid-cols-1 lg:grid-cols-2 gap-6">
                  <div class="bg-slate-900 p-6 rounded-3xl shadow-xl text-white">
-                    <h3 class="font-bold text-slate-400 mb-4 flex items-center border-b border-slate-800 pb-2 text-xs uppercase tracking-widest">Abrechnungs-Ãbersicht</h3>
+                    <h3 class="font-bold text-slate-400 mb-4 flex items-center border-b border-slate-800 pb-2 text-xs uppercase tracking-widest">Monatsreport</h3>
                     <div id="monthly-stats" class="space-y-4"></div>
                  </div>
             </div>
@@ -181,117 +178,84 @@
                     <h3 class="font-bold text-slate-800 mb-4 text-sm uppercase">Kundenverwaltung</h3>
                     <form id="customer-form" class="flex gap-2 mb-6">
                         <input type="text" id="cust-name" placeholder="Name..." required class="flex-grow p-3 border border-gray-300 rounded-xl">
-                        <button type="submit" class="bg-blue-600 text-white px-4 rounded-xl shadow-sm hover:bg-blue-700"><i data-lucide="plus"></i></button>
+                        <button type="submit" class="bg-blue-600 text-white px-4 rounded-xl hover:bg-blue-700 transition"><i data-lucide="plus"></i></button>
                     </form>
                     <div id="customer-list" class="space-y-2"></div>
                 </div>
             </div>
-
-        </div>
-    </div>
-
-    <!-- MODAL: THEMA ERSTELLEN -->
-    <div id="project-create-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-70 flex items-center justify-center p-4 z-50">
-        <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-md border border-gray-200">
-            <h2 class="text-xl font-bold mb-4">Neues Projekt-Post-it</h2>
-            <form id="project-create-form" class="space-y-4">
-                <input type="text" id="proj-title" placeholder="Projekttitel" required class="w-full p-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
-                <select id="proj-customer" required class="w-full p-3 border border-gray-200 rounded-xl bg-white"></select>
-                <textarea id="proj-desc" placeholder="Worum geht es?" rows="3" class="w-full p-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
-                <div class="flex gap-3">
-                    <button type="button" onclick="document.getElementById('project-create-modal').classList.add('hidden')" class="w-1/2 p-3 text-slate-400 font-bold">Abbrechen</button>
-                    <button type="submit" class="w-1/2 p-3 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg hover:bg-indigo-700 transition">Anlegen</button>
-                </div>
-            </form>
         </div>
     </div>
 
     <!-- MODAL: TASK EDIT -->
     <div id="edit-task-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-70 flex items-center justify-center p-4 z-50">
         <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-md border border-gray-200">
-            <h2 class="text-xl font-bold mb-4 flex items-center text-gray-800">Task bearbeiten</h2>
+            <h2 class="text-xl font-bold mb-4">Task bearbeiten</h2>
             <form id="edit-task-form" class="space-y-4">
                 <input type="hidden" id="edit-task-id">
                 <div>
-                    <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Titel</label>
-                    <input type="text" id="edit-task-title" required class="w-full p-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-semibold">
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Titel</label>
+                    <input type="text" id="edit-task-title" required class="w-full p-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Themen-Zuordnung</label>
-                    <select id="edit-task-project" class="w-full p-3 border border-gray-200 rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
-                        <option value="">Kein Thema zugeordnet</option>
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Gehört zu Thema</label>
+                    <select id="edit-task-project" class="w-full p-3 border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-indigo-500">
+                        <option value="">Keine Zuordnung</option>
                     </select>
                 </div>
                 <div class="grid grid-cols-2 gap-3 pt-2">
-                    <button type="button" onclick="window.closeEditModal()" class="p-4 text-gray-400 font-bold hover:bg-gray-50 rounded-2xl transition">Abbrechen</button>
+                    <button type="button" onclick="window.closeEditModal()" class="p-4 text-slate-400 font-bold hover:bg-slate-50 rounded-2xl">Abbrechen</button>
                     <button type="submit" class="p-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg hover:bg-indigo-700 transition">Speichern</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- MODAL: PROJEKT DETAILS & NOTIZEN -->
+    <!-- MODAL: PROJEKT DETAILS -->
     <div id="project-detail-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-80 flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col md:flex-row">
-            <!-- Linke Seite: Details & Notizen -->
             <div class="p-8 md:w-2/3 overflow-y-auto space-y-6 border-r border-slate-100">
                 <div class="flex justify-between items-start">
                     <div>
                         <span id="pd-customer" class="text-xs font-black uppercase text-indigo-500 tracking-widest">Kunde</span>
-                        <h2 id="pd-title" class="text-3xl font-bold text-slate-800 mt-1">Projektname</h2>
+                        <h2 id="pd-title" class="text-3xl font-bold text-slate-800 mt-1">Themen-Post-it</h2>
                     </div>
-                    <button onclick="document.getElementById('project-detail-modal').classList.add('hidden')" class="text-slate-300 hover:text-slate-600 transition"><i data-lucide="x-circle" class="w-8 h-8"></i></button>
+                    <button onclick="document.getElementById('project-detail-modal').classList.add('hidden')" class="text-slate-300 hover:text-slate-600"><i data-lucide="x-circle" class="w-8 h-8"></i></button>
                 </div>
-
                 <section class="space-y-2">
-                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Projektbeschreibung</h4>
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Beschreibung</h4>
                     <textarea id="pd-desc" rows="3" class="w-full p-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-indigo-100 text-sm"></textarea>
                 </section>
-
-                <!-- Notiz-System -->
                 <section class="space-y-4">
                     <div class="flex justify-between items-center border-b border-slate-100 pb-2">
-                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Notizen & Protokoll</h4>
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Notizen</h4>
                         <button onclick="window.prepareNewNote()" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center">
                             <i data-lucide="plus" class="w-3 h-3 mr-1"></i> Neue Notiz
                         </button>
                     </div>
-                    
                     <div id="note-editor" class="hidden bg-yellow-50 p-4 rounded-2xl space-y-3 border border-yellow-100">
-                        <textarea id="note-input" rows="3" placeholder="Gedanken, Protokolle, Ergebnisse..." class="w-full bg-transparent border-none outline-none text-sm placeholder-yellow-600 text-yellow-900"></textarea>
+                        <textarea id="note-input" rows="3" placeholder="..." class="w-full bg-transparent border-none outline-none text-sm text-yellow-900"></textarea>
                         <div class="flex justify-end space-x-2">
                             <button onclick="window.cancelNote()" class="px-3 py-1 text-xs font-bold text-slate-400">Abbrechen</button>
-                            <button id="save-note-btn" class="px-4 py-1 bg-yellow-600 text-white text-xs font-bold rounded-lg shadow-sm">Notiz speichern</button>
+                            <button id="save-note-btn" class="px-4 py-1 bg-yellow-600 text-white text-xs font-bold rounded-lg">Speichern</button>
                         </div>
                     </div>
-
                     <div id="pd-notes-list" class="space-y-3"></div>
                 </section>
-
                 <div class="flex justify-end gap-3 pt-6 border-t border-slate-100">
-                    <button id="pd-save-main-btn" class="bg-indigo-600 text-white px-8 py-2.5 rounded-xl font-bold shadow-md hover:bg-indigo-700 transition">Ãnderungen speichern</button>
-                    <button id="pd-delete-btn" class="text-red-400 text-[10px] font-bold px-4 py-2 hover:text-red-600 transition uppercase tracking-widest">Projekt lÃ¶schen</button>
+                    <button id="pd-save-main-btn" class="bg-indigo-600 text-white px-8 py-2.5 rounded-xl font-bold shadow-md hover:bg-indigo-700 transition">Speichern</button>
+                    <button id="pd-delete-btn" class="text-red-400 text-[10px] font-bold px-4 py-2 hover:text-red-600 transition uppercase tracking-widest">Löschen</button>
                 </div>
             </div>
-
-            <!-- Rechte Seite: Tasks -->
             <div class="p-8 bg-slate-50 md:w-1/3 overflow-y-auto space-y-6">
                 <section>
-                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center">
-                        <i data-lucide="link" class="w-4 h-4 mr-2"></i> Tasks verknÃ¼pfen
-                    </h4>
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center"><i data-lucide="link" class="w-4 h-4 mr-2"></i> Tasks verknüpfen</h4>
                     <div class="flex gap-2">
-                        <select id="pd-link-task-select" class="flex-grow p-2 text-xs border border-slate-200 rounded-lg bg-white outline-none focus:ring-1 focus:ring-indigo-400">
-                            <option value="">Task wÃ¤hlen...</option>
-                        </select>
+                        <select id="pd-link-task-select" class="flex-grow p-2 text-xs border border-slate-200 rounded-lg bg-white outline-none"></select>
                         <button id="pd-link-task-btn" class="bg-slate-800 text-white p-2 rounded-lg hover:bg-black transition"><i data-lucide="plus" class="w-4 h-4"></i></button>
                     </div>
                 </section>
-
                 <section>
-                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center">
-                        <i data-lucide="list-checks" class="w-4 h-4 mr-2"></i> Projekt-Tasks
-                    </h4>
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center"><i data-lucide="list-checks" class="w-4 h-4 mr-2"></i> Projekt-Tasks</h4>
                     <div id="pd-tasks-list" class="space-y-3"></div>
                 </section>
             </div>
@@ -300,16 +264,39 @@
 
     <!-- MODAL: ZEITBUCHUNG -->
     <div id="time-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-70 flex items-center justify-center p-4 z-50">
-        <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-sm">
-            <h2 class="text-xl font-bold mb-4 flex items-center text-gray-800"><i data-lucide="clock" class="mr-2 text-indigo-600"></i> Buchen</h2>
+        <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-sm border border-gray-200">
+            <h2 class="text-xl font-bold mb-4 flex items-center text-gray-800"><i data-lucide="clock" class="mr-2 text-indigo-600"></i> Dauer eintragen</h2>
+            <p id="time-modal-task-name" class="text-xs text-slate-500 mb-6 font-bold uppercase"></p>
             <div class="space-y-4 mb-6">
-                <input type="date" id="log-date" class="w-full p-3 border border-gray-200 rounded-xl outline-none">
-                <input type="number" id="task-duration" step="0.25" placeholder="Stunden (z.B. 1.5)" class="w-full p-4 border border-gray-200 rounded-2xl text-2xl font-black focus:ring-2 focus:ring-indigo-100">
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Datum</label>
+                    <input type="date" id="log-date" class="w-full p-3 border border-gray-200 rounded-xl font-bold">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Stunden (h)</label>
+                    <input type="number" id="task-duration" step="0.25" placeholder="0.00" class="w-full p-4 border border-gray-200 rounded-2xl text-2xl font-black focus:ring-4 focus:ring-indigo-50">
+                </div>
             </div>
             <div class="grid grid-cols-2 gap-3">
-                <button id="cancel-time" class="p-4 text-gray-400 font-bold">Abbrechen</button>
-                <button id="save-time" class="p-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg">Speichern</button>
+                <button id="cancel-time" class="p-4 text-slate-400 font-bold hover:bg-slate-50 rounded-2xl transition">Abbrechen</button>
+                <button id="save-time" class="p-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg hover:bg-indigo-700 transition">Buchen</button>
             </div>
+        </div>
+    </div>
+
+    <!-- MODAL: THEMA ERSTELLEN -->
+    <div id="project-create-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-70 flex items-center justify-center p-4 z-50">
+        <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-md">
+            <h2 class="text-xl font-bold mb-4">Neues Post-it</h2>
+            <form id="project-create-form" class="space-y-4">
+                <input type="text" id="proj-title" placeholder="Titel..." required class="w-full p-3 border border-gray-300 rounded-xl outline-none">
+                <select id="proj-customer" required class="w-full p-3 border border-gray-300 rounded-xl bg-white"></select>
+                <textarea id="proj-desc" placeholder="Details..." rows="3" class="w-full p-3 border border-gray-300 rounded-xl"></textarea>
+                <div class="flex gap-3">
+                    <button type="button" onclick="document.getElementById('project-create-modal').classList.add('hidden')" class="w-1/2 p-3 text-slate-400 font-bold">Abbrechen</button>
+                    <button type="submit" class="w-1/2 p-3 bg-indigo-600 text-white font-bold rounded-2xl">Anlegen</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -333,6 +320,7 @@
         let isSeeding = false;
         let activeProjectId = null;
         let editingNoteId = null;
+        let pendingDropId = null;
 
         const colors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316', '#14B8A6', '#6366F1'];
 
@@ -385,7 +373,7 @@
 
         async function seedCustomers() {
             isSeeding = true;
-            const defaults = ["SGD", "ANWR", "Bol", "bonprix", "OTTO", "ECD", "K5", "Mommytape", "Betty Barclay", "Sonstiges"];
+            const defaults = ["BBG", "ANWR", "bonprix", "BOL", "SGD", "Tradebyte"];
             try {
                 for (let i = 0; i < defaults.length; i++) {
                     await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'customers'), { name: defaults[i], color: colors[i % colors.length] });
@@ -409,11 +397,9 @@
             const cs = document.getElementById('task-customer');
             const ps = document.getElementById('proj-customer');
             const ts = document.getElementById('task-project');
-            
-            const cOptions = '<option value="" disabled selected>Kunde wÃ¤hlen...</option>' + customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-            if (cs) cs.innerHTML = cOptions;
-            if (ps) ps.innerHTML = cOptions;
-            
+            const cOpts = '<option value="" disabled selected>Wählen...</option>' + customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            if (cs) cs.innerHTML = cOpts;
+            if (ps) ps.innerHTML = cOpts;
             if (cs) {
                 cs.onchange = (e) => {
                     const filtered = projects.filter(p => p.customerId === e.target.value);
@@ -423,44 +409,28 @@
         }
 
         function renderProjects() {
-            const boardView = document.getElementById('project-board-view');
-            if (!boardView) return;
-
-            boardView.innerHTML = customers.map(c => {
+            const view = document.getElementById('project-board-view');
+            if (!view) return;
+            view.innerHTML = customers.map(c => {
                 const cProjs = projects.filter(p => p.customerId === c.id);
                 return `
                     <div class="project-column flex flex-col space-y-4 flex-shrink-0">
                         <div class="flex items-center space-x-2 px-2 pb-2 border-b border-slate-200">
                             <span class="w-3 h-3 rounded-full" style="background-color: ${c.color}"></span>
                             <h3 class="text-sm font-black uppercase tracking-widest text-slate-600 truncate">${c.name}</h3>
-                            <span class="text-[10px] bg-slate-200 text-slate-500 px-1.5 rounded-full">${cProjs.length}</span>
                         </div>
                         <div class="space-y-4">
                             ${cProjs.map(p => {
                                 const pTasks = tasks.filter(t => t.projectId === p.id);
-                                const doneTasks = pTasks.filter(t => t.status === 'done').length;
                                 return `
                                     <div class="project-card p-5 rounded-lg flex flex-col space-y-3" onclick="window.openProjectDetails('${p.id}')">
                                         <h4 class="font-bold text-slate-800 leading-tight">${p.title}</h4>
-                                        ${pTasks.length > 0 ? `
-                                            <div class="space-y-1 pt-2 border-t border-yellow-200">
-                                                ${pTasks.slice(0, 3).map(t => `
-                                                    <div class="flex items-center text-[9px] text-slate-500 truncate">
-                                                        <span class="w-1.5 h-1.5 rounded-full mr-1.5 ${t.status === 'done' ? 'bg-green-500' : t.status === 'progress' ? 'bg-orange-400' : 'bg-slate-300'}"></span>
-                                                        <span class="truncate">${t.title}</span>
-                                                    </div>
-                                                `).join('')}
-                                                ${pTasks.length > 3 ? `<div class="text-[8px] font-bold text-yellow-700 pl-3">+ ${pTasks.length - 3} weitere</div>` : ''}
-                                            </div>
-                                            <div class="flex justify-between items-center text-[9px] font-black uppercase text-yellow-700 pt-1">
-                                                <span>Fortschritt</span>
-                                                <span>${doneTasks}/${pTasks.length} Done</span>
-                                            </div>
-                                        ` : '<div class="text-[9px] italic text-yellow-600">Keine Tasks verknÃ¼pft</div>'}
+                                        <div class="space-y-1 pt-2 border-t border-yellow-200">
+                                            ${pTasks.slice(0, 3).map(t => `<div class="flex items-center text-[9px] text-slate-500 truncate"><span class="w-1.5 h-1.5 rounded-full mr-1 ${t.status === 'done' ? 'bg-green-500' : 'bg-orange-400'}"></span>${t.title}</div>`).join('')}
+                                        </div>
                                     </div>
                                 `;
                             }).join('')}
-                            ${cProjs.length === 0 ? '<div class="text-[10px] text-slate-400 italic px-2 py-8 text-center border-2 border-dashed border-slate-100 rounded-xl">Keine Themen</div>' : ''}
                         </div>
                     </div>
                 `;
@@ -480,43 +450,38 @@
 
                 grouped.forEach(g => {
                     const gEl = document.createElement('div');
-                    gEl.className = "space-y-2 mb-6";
-                    gEl.innerHTML = `<div class="text-[9px] font-black uppercase text-slate-300 ml-1 pointer-events-none">${g.c.name}</div>`;
+                    gEl.className = "space-y-2 mb-6 pointer-events-none"; // Header ist passiv
+                    gEl.innerHTML = `<div class="text-[9px] font-black uppercase text-slate-300 ml-1">${g.c.name}</div>`;
+                    container.appendChild(gEl);
                     
                     g.tasks.forEach(t => {
                         const project = projects.find(p => p.id === t.projectId);
                         const card = document.createElement('div');
-                        card.className = `task-card bg-white p-4 rounded-2xl shadow-sm border border-slate-200 border-l-[6px] group ${t.isHighPriority ? 'priority-high' : ''}`;
+                        card.className = `task-card bg-white p-4 rounded-2xl shadow-sm border border-slate-200 border-l-[6px] group relative pointer-events-auto ${t.isHighPriority ? 'priority-high' : ''}`;
                         card.style.borderLeftColor = g.c.color;
                         card.draggable = true;
                         card.setAttribute('data-id', t.id);
-                        
                         card.innerHTML = `
                             <div class="flex justify-between items-start mb-1">
-                                <span class="text-[8px] font-black text-indigo-400 uppercase truncate max-w-[150px]">${project ? project.title : ''}</span>
+                                <span class="text-[8px] font-black text-indigo-400 uppercase truncate">${project ? project.title : ''}</span>
                                 <div class="flex space-x-1 opacity-0 group-hover:opacity-100 transition">
                                      <button onclick="window.togglePriority('${t.id}', ${!t.isHighPriority})"><i data-lucide="zap" class="w-3 h-3 ${t.isHighPriority ? 'text-red-500 fill-current' : 'text-slate-300'}"></i></button>
-                                     <button onclick="window.openEditModal('${t.id}')"><i data-lucide="pencil" class="w-3 h-3 text-slate-300 hover:text-indigo-500"></i></button>
+                                     <button onclick="window.openEditModal('${t.id}')"><i data-lucide="pencil" class="w-3 h-3 text-slate-300"></i></button>
                                      <button onclick="window.deleteTask('${t.id}')" class="text-slate-300 hover:text-red-500"><i data-lucide="x" class="w-3 h-3"></i></button>
                                 </div>
                             </div>
                             <p class="text-sm font-bold text-slate-800 leading-tight">${t.title}</p>
-              <div class="flex gap-1 mt-1 flex-wrap">
-                ${t.isUrgent ? '<span class="text-[8px] font-black bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full uppercase tracking-wide">● Heute</span>' : ''}
-                ${t.isWaiting ? '<span class="text-[8px] font-black bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full uppercase tracking-wide">⏳ Wiedervorlage</span>' : ''}
-              </div>
                             <div class="mt-3 flex justify-between items-center text-[9px] text-slate-400 font-bold border-t pt-2 border-slate-50">
                                 <span>${t.date ? new Date(t.date).toLocaleDateString() : ''}</span>
-                                ${status === 'progress' ? `<input type="number" step="0.25" placeholder="h" value="${t.currentDuration || ''}" onchange="window.updateHours('${t.id}', this.value)" class="w-10 bg-indigo-50 text-indigo-600 rounded text-center outline-none">` : ''}
+                                ${status === 'progress' ? `<input type="number" step="0.25" placeholder="h" value="${t.currentDuration || ''}" onchange="window.updateHours('${t.id}', this.value)" class="w-10 bg-indigo-50 text-indigo-600 rounded text-center">` : ''}
                             </div>
                         `;
                         card.addEventListener('dragstart', (e) => {
                             e.dataTransfer.setData('text/plain', t.id);
                             e.dataTransfer.effectAllowed = "move";
                         });
-                        gEl.appendChild(card);
+                        container.appendChild(card);
                     });
-                    container.appendChild(gEl);
                 });
             });
             lucide.createIcons();
@@ -527,218 +492,123 @@
             const c = customers.find(c => c.id === p.customerId);
             activeProjectId = id;
             editingNoteId = null;
-            
             document.getElementById('pd-title').textContent = p.title;
-            document.getElementById('pd-customer').textContent = c ? c.name : 'Unbekannter Kunde';
+            document.getElementById('pd-customer').textContent = c ? c.name : 'Unbekannt';
             document.getElementById('pd-desc').value = p.desc || '';
-            
-            // Render Notes List
             const notes = p.notes || [];
             document.getElementById('pd-notes-list').innerHTML = notes.map((n) => `
                 <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-100 group/note">
                     <div class="flex justify-between items-start mb-1">
                         <span class="text-[8px] font-bold text-yellow-600 uppercase tracking-tighter">${new Date(n.date).toLocaleString()}</span>
                         <div class="flex space-x-2 opacity-0 group-hover/note:opacity-100 transition">
-                             <button onclick="window.editNote('${n.id}')" class="text-yellow-600 hover:text-indigo-600"><i data-lucide="edit-2" class="w-3 h-3"></i></button>
-                             <button onclick="window.deleteNote('${n.id}')" class="text-yellow-600 hover:text-red-500"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
+                             <button onclick="window.editNote('${n.id}')"><i data-lucide="pencil" class="w-3 h-3"></i></button>
+                             <button onclick="window.deleteNote('${n.id}')"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
                         </div>
                     </div>
                     <p class="text-sm text-yellow-900 whitespace-pre-wrap">${n.text}</p>
                 </div>
-            `).join('') || '<div class="text-[11px] text-slate-400 italic py-4 text-center">Noch keine Notizen vorhanden.</div>';
-            
-            // Handle Task Linking Select
-            const linkSelect = document.getElementById('pd-link-task-select');
-            // Show all tasks of this customer that are NOT already in this project
+            `).join('') || '<div class="text-center text-slate-300 py-4 italic text-xs">Keine Notizen.</div>';
             const availableTasks = tasks.filter(t => t.customerId === p.customerId && t.projectId !== id);
-            linkSelect.innerHTML = '<option value="">Task wÃ¤hlen...</option>' + availableTasks.map(t => `<option value="${t.id}">${t.title} [${t.status}]</option>`).join('');
-
-            // Render Task List
+            document.getElementById('pd-link-task-select').innerHTML = '<option value="">Task wählen...</option>' + availableTasks.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
             const pTasks = tasks.filter(t => t.projectId === id);
             document.getElementById('pd-tasks-list').innerHTML = pTasks.map(t => `
-                <div class="p-3 bg-white rounded-xl shadow-sm text-xs flex justify-between items-center border-l-4" style="border-left-color: ${t.status === 'done' ? '#22c55e' : t.status === 'progress' ? '#fb923c' : '#cbd5e1'}">
+                <div class="p-3 bg-white rounded-xl shadow-sm text-xs flex justify-between items-center border-l-4" style="border-left-color: ${t.status === 'done' ? '#22c55e' : '#fb923c'}">
                     <span class="font-bold text-slate-700 truncate mr-2">${t.title}</span>
-                    <div class="flex items-center space-x-2">
-                        <span class="px-2 py-0.5 rounded-full ${t.status === 'done' ? 'bg-green-100 text-green-600' : t.status === 'progress' ? 'bg-orange-100 text-orange-600' : 'bg-slate-100 text-slate-400'} font-black uppercase text-[8px] whitespace-nowrap">${t.status}</span>
-                        <button onclick="window.unlinkTask('${t.id}')" class="text-slate-300 hover:text-red-500 transition" title="VerknÃ¼pfung lÃ¶sen"><i data-lucide="link-2-off" class="w-3 h-3"></i></button>
-                    </div>
+                    <button onclick="window.unlinkTask('${t.id}')" class="text-slate-300 hover:text-red-500"><i data-lucide="link-2-off" class="w-3 h-3"></i></button>
                 </div>
-            `).join('') || '<div class="text-[10px] italic text-slate-400">Keine verknÃ¼pften Tasks.</div>';
-            
+            `).join('') || '<div class="text-[10px] italic text-slate-300">Keine Tasks.</div>';
             document.getElementById('project-detail-modal').classList.remove('hidden');
             lucide.createIcons();
         };
 
         window.openEditModal = (id) => {
             const task = tasks.find(t => t.id === id);
-            if (!task) return;
-            activeProjectId = null; // Important to reset
-            
+            if(!task) return;
             document.getElementById('edit-task-id').value = id;
             document.getElementById('edit-task-title').value = task.title;
-            
-            // Populate Project Dropdown based on Customer of the Task
-            const projSelect = document.getElementById('edit-task-project');
-            const availableProjects = projects.filter(p => p.customerId === task.customerId);
-            projSelect.innerHTML = '<option value="">Kein Thema zugeordnet</option>' + availableProjects.map(p => `<option value="${p.id}">${p.title}</option>`).join('');
-            projSelect.value = task.projectId || "";
-            
+            const pSel = document.getElementById('edit-task-project');
+            const cProjs = projects.filter(p => p.customerId === task.customerId);
+            pSel.innerHTML = '<option value="">Keine Zuordnung</option>' + cProjs.map(p => `<option value="${p.id}">${p.title}</option>`).join('');
+            pSel.value = task.projectId || "";
             document.getElementById('edit-task-modal').classList.remove('hidden');
         };
 
         window.closeEditModal = () => document.getElementById('edit-task-modal').classList.add('hidden');
 
-        // --- NOTE LOGIC ---
-        window.prepareNewNote = () => {
-            editingNoteId = null;
-            document.getElementById('note-input').value = "";
-            document.getElementById('note-editor').classList.remove('hidden');
-            document.getElementById('save-note-btn').textContent = "Notiz speichern";
-        };
-
+        // --- ACTIONS ---
+        window.prepareNewNote = () => { editingNoteId = null; document.getElementById('note-input').value = ""; document.getElementById('note-editor').classList.remove('hidden'); };
         window.cancelNote = () => document.getElementById('note-editor').classList.add('hidden');
-
-        window.editNote = (id) => {
+        window.editNote = (id) => { 
             const p = projects.find(p => p.id === activeProjectId);
-            const note = p.notes.find(n => n.id === id);
-            if (!note) return;
-            editingNoteId = id;
-            document.getElementById('note-input').value = note.text;
-            document.getElementById('note-editor').classList.remove('hidden');
-            document.getElementById('save-note-btn').textContent = "Ãnderung speichern";
+            const n = p.notes.find(x => x.id === id);
+            editingNoteId = id; document.getElementById('note-input').value = n.text; document.getElementById('note-editor').classList.remove('hidden');
         };
-
         document.getElementById('save-note-btn').onclick = async () => {
             const text = document.getElementById('note-input').value.trim();
-            if (!text) return;
+            if(!text) return;
             const p = projects.find(p => p.id === activeProjectId);
             let notes = [...(p.notes || [])];
-            if (editingNoteId) {
-                notes = notes.map(n => n.id === editingNoteId ? { ...n, text, date: new Date().toISOString() } : n);
-            } else {
-                notes.unshift({ id: Date.now().toString(), text, date: new Date().toISOString() });
-            }
+            if(editingNoteId) notes = notes.map(n => n.id === editingNoteId ? { ...n, text, date: new Date().toISOString() } : n);
+            else notes.unshift({ id: Date.now().toString(), text, date: new Date().toISOString() });
             await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'projects', activeProjectId), { notes });
-            document.getElementById('note-editor').classList.add('hidden');
+            window.cancelNote();
         };
-
         window.deleteNote = async (id) => {
-            if(!confirm("Notiz lÃ¶schen?")) return;
             const p = projects.find(p => p.id === activeProjectId);
-            const notes = p.notes.filter(n => n.id !== id);
-            await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'projects', activeProjectId), { notes });
+            await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'projects', activeProjectId), { notes: p.notes.filter(n => n.id !== id) });
         };
-
-        function renderReports() {
-            const container = document.getElementById('monthly-stats');
-            const now = new Date();
-            const logs = timeLogs.filter(l => new Date(l.timestamp).getMonth() === now.getMonth());
-            container.innerHTML = customers.map(c => {
-                const cLogs = logs.filter(l => l.customerId === c.id);
-                const total = cLogs.reduce((sum, l) => sum + (parseFloat(l.duration) || 0), 0);
-                if (total === 0) return '';
-                return `
-                    <div class="bg-slate-800 bg-opacity-40 p-4 rounded-2xl border border-slate-700 group">
-                        <div class="flex justify-between items-center mb-3">
-                            <span class="font-bold text-sm text-slate-200">${c.name}</span>
-                            <div class="flex items-center space-x-2">
-                                <button onclick="window.exportCSV('${c.id}')" class="p-1 text-slate-500 hover:text-white transition"><i data-lucide="download" class="w-4 h-4"></i></button>
-                                <span class="text-xl font-black text-white">${total.toFixed(2)}h</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('') || '<div class="text-center text-slate-500 py-10">Keine Daten.</div>';
-            lucide.createIcons();
-        }
-
-        // --- ACTIONS ---
-
-        window.deleteCustomer = async (id) => { 
-            const hasData = projects.some(p => p.customerId === id) || tasks.some(t => t.customerId === id);
-            if(hasData && !confirm("Dieser Kunde hat noch Projekte oder Tasks. Wirklich alles lÃ¶schen?")) return;
-            if(confirm("LÃ¶schen bestÃ¤tigen?")) await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'customers', id)); 
-        };
-        window.deleteTask = async (id) => { if(confirm("Task lÃ¶schen?")) await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id)); };
-        window.unlinkTask = async (id) => { if(confirm("VerknÃ¼pfung zu diesem Thema lÃ¶sen?")) await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { projectId: "" }); };
+        window.deleteCustomer = async (id) => { if(confirm("Löschen?")) await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'customers', id)); };
+        window.deleteTask = async (id) => { if(confirm("Löschen?")) await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id)); };
+        window.unlinkTask = async (id) => { await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { projectId: "" }); };
         window.togglePriority = async (id, v) => { await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { isHighPriority: v }); };
         window.updateHours = async (id, v) => { await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { currentDuration: parseFloat(v) || 0 }); };
 
         document.getElementById('pd-save-main-btn').onclick = async () => {
             await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'projects', activeProjectId), { desc: document.getElementById('pd-desc').value });
-            alert("Ãnderungen gespeichert!");
+            alert("Gespeichert.");
         };
-
-        document.getElementById('pd-delete-btn').onclick = async () => {
-            if(confirm("Thema lÃ¶schen? Tasks bleiben im Board.")){
-                await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'projects', activeProjectId));
-                document.getElementById('project-detail-modal').classList.add('hidden');
-                activeProjectId = null;
-            }
-        };
-
         document.getElementById('pd-link-task-btn').onclick = async () => {
-            const taskId = document.getElementById('pd-link-task-select').value;
-            if (!taskId || !activeProjectId) return;
-            await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', taskId), { projectId: activeProjectId });
+            const tId = document.getElementById('pd-link-task-select').value;
+            if(tId) await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', tId), { projectId: activeProjectId });
         };
-
         document.getElementById('edit-task-form').onsubmit = async (e) => {
             e.preventDefault();
             const id = document.getElementById('edit-task-id').value;
-            const title = document.getElementById('edit-task-title').value;
-            const projectId = document.getElementById('edit-task-project').value;
-            await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { title, projectId });
+            await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { title: document.getElementById('edit-task-title').value, projectId: document.getElementById('edit-task-project').value });
             window.closeEditModal();
         };
-
         document.getElementById('project-create-form').onsubmit = async (e) => {
             e.preventDefault();
-            await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'projects'), {
-                title: document.getElementById('proj-title').value,
-                customerId: document.getElementById('proj-customer').value,
-                desc: document.getElementById('proj-desc').value,
-                notes: [],
-                createdAt: new Date().toISOString()
-            });
+            await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'projects'), { title: document.getElementById('proj-title').value, customerId: document.getElementById('proj-customer').value, desc: document.getElementById('proj-desc').value, notes: [], createdAt: new Date().toISOString() });
             document.getElementById('project-create-modal').classList.add('hidden');
             e.target.reset();
         };
-
         document.getElementById('task-form').onsubmit = async (e) => {
             e.preventDefault();
-            const today = new Date().toISOString().split('T')[0];
-            await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'tasks'), {
-                title: document.getElementById('task-title').value,
-                customerId: document.getElementById('task-customer').value,
-                projectId: document.getElementById('task-project').value || "",
-                status: 'backlog',
-                date: today,
-                createdAt: new Date().toISOString()
-            });
+            await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'tasks'), { title: document.getElementById('task-title').value, customerId: document.getElementById('task-customer').value, projectId: document.getElementById('task-project').value || "", status: 'backlog', date: new Date().toISOString().split('T')[0], createdAt: new Date().toISOString() });
             e.target.reset();
         };
 
         // --- DRAG & DROP ---
-        let pendingId = null;
         document.querySelectorAll('.drop-zone').forEach(z => {
-            z.ondragover = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; z.classList.add('drop-zone-active'); };
+            z.ondragover = (e) => { e.preventDefault(); z.classList.add('drop-zone-active'); };
             z.ondragleave = () => z.classList.remove('drop-zone-active');
             z.ondrop = async (e) => {
                 e.preventDefault();
                 z.classList.remove('drop-zone-active');
                 const id = e.dataTransfer.getData('text/plain');
-                if (!id) return;
+                if(!id) return;
                 const status = z.dataset.status;
                 const t = tasks.find(x => x.id === id);
-                if (!t) return;
+                if(!t) return;
+
                 if(status === 'done') {
                     document.getElementById('time-modal-task-name').textContent = t.title;
-                    document.getElementById('task-duration').value = t.currentDuration || '';
+                    document.getElementById('task-duration').value = t.currentDuration || "";
                     document.getElementById('log-date').value = new Date().toISOString().split('T')[0];
-                    pendingId = id;
+                    pendingDropId = id;
                     document.getElementById('time-modal').classList.remove('hidden');
-                } else if (status === 'progress') {
+                } else if(status === 'progress') {
                     await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { status, date: new Date().toISOString().split('T')[0] });
                 } else {
                     await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { status });
@@ -749,87 +619,54 @@
         document.getElementById('save-time').onclick = async () => {
             const dur = parseFloat(document.getElementById('task-duration').value);
             const date = document.getElementById('log-date').value;
-            const t = tasks.find(x => x.id === pendingId);
-            if(dur && pendingId) {
+            const t = tasks.find(x => x.id === pendingDropId);
+            if(!isNaN(dur) && pendingDropId) {
                 await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'timeLogs'), { taskId: t.id, taskTitle: t.title, customerId: t.customerId, duration: dur, timestamp: date });
-                await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', pendingId), { status: 'done', currentDuration: 0 });
+                await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', pendingDropId), { status: 'done', currentDuration: 0 });
                 document.getElementById('time-modal').classList.add('hidden');
+                pendingDropId = null;
             }
         };
 
-        // Tabs
+        function renderReports() {
+            const container = document.getElementById('monthly-stats');
+            const now = new Date();
+            const logs = timeLogs.filter(l => new Date(l.timestamp).getMonth() === now.getMonth());
+            container.innerHTML = customers.map(c => {
+                const cLogs = logs.filter(l => l.customerId === c.id);
+                const total = cLogs.reduce((sum, l) => sum + (parseFloat(l.duration) || 0), 0);
+                if (total === 0) return '';
+                return `<div class="bg-slate-800 bg-opacity-40 p-4 rounded-2xl border border-slate-700 flex justify-between items-center"><span class="font-bold text-slate-200">${c.name}</span><span class="text-xl font-black text-white">${total.toFixed(2)}h</span></div>`;
+            }).join('') || '<div class="text-center text-slate-500 py-10">Keine Daten.</div>';
+        }
+
         document.querySelectorAll('.tab-btn').forEach(b => b.onclick = () => {
             document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
             b.classList.add('active');
             document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-            const content = document.getElementById(`tab-${b.dataset.tab}`);
-            if(content) content.classList.remove('hidden');
-            if(b.dataset.tab === 'projects') renderProjects();
+            document.getElementById(`tab-${b.dataset.tab}`).classList.remove('hidden');
             lucide.createIcons();
         });
 
         document.getElementById('open-project-modal').onclick = () => document.getElementById('project-create-modal').classList.remove('hidden');
         document.getElementById('auth-form').onsubmit = handleAuthSubmit;
-        document.getElementById('toggle-auth-mode').onclick = () => { isLoginMode = !isLoginMode; document.getElementById('auth-title').textContent = isLoginMode ? 'Willkommen' : 'Konto erstellen'; document.getElementById('auth-submit-btn').textContent = isLoginMode ? 'Login' : 'Registrieren'; };
+        document.getElementById('toggle-auth-mode').onclick = () => { isLoginMode = !isLoginMode; document.getElementById('auth-title').textContent = isLoginMode ? 'Anmelden' : 'Registrieren'; document.getElementById('auth-submit-btn').textContent = isLoginMode ? 'Login' : 'Registrieren'; };
         document.getElementById('logout-btn').onclick = () => signOut(auth);
         document.getElementById('cancel-time').onclick = () => document.getElementById('time-modal').classList.add('hidden');
 
         async function handleAuthSubmit(e) {
             e.preventDefault();
-            const email = document.getElementById('auth-email').value;
-            const pass = document.getElementById('auth-password').value;
             try {
-                if(isLoginMode) await signInWithEmailAndPassword(auth, email, pass);
-                else await createUserWithEmailAndPassword(auth, email, pass);
+                if(isLoginMode) await signInWithEmailAndPassword(auth, document.getElementById('auth-email').value, document.getElementById('auth-password').value);
+                else await createUserWithEmailAndPassword(auth, document.getElementById('auth-email').value, document.getElementById('auth-password').value);
             } catch(err) { document.getElementById('auth-message').textContent = err.message; }
         }
 
-      
-  // === CLAUDE AGENT INTEGRATION ===
-  window.claudeAddTask = async function(title, customerName, opts) {
-    if (!userId) return console.error('Not logged in');
-    const customer = customers.find(c => c.name.toLowerCase() === customerName.toLowerCase())
-                  || customers.find(c => c.name === 'Sonstiges');
-    if (!customer) return console.error('Customer not found:', customerName);
-    const project = opts?.project ? projects.find(p => p.title === opts.project && p.customerId === customer.id) : null;
-    const today = new Date().toISOString().split('T')[0];
-    await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'tasks'), {
-      title, customerId: customer.id, projectId: project ? project.id : '',
-      status: 'backlog', date: today, createdAt: new Date().toISOString(),
-      isUrgent: opts?.urgent || false, isWaiting: opts?.waiting || false, claudeAdded: true
-    });
-    console.log('[Claude] Task added:', title, '→', customer.name);
-    return true;
-  };
-  window.claudeBulkAdd = async function(taskList) {
-    let count = 0;
-    for (const t of taskList) {
-      await window.claudeAddTask(t.title, t.customer, { urgent: t.urgent, waiting: t.waiting, project: t.project });
-      count++;
-    }
-    console.log('[Claude] Bulk added', count, 'tasks');
-    return count;
-  };
-  // ================================
-    window.onload = init;
+        window.onload = init;
         window.deleteCustomer = (id) => deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'customers', id));
         window.deleteTask = (id) => deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id));
         window.togglePriority = (id, v) => updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { isHighPriority: v });
         window.updateHours = (id, v) => updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { currentDuration: parseFloat(v) || 0 });
-        window.exportCSV = (custId) => {
-            const customer = customers.find(c => c.id === custId);
-            const now = new Date();
-            const logs = timeLogs.filter(l => l.customerId === custId && new Date(l.timestamp).getMonth() === now.getMonth());
-            let csv = "\uFEFFDatum;Projekt;Dauer (h)\n";
-            logs.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp)).forEach(l => { 
-                csv += `${new Date(l.timestamp).toLocaleDateString()};"${l.taskTitle.replace(/"/g, '""')}";${l.duration.toString().replace('.', ',')}\n`; 
-            });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = `Leistungsnachweis_${customer.name}_${now.getMonth()+1}_${now.getFullYear()}.csv`;
-            link.click();
-        };
     </script>
 </body>
 </html>
