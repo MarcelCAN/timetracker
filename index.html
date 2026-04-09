@@ -23,6 +23,7 @@
             min-height: 200px;
             transition: all 0.2s ease;
             border: 2px solid transparent;
+            flex-grow: 1; /* Stellt sicher, dass die Zone den Platz füllt */
         }
 
         .drop-zone-active {
@@ -41,7 +42,7 @@
         /* Modernes Post-it Design */
         .project-card {
             background: #fffde7; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             border-bottom: 3px solid #fbc02d;
             transition: all 0.2s ease;
             position: relative;
@@ -82,7 +83,6 @@
             box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1) !important;
         }
 
-        /* Grid für die Landkarte */
         .project-grid-container {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
@@ -150,9 +150,8 @@
         <!-- Main Content -->
         <div id="main-content" class="hidden space-y-6">
 
-            <!-- TAB 1: DASHBOARD (NEU) -->
+            <!-- TAB 1: DASHBOARD -->
             <div id="tab-dashboard" class="tab-content space-y-8">
-                <!-- Stats Row -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex items-center space-x-4">
                         <div class="bg-orange-100 p-3 rounded-2xl text-orange-600"><i data-lucide="activity"></i></div>
@@ -178,23 +177,19 @@
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <!-- Linke Seite: Dringende Tasks -->
                     <div class="lg:col-span-2 space-y-6">
                         <div class="flex items-center justify-between">
                             <h3 class="text-xl font-black text-slate-800 tracking-tight flex items-center">
                                 <i data-lucide="alert-circle" class="mr-2 text-red-500"></i> Fokus & Dringend
                             </h3>
                         </div>
-                        <div id="urgent-tasks-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Hohe Priorität Tasks hier -->
-                        </div>
+                        <div id="urgent-tasks-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
                         <div id="no-urgent-tasks" class="hidden bg-white p-12 rounded-3xl border border-dashed border-slate-200 text-center space-y-2">
                             <div class="bg-slate-50 w-12 h-12 rounded-full flex items-center justify-center mx-auto text-slate-300"><i data-lucide="check"></i></div>
                             <p class="text-slate-400 font-bold">Alles im Griff! Keine dringenden Tasks offen.</p>
                         </div>
                     </div>
 
-                    <!-- Rechte Seite: Quick Entry -->
                     <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-6 self-start sticky top-6">
                         <div>
                             <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">Schnellerfassung</h3>
@@ -207,9 +202,7 @@
                                     <i data-lucide="mic" class="w-5 h-5"></i>
                                 </button>
                             </div>
-                            <select id="dash-task-customer" required class="w-full p-3 border border-slate-200 rounded-xl bg-white text-sm">
-                                <!-- Wird von JS befüllt -->
-                            </select>
+                            <select id="dash-task-customer" required class="w-full p-3 border border-slate-200 rounded-xl bg-white text-sm"></select>
                             <button type="submit" class="w-full bg-indigo-600 text-white p-4 rounded-xl font-bold hover:bg-indigo-700 shadow-lg transition">ANLEGEN</button>
                         </form>
                         <div id="dash-voice-indicator" class="hidden flex items-center justify-center p-2 bg-red-50 text-red-600 rounded-xl text-xs font-black animate-pulse">
@@ -221,20 +214,13 @@
 
             <!-- TAB 2: BOARD -->
             <div id="tab-board" class="tab-content hidden grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Column 1: Backlog -->
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col">
-                    <div class="flex justify-between items-center border-b pb-2 mb-4">
-                        <h3 class="font-bold text-slate-700 text-xs uppercase tracking-widest">Backlog</h3>
-                        <div id="voice-indicator" class="hidden flex items-center text-[10px] font-bold text-red-500 animate-pulse">
-                            <span class="w-2 h-2 bg-red-500 rounded-full mr-1"></span> KI hört zu...
-                        </div>
-                    </div>
+                <!-- Spaltencontainer haben nun flex-grow auf den drop-zones -->
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col h-full">
+                    <h3 class="font-bold text-slate-700 text-xs uppercase tracking-widest border-b pb-2 mb-4">Backlog</h3>
                     <form id="task-form" class="mb-4 space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-100 shadow-inner">
                         <div class="relative">
-                            <input type="text" id="task-title" placeholder="Aufgabe beschreiben..." required class="w-full p-2 pr-10 text-sm border border-slate-300 rounded-lg outline-none">
-                            <button type="button" id="voice-input-btn" title="KI Sprach-Eingabe" class="absolute right-2 top-2 text-slate-400 hover:text-indigo-600 transition">
-                                <i data-lucide="mic" class="w-5 h-5"></i>
-                            </button>
+                            <input type="text" id="task-title" placeholder="Aufgabe..." required class="w-full p-2 pr-10 text-sm border border-slate-300 rounded-lg outline-none">
+                            <button type="button" id="voice-input-btn" class="absolute right-2 top-2 text-slate-400"><i data-lucide="mic" class="w-5 h-5"></i></button>
                         </div>
                         <div class="flex gap-2">
                              <select id="task-customer" required class="w-1/2 p-2 text-xs border border-slate-300 rounded-lg outline-none bg-white"></select>
@@ -242,30 +228,37 @@
                                 <option value="">Projekt (opt.)</option>
                              </select>
                         </div>
-                        <button type="submit" class="w-full bg-slate-800 text-white p-2 rounded-lg font-bold text-xs hover:bg-black transition uppercase">Task anlegen</button>
+                        <button type="submit" class="w-full bg-slate-800 text-white p-2 rounded-lg font-bold text-xs uppercase">Task anlegen</button>
                     </form>
                     <div id="col-backlog" class="drop-zone space-y-6 overflow-y-auto" data-status="backlog"></div>
                 </div>
 
-                <!-- Column 2: Aktiv -->
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col">
-                    <h3 class="font-bold text-orange-600 mb-4 flex items-center border-b pb-2 text-xs uppercase tracking-widest">In Bearbeitung</h3>
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col h-full">
+                    <h3 class="font-bold text-orange-600 text-xs uppercase tracking-widest border-b pb-2 mb-4">In Bearbeitung</h3>
                     <div id="col-progress" class="drop-zone space-y-6 overflow-y-auto" data-status="progress"></div>
                 </div>
 
-                <!-- Column 3: Fertig -->
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col">
-                    <h3 class="font-bold text-green-600 mb-4 flex items-center border-b pb-2 text-xs uppercase tracking-widest">Fertig</h3>
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col h-full">
+                    <h3 class="font-bold text-green-600 text-xs uppercase tracking-widest border-b pb-2 mb-4">Fertig</h3>
                     <div id="col-done" class="drop-zone space-y-6 overflow-y-auto" data-status="done"></div>
                 </div>
             </div>
 
-            <!-- TAB: PROJEKTE -->
+            <!-- TAB 3: PROJEKTE -->
             <div id="tab-projects" class="tab-content hidden space-y-6">
-                <div id="project-board-view" class="project-grid-container"></div>
+                <div class="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                    <div>
+                        <h2 class="text-2xl font-black text-slate-800 tracking-tight">Themen-Landkarte</h2>
+                        <p class="text-sm text-slate-500">Kachelansicht der Projekte pro Mandant</p>
+                    </div>
+                    <button id="open-project-modal" class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition flex items-center shadow-md">
+                        <i data-lucide="plus-circle" class="w-5 h-5 mr-2"></i> Neues Thema
+                    </button>
+                </div>
+                <div id="project-board-view" class="project-grid-container pb-6"></div>
             </div>
 
-            <!-- TAB: ANALYSIS -->
+            <!-- TAB 4: ANALYSIS -->
             <div id="tab-analysis" class="tab-content hidden grid grid-cols-1 lg:grid-cols-2 gap-8">
                  <div class="bg-slate-900 p-6 rounded-3xl shadow-xl text-white space-y-6">
                     <h3 class="font-bold text-slate-400 flex items-center border-b border-slate-800 pb-2 text-xs uppercase tracking-widest">Monatsabrechnung</h3>
@@ -283,13 +276,13 @@
                  </div>
             </div>
 
-            <!-- TAB: MANAGEMENT -->
+            <!-- TAB 5: MANAGEMENT -->
             <div id="tab-management" class="tab-content hidden">
                 <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-200 max-w-lg">
-                    <h3 class="font-bold text-slate-800 mb-4 text-sm uppercase">Kundenverwaltung</h3>
+                    <h3 class="font-bold text-slate-800 mb-4 text-sm uppercase">Mandantenstamm</h3>
                     <form id="customer-form" class="flex gap-2 mb-6">
                         <input type="text" id="cust-name" placeholder="Name..." required class="flex-grow p-3 border border-gray-300 rounded-xl">
-                        <button type="submit" class="bg-blue-600 text-white px-4 rounded-xl"><i data-lucide="plus"></i></button>
+                        <button type="submit" class="bg-blue-600 text-white px-4 rounded-xl shadow-sm hover:bg-blue-700 transition"><i data-lucide="plus"></i></button>
                     </form>
                     <div id="customer-list" class="space-y-2"></div>
                 </div>
@@ -298,7 +291,7 @@
         </div>
     </div>
 
-    <!-- MODALS (TASK EDIT, PROJECT DETAILS, TIME) -->
+    <!-- MODALS -->
     <div id="edit-task-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-70 flex items-center justify-center p-4 z-50">
         <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-md border border-gray-200">
             <h2 class="text-xl font-bold mb-4">Task bearbeiten</h2>
@@ -309,8 +302,8 @@
                     <option value="">Keine Zuordnung</option>
                 </select>
                 <div class="grid grid-cols-2 gap-3 pt-2">
-                    <button type="button" onclick="window.closeEditModal()" class="p-4 text-slate-400 font-bold hover:bg-slate-50 rounded-2xl">Abbrechen</button>
-                    <button type="submit" class="p-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg">Speichern</button>
+                    <button type="button" onclick="window.closeEditModal()" class="p-4 text-slate-400 font-bold hover:bg-slate-50 rounded-2xl transition">Abbrechen</button>
+                    <button type="submit" class="p-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg hover:bg-indigo-700 transition">Speichern</button>
                 </div>
             </form>
         </div>
@@ -332,7 +325,7 @@
                 </section>
                 <section class="space-y-4">
                     <div class="flex justify-between items-center border-b border-slate-100 pb-2">
-                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Notizen</h4>
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Protokoll & Notizen</h4>
                         <button onclick="window.prepareNewNote()" class="text-xs font-bold text-indigo-600 flex items-center"><i data-lucide="plus" class="w-3 h-3 mr-1"></i> Neu</button>
                     </div>
                     <div id="note-editor" class="hidden bg-yellow-50 p-4 rounded-2xl space-y-3 border border-yellow-100">
@@ -366,32 +359,17 @@
     </div>
 
     <div id="time-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-70 flex items-center justify-center p-4 z-50">
-        <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-sm border border-gray-200 text-center">
+        <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-sm border border-gray-200 text-center text-slate-800">
             <h2 class="text-xl font-bold mb-4 flex items-center justify-center text-gray-800"><i data-lucide="clock" class="mr-2 text-indigo-600"></i> Buchen</h2>
             <p id="time-modal-task-name" class="text-xs text-slate-500 mb-6 font-bold uppercase"></p>
             <div class="space-y-4 mb-6">
                 <input type="date" id="log-date" class="w-full p-3 border border-gray-200 rounded-xl font-bold">
-                <input type="number" id="task-duration" step="0.25" placeholder="Stunden (h)" class="w-full p-4 border border-gray-200 rounded-2xl text-2xl font-black text-center">
+                <input type="number" id="task-duration" step="0.25" placeholder="Stunden (h)" class="w-full p-4 border border-gray-200 rounded-2xl text-2xl font-black text-center outline-none focus:ring-4 focus:ring-indigo-50">
             </div>
             <div class="grid grid-cols-2 gap-3">
                 <button id="cancel-time" class="p-4 text-slate-400 font-bold hover:bg-slate-50 rounded-2xl transition">Abbruch</button>
-                <button id="save-time" class="p-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg">Buchen</button>
+                <button id="save-time" class="p-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg hover:bg-indigo-700 transition">Buchen</button>
             </div>
-        </div>
-    </div>
-
-    <div id="project-create-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-70 flex items-center justify-center p-4 z-50">
-        <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-md">
-            <h2 class="text-xl font-bold mb-4">Neues Thema anlegen</h2>
-            <form id="project-create-form" class="space-y-4">
-                <input type="text" id="proj-title" placeholder="Titel..." required class="w-full p-3 border border-gray-300 rounded-xl outline-none">
-                <select id="proj-customer" required class="w-full p-3 border border-gray-300 rounded-xl bg-white"></select>
-                <textarea id="proj-desc" placeholder="Kurzbeschreibung..." rows="3" class="w-full p-3 border border-gray-300 rounded-xl"></textarea>
-                <div class="flex gap-3">
-                    <button type="button" onclick="document.getElementById('project-create-modal').classList.add('hidden')" class="w-1/2 p-3 text-slate-400 font-bold">Abbrechen</button>
-                    <button type="submit" class="w-1/2 p-3 bg-indigo-600 text-white font-bold rounded-2xl">Anlegen</button>
-                </div>
-            </form>
         </div>
     </div>
 
@@ -417,6 +395,8 @@
         let editingNoteId = null;
         let pendingDropId = null;
         let isSeeding = false;
+
+        const colors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316', '#14B8A6', '#6366F1'];
 
         // --- AI & VOICE ---
         let recognition = null;
@@ -465,7 +445,6 @@
                     document.getElementById('logout-btn').classList.remove('hidden');
                     document.getElementById('user-info').textContent = u.email;
                     startListeners();
-                    switchTab('dashboard'); // Startseite als Default
                 } else {
                     document.getElementById('login-center').classList.remove('hidden');
                     document.getElementById('main-content').classList.add('hidden');
@@ -512,7 +491,6 @@
             finally { isSeeding = false; }
         }
 
-        // --- DASHBOARD (STARTSEITE) RENDERING ---
         function renderDashboard() {
             const activeTasks = tasks.filter(t => t.status === 'progress').length;
             const now = new Date();
@@ -524,48 +502,32 @@
             document.getElementById('stat-total-projects').textContent = `${projects.length} Themen`;
             document.getElementById('stat-monthly-hours').textContent = `${monthlyHours.toFixed(2)} h`;
 
-            const urgentContainer = document.getElementById('urgent-tasks-container');
-            const urgentList = tasks.filter(t => t.isHighPriority && t.status !== 'done').sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+            const container = document.getElementById('urgent-tasks-container');
+            const urgent = tasks.filter(t => t.isHighPriority && t.status !== 'done').sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
             
-            if (urgentList.length === 0) {
-                urgentContainer.innerHTML = '';
+            if (urgent.length === 0) {
+                container.innerHTML = '';
                 document.getElementById('no-urgent-tasks').classList.remove('hidden');
             } else {
                 document.getElementById('no-urgent-tasks').classList.add('hidden');
-                urgentContainer.innerHTML = urgentList.map(t => {
+                container.innerHTML = urgent.map(t => {
                     const c = customers.find(x => x.id === t.customerId);
                     const p = projects.find(x => x.id === t.projectId);
-                    return `
-                        <div class="bg-white p-5 rounded-3xl shadow-sm border border-l-[6px] border-slate-100" style="border-left-color: ${c ? c.color : '#cbd5e1'}">
-                            <div class="flex justify-between items-start mb-2">
-                                <span class="text-[9px] font-black uppercase text-indigo-400 tracking-widest">${p ? p.title : (c ? c.name : 'Allgemein')}</span>
-                                <span class="text-[8px] font-bold text-slate-300 uppercase">${new Date(t.createdAt).toLocaleDateString()}</span>
-                            </div>
-                            <h4 class="font-bold text-slate-800 leading-tight mb-3">${t.title}</h4>
-                            <div class="flex justify-between items-center">
-                                <span class="px-2 py-0.5 bg-red-50 text-red-500 rounded-full text-[8px] font-black uppercase">Dringend</span>
-                                <button onclick="window.switchTab('board')" class="text-indigo-600 font-bold text-[10px] uppercase hover:underline">Zum Board <i data-lucide="arrow-right" class="w-3 h-3 inline"></i></button>
-                            </div>
-                        </div>
-                    `;
+                    return `<div class="bg-white p-5 rounded-3xl shadow-sm border border-l-[6px] border-slate-100" style="border-left-color: ${c ? c.color : '#cbd5e1'}"><div class="flex justify-between items-start mb-2"><span class="text-[9px] font-black uppercase text-indigo-400 tracking-widest">${p ? p.title : (c ? c.name : 'Allgemein')}</span><span class="text-[8px] font-bold text-slate-300">${new Date(t.createdAt).toLocaleDateString()}</span></div><h4 class="font-bold text-slate-800 leading-tight mb-3">${t.title}</h4><div class="flex justify-between items-center"><span class="px-2 py-0.5 bg-red-50 text-red-500 rounded-full text-[8px] font-black uppercase">Dringend</span><button onclick="window.switchTab('board')" class="text-indigo-600 font-bold text-[10px] uppercase hover:underline">Zum Board <i data-lucide="arrow-right" class="w-3 h-3 inline"></i></button></div></div>`;
                 }).join('');
             }
             lucide.createIcons();
         }
 
-        // --- GENERAL RENDERING & ACTIONS ---
         function renderCustomers() {
-            document.getElementById('customer-list').innerHTML = customers.map(c => `<div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl"><div class="flex items-center text-sm font-bold"><span class="w-2 h-2 rounded-full mr-2" style="background-color:${c.color}"></span>${c.name}</div><button onclick="window.deleteCustomer('${c.id}')" class="text-slate-300 hover:text-red-500 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`).join('');
+            document.getElementById('customer-list').innerHTML = customers.map(c => `<div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl mb-2"><div class="flex items-center text-sm font-bold"><span class="w-2 h-2 rounded-full mr-2" style="background-color:${c.color}"></span>${c.name}</div><button onclick="window.deleteCustomer('${c.id}')" class="text-slate-300 hover:text-red-500 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`).join('');
             lucide.createIcons();
         }
 
         function renderSelectors() {
-            const selects = ['task-customer', 'proj-customer', 'ql-customer', 'dash-task-customer'];
+            const ids = ['task-customer', 'proj-customer', 'ql-customer', 'dash-task-customer'];
             const opts = '<option value="" disabled selected>Kunde wählen...</option>' + customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-            selects.forEach(id => {
-                const el = document.getElementById(id);
-                if(el) el.innerHTML = opts;
-            });
+            ids.forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = opts; });
             const tc = document.getElementById('task-customer');
             if(tc) tc.onchange = (e) => {
                 const filtered = projects.filter(p => p.customerId === e.target.value);
@@ -577,13 +539,41 @@
             const view = document.getElementById('project-board-view'); if(!view) return;
             view.innerHTML = customers.map(c => {
                 const cProjs = projects.filter(p => p.customerId === c.id);
-                return `<div class="project-column bg-white p-6 rounded-3xl border border-slate-50 shadow-sm space-y-4"><h3 class="text-sm font-black uppercase text-slate-500 border-b pb-2 flex items-center"><span class="w-2 h-2 rounded-full mr-2" style="background-color:${c.color}"></span>${c.name}</h3>${cProjs.map(p => {
-                    const pTasks = tasks.filter(t => t.projectId === p.id);
-                    return `<div class="project-card p-5 rounded-2xl" onclick="window.openProjectDetails('${p.id}')"><h4 class="font-bold text-sm mb-2">${p.title}</h4><div class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">${pTasks.length} Tasks</div></div>`;
-                }).join('')}</div>`;
+                return `
+                    <div class="project-column bg-white p-6 rounded-3xl border border-slate-50 shadow-sm space-y-4">
+                        <h3 class="text-sm font-black uppercase text-slate-500 border-b pb-2 flex items-center"><span class="w-2 h-2 rounded-full mr-2" style="background-color:${c.color}"></span>${c.name}</h3>
+                        ${cProjs.map(p => {
+                            const pTasks = tasks.filter(t => t.projectId === p.id);
+                            const doneCount = pTasks.filter(t => t.status === 'done').length;
+                            return `
+                                <div class="project-card p-5 rounded-2xl flex flex-col space-y-3" onclick="window.openProjectDetails('${p.id}')">
+                                    <h4 class="font-bold text-sm leading-tight">${p.title}</h4>
+                                    <div class="space-y-1 pt-2 border-t border-yellow-200">
+                                        ${pTasks.slice(0, 3).map(t => `<div class="flex items-center text-[9px] text-slate-500 truncate"><span class="w-1.5 h-1.5 rounded-full mr-1 ${t.status === 'done' ? 'bg-green-500' : 'bg-orange-400'}"></span>${t.title}</div>`).join('')}
+                                    </div>
+                                    <div class="flex justify-between items-center text-[9px] font-black uppercase text-yellow-700 pt-1">
+                                        <span>Fortschritt</span>
+                                        <span>${doneCount}/${pTasks.length} Fertig</span>
+                                    </div>
+                                    <div class="mt-2 pt-2 border-t border-yellow-100 flex gap-2" onclick="event.stopPropagation()">
+                                        <input type="text" id="quick-task-${p.id}" placeholder="Neuer Task..." class="flex-grow p-1 text-[10px] bg-white border border-yellow-200 rounded outline-none" onkeyup="if(event.key==='Enter') window.quickAddTask('${p.id}', '${c.id}')">
+                                        <button onclick="window.quickAddTask('${p.id}', '${c.id}')" class="bg-yellow-600 text-white p-1 rounded"><i data-lucide="plus" class="w-3 h-3"></i></button>
+                                    </div>
+                                </div>`;
+                        }).join('')}
+                    </div>`;
             }).join('');
             lucide.createIcons();
         }
+
+        window.quickAddTask = async (pId, cId) => {
+            const input = document.getElementById(`quick-task-${pId}`);
+            if(!input.value.trim()) return;
+            await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'tasks'), {
+                title: input.value.trim(), customerId: cId, projectId: pId, status: 'backlog', date: new Date().toISOString().split('T')[0], createdAt: new Date().toISOString()
+            });
+            input.value = '';
+        };
 
         function renderBoard() {
             const cols = { backlog: document.getElementById('col-backlog'), progress: document.getElementById('col-progress'), done: document.getElementById('col-done') };
@@ -600,7 +590,7 @@
                         const card = document.createElement('div');
                         card.className = `task-card bg-white p-4 rounded-2xl shadow-sm border border-l-[6px] group relative pointer-events-auto ${t.isHighPriority ? 'priority-high' : ''}`;
                         card.style.borderLeftColor = g.c.color; card.draggable = true; card.setAttribute('data-id', t.id);
-                        card.innerHTML = `<div class="flex justify-between items-start mb-1"><span class="text-[8px] font-black text-indigo-400 uppercase truncate">${project ? project.title : 'Allgemein'}</span><div class="flex space-x-1 opacity-0 group-hover:opacity-100 transition"><button onclick="window.togglePriority('${t.id}', ${!t.isHighPriority})"><i data-lucide="zap" class="w-3 h-3 ${t.isHighPriority ? 'text-red-500 fill-current' : 'text-slate-300'}"></i></button><button onclick="window.openEditModal('${t.id}')"><i data-lucide="pencil" class="w-3 h-3 text-slate-300"></i></button><button onclick="window.deleteTask('${t.id}')" class="text-slate-300 hover:text-red-500"><i data-lucide="x" class="w-3 h-3"></i></button></div></div><p class="text-sm font-bold text-slate-800 leading-tight">${t.title}</p><div class="mt-3 pt-2 border-t border-slate-50 flex justify-between text-[9px] text-slate-400 font-bold"><span>${new Date(t.date).toLocaleDateString()}</span>${status === 'progress' ? `<input type="number" step="0.25" value="${t.currentDuration || ''}" onchange="window.updateHours('${t.id}', this.value)" class="w-10 bg-indigo-50 text-indigo-600 rounded text-center">` : ''}</div>`;
+                        card.innerHTML = `<div class="flex justify-between items-start mb-1"><span class="text-[8px] font-black text-indigo-400 uppercase truncate">${project ? project.title : 'Allgemein'}</span><div class="flex space-x-1 opacity-0 group-hover:opacity-100 transition"><button onclick="window.togglePriority('${t.id}', ${!t.isHighPriority})"><i data-lucide="zap" class="w-3 h-3 ${t.isHighPriority ? 'text-red-500 fill-current' : 'text-slate-300'}"></i></button><button onclick="window.openEditModal('${t.id}')"><i data-lucide="pencil" class="w-3 h-3 text-slate-300"></i></button><button onclick="window.deleteTask('${t.id}')" class="text-slate-300 hover:text-red-500"><i data-lucide="x" class="w-3 h-3"></i></button></div></div><p class="text-sm font-bold text-slate-800 leading-tight">${t.title}</p><div class="mt-3 pt-2 border-t border-slate-50 flex justify-between text-[9px] text-slate-400 font-bold"><span>${new Date(t.date).toLocaleDateString()}</span>${status === 'progress' ? `<input type="number" step="0.25" value="${t.currentDuration || ''}" onchange="window.updateHours('${t.id}', this.value)" class="w-10 bg-indigo-50 text-indigo-600 rounded text-center outline-none">` : ''}</div>`;
                         card.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', t.id); e.dataTransfer.effectAllowed = "move"; });
                         container.appendChild(card);
                     });
@@ -612,7 +602,7 @@
         window.openProjectDetails = (id) => {
             const p = projects.find(p => p.id === id); const c = customers.find(c => c.id === p.customerId); activeProjectId = id;
             document.getElementById('pd-title').textContent = p.title; document.getElementById('pd-customer').textContent = c ? c.name : 'Unbekannt'; document.getElementById('pd-desc').value = p.desc || '';
-            document.getElementById('pd-notes-list').innerHTML = (p.notes || []).map(n => `<div class="bg-yellow-50 p-4 rounded-xl border border-yellow-100 group/note mb-2"><div class="flex justify-between items-start mb-1"><span class="text-[8px] font-bold text-yellow-600 uppercase">${new Date(n.date).toLocaleString()}</span><div class="flex space-x-2 opacity-0 group-hover/note:opacity-100 transition"><button onclick="window.editNote('${n.id}')"><i data-lucide="pencil" class="w-3 h-3"></i></button><button onclick="window.deleteNote('${n.id}')"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div></div><p class="text-sm text-yellow-900 whitespace-pre-wrap">${n.text}</p></div>`).join('') || '<div class="text-center py-4 italic text-xs">Keine Notizen.</div>';
+            document.getElementById('pd-notes-list').innerHTML = (p.notes || []).map(n => `<div class="bg-yellow-50 p-4 rounded-xl border border-yellow-100 group/note mb-2"><div class="flex justify-between items-start mb-1"><span class="text-[8px] font-bold text-yellow-600 uppercase">${new Date(n.date).toLocaleString()}</span><div class="flex space-x-2 opacity-0 group-hover/note:opacity-100 transition"><button onclick="window.editNote('${n.id}')"><i data-lucide="pencil" class="w-3 h-3 text-yellow-600"></i></button><button onclick="window.deleteNote('${n.id}')"><i data-lucide="trash-2" class="w-3 h-3 text-yellow-600"></i></button></div></div><p class="text-sm text-yellow-900 whitespace-pre-wrap">${n.text}</p></div>`).join('') || '<div class="text-center py-4 italic text-xs">Keine Notizen.</div>';
             const availableTasks = tasks.filter(t => t.customerId === p.customerId && t.projectId !== id);
             document.getElementById('pd-link-task-select').innerHTML = '<option value="">Task wählen...</option>' + availableTasks.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
             document.getElementById('pd-tasks-list').innerHTML = tasks.filter(t => t.projectId === id).map(t => `<div class="p-3 bg-white rounded-xl shadow-sm text-xs flex justify-between items-center border-l-4" style="border-left-color:${t.status==='done'?'#22c55e':'#fb923c'}"><span class="font-bold text-slate-700 truncate mr-2">${t.title}</span><button onclick="window.unlinkTask('${t.id}')" class="text-slate-300 hover:text-red-500"><i data-lucide="link-2-off" class="w-3 h-3"></i></button></div>`).join('');
@@ -631,17 +621,18 @@
         window.switchTab = (tabId) => {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            const target = document.getElementById(`tab-${tabId}`);
+            if(target) target.classList.remove('hidden');
             if(tabId === 'projects') renderProjects();
             if(tabId === 'dashboard') renderDashboard();
             lucide.createIcons();
         };
 
-        window.startVoiceOnDashboard = () => { if(recognition) recognition.start(); else alert("Nicht unterstützt."); };
+        window.startVoiceOnDashboard = () => { if(recognition) recognition.start(); else alert("Spracherkennung wird nicht unterstützt."); };
         window.closeEditModal = () => document.getElementById('edit-task-modal').classList.add('hidden');
-        window.deleteCustomer = async (id) => { if(confirm("Löschen?")) await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'customers', id)); };
-        window.deleteTask = async (id) => { if(confirm("Löschen?")) await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id)); };
-        window.unlinkTask = async (id) => { await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { projectId: "" }); };
+        window.deleteCustomer = async (id) => { if(confirm("Mandant löschen?")) await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'customers', id)); };
+        window.deleteTask = async (id) => { if(confirm("Task löschen?")) await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id)); };
+        window.unlinkTask = async (id) => { if(confirm("Verknüpfung lösen?")) await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { projectId: "" }); };
         window.togglePriority = async (id, v) => { await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { isHighPriority: v }); };
         window.updateHours = async (id, v) => { await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { currentDuration: parseFloat(v) || 0 }); };
 
@@ -662,6 +653,7 @@
             if(dur > 0) {
                 await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'timeLogs'), { taskId: "quick", taskTitle: document.getElementById('ql-title').value, customerId: document.getElementById('ql-customer').value, duration: dur, timestamp: document.getElementById('ql-date').value });
                 e.target.reset(); document.getElementById('ql-date').value = new Date().toISOString().split('T')[0];
+                alert("Buchung erfolgreich.");
             }
         };
 
@@ -685,13 +677,15 @@
         });
 
         document.getElementById('save-time').onclick = async () => {
-            const dur = parseFloat(document.getElementById('task-duration').value);
+            const durValue = document.getElementById('task-duration').value;
+            const dur = parseFloat(durValue);
+            const date = document.getElementById('log-date').value;
             const t = tasks.find(x => x.id === pendingDropId);
-            if(!isNaN(dur) && t) {
-                await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'timeLogs'), { taskId: t.id, taskTitle: t.title, customerId: t.customerId, duration: dur, timestamp: document.getElementById('log-date').value });
+            if(!isNaN(dur) && pendingDropId) {
+                await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'timeLogs'), { taskId: t.id, taskTitle: t.title, customerId: t.customerId, duration: dur, timestamp: date });
                 await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', pendingDropId), { status: 'done', currentDuration: 0 });
                 document.getElementById('time-modal').classList.add('hidden'); pendingDropId = null;
-            }
+            } else { alert("Dauer ungültig."); }
         };
 
         function renderReports() {
@@ -700,7 +694,7 @@
             container.innerHTML = customers.map(c => {
                 const total = logs.filter(l => l.customerId === c.id).reduce((sum, l) => sum + (parseFloat(l.duration) || 0), 0);
                 if (total === 0) return '';
-                return `<div class="bg-slate-800 bg-opacity-40 p-4 rounded-2xl border border-slate-700 flex justify-between items-center"><span class="font-bold text-slate-200">${c.name}</span><div class="flex items-center space-x-3"><button onclick="window.exportCSV('${c.id}')" class="p-1.5 text-slate-500 hover:text-white transition"><i data-lucide="download" class="w-4 h-4"></i></button><span class="text-xl font-black text-white">${total.toFixed(2)}h</span></div></div>`;
+                return `<div class="bg-slate-800 bg-opacity-40 p-4 rounded-2xl border border-slate-700 flex justify-between items-center group mb-2"><span class="font-bold text-slate-200 text-sm">${c.name}</span><div class="flex items-center space-x-3"><button onclick="window.exportCSV('${c.id}')" class="p-1.5 text-slate-500 hover:text-white transition"><i data-lucide="download" class="w-4 h-4"></i></button><span class="text-xl font-black text-white">${total.toFixed(2)}h</span></div></div>`;
             }).join('') || '<div class="text-center text-slate-500 py-10">Keine Daten.</div>';
             lucide.createIcons();
         }
@@ -716,15 +710,21 @@
             } catch(err) { document.getElementById('auth-message').textContent = err.message; }
         };
         document.getElementById('toggle-auth-mode').onclick = () => { isLoginMode = !isLoginMode; document.getElementById('auth-title').textContent = isLoginMode ? 'Anmelden' : 'Registrieren'; document.getElementById('auth-submit-btn').textContent = isLoginMode ? 'Login' : 'Registrieren'; };
+        document.getElementById('cancel-time').onclick = () => { document.getElementById('time-modal').classList.add('hidden'); pendingDropId = null; };
 
         window.onload = init;
         window.switchTab = switchTab;
+        window.prepareNewNote = () => { editingNoteId = null; document.getElementById('note-input').value = ""; document.getElementById('note-editor').classList.remove('hidden'); };
+        window.cancelNote = () => document.getElementById('note-editor').classList.add('hidden');
+        window.editNote = (id) => { const p = projects.find(p => p.id === activeProjectId); const n = p.notes.find(x => x.id === id); editingNoteId = id; document.getElementById('note-input').value = n.text; document.getElementById('note-editor').classList.remove('hidden'); };
         window.exportCSV = (custId) => {
             const customer = customers.find(c => c.id === custId);
             const now = new Date();
             const logs = timeLogs.filter(l => l.customerId === custId && new Date(l.timestamp).getMonth() === now.getMonth());
-            let csv = "\uFEFFDatum;Leistung;Dauer (h)\n";
-            logs.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp)).forEach(l => { csv += `${new Date(l.timestamp).toLocaleDateString()};"${l.taskTitle.replace(/"/g, '""')}";${l.duration.toString().replace('.', ',')}\n`; });
+            let csv = "\uFEFFDatum;Projekt;Dauer (h)\n";
+            logs.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp)).forEach(l => { 
+                csv += `${new Date(l.timestamp).toLocaleDateString()};"${l.taskTitle.replace(/"/g, '""')}";${l.duration.toString().replace('.', ',')}\n`; 
+            });
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `Report_${customer.name}.csv`; link.click();
         };
