@@ -3,731 +3,451 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consultancy Workflow & Project Manager</title>
+    <title>Consultancy Time & Plan Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
         
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: #f8fafc;
-            overflow-x: hidden;
-            min-height: 100vh;
-        }
+        body { min-height: 100vh; background-color: #f8fafc; font-family: 'Inter', sans-serif; }
 
-        .drop-zone {
-            min-height: 200px;
-            transition: all 0.2s ease;
-            border: 2px solid transparent;
-            flex-grow: 1; /* Stellt sicher, dass die Zone den Platz füllt */
-        }
-
-        .drop-zone-active {
-            background-color: #f1f5f9;
-            border-color: #4f46e5;
-            border-style: dashed;
-            border-radius: 1.5rem;
-        }
-
-        .task-card {
-            cursor: grab;
-            transition: all 0.2s ease;
-        }
-        .task-card:active { cursor: grabbing; }
-
-        /* Modernes Post-it Design */
-        .project-card {
-            background: #fffde7; 
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            border-bottom: 3px solid #fbc02d;
-            transition: all 0.2s ease;
-            position: relative;
-        }
-        .project-card:hover { 
-            transform: translateY(-4px); 
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); 
-            z-index: 10;
-        }
-        
-        .project-card::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 0;
-            height: 0;
-            border-style: solid;
-            border-width: 0 0 15px 15px;
-            border-color: transparent transparent #fbc02d transparent;
-            opacity: 0.3;
-        }
-
-        .tab-btn {
-            padding: 0.75rem 1.5rem;
-            font-weight: 700;
+        .tab-button {
+            padding: 0.75rem 1.25rem;
+            font-weight: 600;
             border-bottom: 3px solid transparent;
-            color: #64748b;
+            cursor: pointer;
             transition: all 0.2s;
+            color: #64748b;
         }
-        .tab-btn.active {
-            color: #4f46e5;
+        .tab-button:hover { background-color: #f3f4f6; }
+        .tab-button.active {
             border-bottom-color: #4f46e5;
+            color: #4f46e5;
+            background-color: #fff;
         }
 
-        .priority-high {
-            border-right: 5px solid #ef4444 !important;
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1) !important;
+        .plan-input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            outline: none;
+            transition: border-color 0.2s;
         }
+        .plan-input:focus { border-color: #4f46e5; box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1); }
+        
+        .task-done { text-decoration: line-through; opacity: 0.5; }
 
-        .project-grid-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-            gap: 2rem;
-            align-items: start;
-        }
-
-        @keyframes pulse-red {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.2); opacity: 0.7; }
-        }
-        .mic-active {
-            color: #ef4444;
-            animation: pulse-red 1.5s infinite;
-        }
+        .tab-content.hidden { display: none; }
     </style>
     <script type="module" src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="p-4 md:p-6 text-slate-800">
+<body class="p-4 md:p-8">
 
-    <div id="app" class="max-w-[1800px] mx-auto space-y-6">
+    <div id="app" class="max-w-5xl mx-auto space-y-6">
 
-        <!-- Header -->
-        <header class="flex flex-col sm:flex-row justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-gray-200">
+        <header class="flex flex-col sm:flex-row justify-between items-center pb-4 border-b border-gray-200">
             <div class="flex items-center space-x-3">
-                <div class="bg-indigo-600 p-2 rounded-xl">
-                    <i data-lucide="layout-grid" class="text-white w-6 h-6"></i>
-                </div>
-                <h1 class="text-xl font-bold text-gray-900">Consultancy Dashboard</h1>
+                <div class="bg-indigo-600 p-2 rounded-lg text-white"><i data-lucide="layout-dashboard"></i></div>
+                <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight">Consultancy Workflow</h1>
             </div>
-            <div class="flex items-center space-x-4 mt-4 sm:mt-0">
-                <div id="user-info" class="text-sm font-medium text-slate-500"></div>
-                <button id="logout-btn" class="hidden bg-red-50 text-red-600 px-4 py-1.5 rounded-lg text-sm font-bold hover:bg-red-100 transition">Logout</button>
-            </div>
+            <div id="auth-status" class="text-xs text-gray-400 font-medium">Authentifizierung...</div>
         </header>
+        
+        <!-- Tab Navigation -->
+        <div id="tab-selector" class="flex flex-wrap border-b border-gray-200 bg-gray-50 rounded-t-xl overflow-hidden">
+            <button class="tab-button active" data-tab="plan"><i data-lucide="calendar-check" class="w-4 h-4 inline mr-1"></i> Tagesplan (1-3-5)</button>
+            <button class="tab-button" data-tab="tracking"><i data-lucide="clock-4" class="w-4 h-4 inline mr-1"></i> Zeiterfassung</button>
+            <button class="tab-button" data-tab="analysis"><i data-lucide="bar-chart-2" class="w-4 h-4 inline mr-1"></i> Analyse</button>
+            <button class="tab-button" data-tab="management"><i data-lucide="settings" class="w-4 h-4 inline mr-1"></i> Setup</button>
+        </div>
 
-        <!-- Navigation -->
-        <nav id="nav-tabs" class="hidden flex space-x-2 border-b border-gray-200 overflow-x-auto whitespace-nowrap">
-            <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
-            <button class="tab-btn" data-tab="board">Board (Planung)</button>
-            <button class="tab-btn" data-tab="projects">Landkarte (Themen)</button>
-            <button class="tab-btn" data-tab="analysis">Report & Export</button>
-            <button class="tab-btn" data-tab="management">Kundenstamm</button>
-        </nav>
-
-        <!-- Loading Indicator -->
+        <!-- Loader -->
         <div id="loading-indicator" class="text-center py-20">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+            <div class="animate-spin h-8 w-8 text-indigo-500 mx-auto border-4 border-t-transparent rounded-full"></div>
+            <p class="mt-4 text-sm text-gray-500 font-bold uppercase tracking-widest">Synchronisiere Cloud...</p>
         </div>
 
-        <!-- Login Section -->
-        <div id="login-center" class="hidden flex items-center justify-center py-10">
-            <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md border border-gray-100">
-                <h2 id="auth-title" class="text-2xl font-bold text-slate-800 text-center mb-6">Anmelden</h2>
-                <form id="auth-form" class="space-y-4">
-                    <input type="email" id="auth-email" placeholder="E-Mail" required class="w-full p-3 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 transition">
-                    <input type="password" id="auth-password" placeholder="Passwort" required class="w-full p-3 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 transition">
-                    <p id="auth-message" class="text-sm text-red-500 text-center"></p>
-                    <button type="submit" id="auth-submit-btn" class="w-full bg-indigo-600 text-white p-3 rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg">Login</button>
-                </form>
-                <button id="toggle-auth-mode" class="w-full mt-4 text-sm text-indigo-600 hover:underline">Neuen Account erstellen</button>
-            </div>
-        </div>
-
-        <!-- Main Content -->
+        <!-- MAIN CONTENT -->
         <div id="main-content" class="hidden space-y-6">
 
-            <!-- TAB 1: DASHBOARD -->
-            <div id="tab-dashboard" class="tab-content space-y-8">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex items-center space-x-4">
-                        <div class="bg-orange-100 p-3 rounded-2xl text-orange-600"><i data-lucide="activity"></i></div>
-                        <div>
-                            <p class="text-xs font-black uppercase text-slate-400 tracking-widest">In Bearbeitung</p>
-                            <p id="stat-active-tasks" class="text-2xl font-black text-slate-800">0 Tasks</p>
-                        </div>
-                    </div>
-                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex items-center space-x-4">
-                        <div class="bg-indigo-100 p-3 rounded-2xl text-indigo-600"><i data-lucide="layers"></i></div>
-                        <div>
-                            <p class="text-xs font-black uppercase text-slate-400 tracking-widest">Aktive Projekte</p>
-                            <p id="stat-total-projects" class="text-2xl font-black text-slate-800">0 Themen</p>
-                        </div>
-                    </div>
-                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex items-center space-x-4">
-                        <div class="bg-green-100 p-3 rounded-2xl text-green-600"><i data-lucide="clock"></i></div>
-                        <div>
-                            <p class="text-xs font-black uppercase text-slate-400 tracking-widest">Monats-Dauer</p>
-                            <p id="stat-monthly-hours" class="text-2xl font-black text-slate-800">0.00 h</p>
-                        </div>
-                    </div>
-                </div>
-
+            <!-- TAB: TAGESPLAN (1-3-5 Strategie) -->
+            <div id="tab-plan" class="tab-content space-y-8">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    
                     <div class="lg:col-span-2 space-y-6">
-                        <div class="flex items-center justify-between">
-                            <h3 class="text-xl font-black text-slate-800 tracking-tight flex items-center">
-                                <i data-lucide="alert-circle" class="mr-2 text-red-500"></i> Fokus & Dringend
-                            </h3>
-                        </div>
-                        <div id="urgent-tasks-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-                        <div id="no-urgent-tasks" class="hidden bg-white p-12 rounded-3xl border border-dashed border-slate-200 text-center space-y-2">
-                            <div class="bg-slate-50 w-12 h-12 rounded-full flex items-center justify-center mx-auto text-slate-300"><i data-lucide="check"></i></div>
-                            <p class="text-slate-400 font-bold">Alles im Griff! Keine dringenden Tasks offen.</p>
+                        <header>
+                            <h2 class="text-2xl font-black text-gray-800">Dein Fokus für heute</h2>
+                            <p class="text-sm text-gray-500">Nach der 1-3-5 Regel: Beende die Flut im Kopf.</p>
+                        </header>
+
+                        <!-- Die 1-3-5 Sektionen -->
+                        <div id="planner-container" class="space-y-6">
+                            <!-- 1 Big Thing -->
+                            <section class="bg-white p-6 rounded-2xl shadow-sm border border-indigo-100">
+                                <h3 class="text-xs font-black text-indigo-600 uppercase tracking-widest mb-4 flex items-center">
+                                    <i data-lucide="crown" class="w-4 h-4 mr-2"></i> 1 Großes Thema (2-3 Std.)
+                                </h3>
+                                <div id="plan-section-big" class="space-y-3"></div>
+                            </section>
+
+                            <!-- 3 Medium Things -->
+                            <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                                <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center">
+                                    <i data-lucide="list" class="w-4 h-4 mr-2 text-slate-400"></i> 3 Mittlere Aufgaben (30-60 Min.)
+                                </h3>
+                                <div id="plan-section-medium" class="space-y-3"></div>
+                            </section>
+
+                            <!-- 5 Small Things -->
+                            <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                                <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center">
+                                    <i data-lucide="zap" class="w-4 h-4 mr-2 text-yellow-500"></i> 5 Kleine "Quick Wins" (<15 Min.)
+                                </h3>
+                                <div id="plan-section-small" class="space-y-3"></div>
+                            </section>
                         </div>
                     </div>
 
-                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-6 self-start sticky top-6">
-                        <div>
-                            <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">Schnellerfassung</h3>
-                            <p class="text-xs text-slate-400">Task direkt anlegen (auch per Sprache)</p>
-                        </div>
-                        <form id="dash-task-form" class="space-y-4">
-                            <div class="relative">
-                                <input type="text" id="dash-task-title" placeholder="Was ist zu tun?" required class="w-full p-3 pr-10 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
-                                <button type="button" onclick="window.startVoiceOnDashboard()" title="KI Sprach-Eingabe" class="absolute right-3 top-3 text-slate-400 hover:text-indigo-600">
-                                    <i data-lucide="mic" class="w-5 h-5"></i>
-                                </button>
+                    <!-- Sidebar Stats for the day -->
+                    <div class="space-y-6">
+                        <div class="bg-indigo-600 text-white p-6 rounded-3xl shadow-xl">
+                            <h4 class="font-bold text-lg mb-4">Tagesfortschritt</h4>
+                            <div class="space-y-4">
+                                <div>
+                                    <div class="flex justify-between text-xs font-bold mb-1 uppercase opacity-80"><span>Erledigt</span><span id="plan-progress-percent">0%</span></div>
+                                    <div class="w-full bg-indigo-800 rounded-full h-2">
+                                        <div id="plan-progress-bar" class="bg-white h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                                <p id="plan-stats-text" class="text-sm opacity-90 leading-relaxed italic">Noch kein Task für heute geplant.</p>
                             </div>
-                            <select id="dash-task-customer" required class="w-full p-3 border border-slate-200 rounded-xl bg-white text-sm"></select>
-                            <button type="submit" class="w-full bg-indigo-600 text-white p-4 rounded-xl font-bold hover:bg-indigo-700 shadow-lg transition">ANLEGEN</button>
-                        </form>
-                        <div id="dash-voice-indicator" class="hidden flex items-center justify-center p-2 bg-red-50 text-red-600 rounded-xl text-xs font-black animate-pulse">
-                            <i data-lucide="mic" class="w-3 h-3 mr-2"></i> KI HÖRT ZU...
+                        </div>
+                        
+                        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                            <h4 class="font-bold text-gray-800 mb-2 flex items-center"><i data-lucide="info" class="w-4 h-4 mr-2 text-indigo-500"></i> Tipp</h4>
+                            <p class="text-xs text-gray-500 leading-relaxed">Plane deinen Tag am Vorabend oder als erste Amtshandlung morgens. Was nicht auf der Liste steht, existiert heute nicht.</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- TAB 2: BOARD -->
-            <div id="tab-board" class="tab-content hidden grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Spaltencontainer haben nun flex-grow auf den drop-zones -->
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col h-full">
-                    <h3 class="font-bold text-slate-700 text-xs uppercase tracking-widest border-b pb-2 mb-4">Backlog</h3>
-                    <form id="task-form" class="mb-4 space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-100 shadow-inner">
-                        <div class="relative">
-                            <input type="text" id="task-title" placeholder="Aufgabe..." required class="w-full p-2 pr-10 text-sm border border-slate-300 rounded-lg outline-none">
-                            <button type="button" id="voice-input-btn" class="absolute right-2 top-2 text-slate-400"><i data-lucide="mic" class="w-5 h-5"></i></button>
-                        </div>
-                        <div class="flex gap-2">
-                             <select id="task-customer" required class="w-1/2 p-2 text-xs border border-slate-300 rounded-lg outline-none bg-white"></select>
-                             <select id="task-project" class="w-1/2 p-2 text-xs border border-slate-300 rounded-lg outline-none bg-white">
-                                <option value="">Projekt (opt.)</option>
-                             </select>
-                        </div>
-                        <button type="submit" class="w-full bg-slate-800 text-white p-2 rounded-lg font-bold text-xs uppercase">Task anlegen</button>
+            <!-- TAB: ZEITERFASSUNG -->
+            <div id="tab-tracking" class="tab-content space-y-8 hidden">
+                <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center"><i data-lucide="clock" class="w-5 h-5 mr-2 text-indigo-500"></i> Zeit buchen</h2>
+                    <form id="entry-form" class="grid grid-cols-1 md:grid-cols-6 gap-4">
+                        <div class="md:col-span-1"><label class="block text-xs font-bold text-gray-400 uppercase mb-1">Datum</label><input type="date" id="entry-date" required class="w-full p-2 border border-gray-200 rounded-lg"></div>
+                        <div class="md:col-span-2"><label class="block text-xs font-bold text-gray-400 uppercase mb-1">Kunde</label><select id="customer-select" required class="w-full p-2 border border-gray-200 rounded-lg bg-white"></select></div>
+                        <div class="md:col-span-3 flex items-end"><div id="rate-display" class="p-2 border border-dashed border-gray-200 rounded-lg w-full bg-gray-50 text-xs text-gray-500 italic">Rate: ---</div></div>
+                        <div class="md:col-span-2"><label class="block text-xs font-bold text-gray-400 uppercase mb-1">Aufgabe / Thema</label><input type="text" id="entry-description" required class="w-full p-2 border border-gray-200 rounded-lg" placeholder="Was hast du getan?"></div>
+                        <div class="md:col-span-1"><label class="block text-xs font-bold text-gray-400 uppercase mb-1">Stunden</label><input type="number" id="entry-hours" step="0.25" min="0.25" required class="w-full p-2 border border-gray-200 rounded-lg"></div>
+                        <div class="md:col-span-3 flex items-end"><button type="submit" class="w-full bg-indigo-600 text-white p-2 rounded-lg font-bold hover:bg-indigo-700 transition shadow-md uppercase tracking-wider">Zeit buchen</button></div>
                     </form>
-                    <div id="col-backlog" class="drop-zone space-y-6 overflow-y-auto" data-status="backlog"></div>
-                </div>
-
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col h-full">
-                    <h3 class="font-bold text-orange-600 text-xs uppercase tracking-widest border-b pb-2 mb-4">In Bearbeitung</h3>
-                    <div id="col-progress" class="drop-zone space-y-6 overflow-y-auto" data-status="progress"></div>
-                </div>
-
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col h-full">
-                    <h3 class="font-bold text-green-600 text-xs uppercase tracking-widest border-b pb-2 mb-4">Fertig</h3>
-                    <div id="col-done" class="drop-zone space-y-6 overflow-y-auto" data-status="done"></div>
-                </div>
+                </section>
+                
+                <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center"><i data-lucide="list" class="w-5 h-5 mr-2 text-indigo-500"></i> Letzte Buchungen</h2>
+                    <div class="overflow-x-auto"><table class="min-w-full"><thead class="bg-gray-50"><tr><th class="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase">Datum</th><th class="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase">Kunde</th><th class="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase">Tätigkeit</th><th class="px-4 py-2 text-right text-[10px] font-bold text-gray-400 uppercase">Stunden</th><th class="px-4 py-2 text-right text-[10px] font-bold text-gray-400 uppercase">Aktion</th></tr></thead><tbody id="entries-list" class="divide-y divide-gray-100"></tbody></table></div>
+                </section>
             </div>
 
-            <!-- TAB 3: PROJEKTE -->
-            <div id="tab-projects" class="tab-content hidden space-y-6">
-                <div class="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <div>
-                        <h2 class="text-2xl font-black text-slate-800 tracking-tight">Themen-Landkarte</h2>
-                        <p class="text-sm text-slate-500">Kachelansicht der Projekte pro Mandant</p>
+            <!-- TAB: ANALYSE -->
+            <div id="tab-analysis" class="tab-content hidden space-y-6">
+                <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 text-center py-12">
+                    <div class="bg-indigo-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-600"><i data-lucide="pie-chart"></i></div>
+                    <h2 class="text-xl font-bold mb-2">Analyse</h2>
+                    <div id="revenue-summary" class="flex justify-center items-center">
+                        <!-- Stundenanzeige -->
                     </div>
-                    <button id="open-project-modal" class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition flex items-center shadow-md">
-                        <i data-lucide="plus-circle" class="w-5 h-5 mr-2"></i> Neues Thema
-                    </button>
-                </div>
-                <div id="project-board-view" class="project-grid-container pb-6"></div>
+                </section>
             </div>
-
-            <!-- TAB 4: ANALYSIS -->
-            <div id="tab-analysis" class="tab-content hidden grid grid-cols-1 lg:grid-cols-2 gap-8">
-                 <div class="bg-slate-900 p-6 rounded-3xl shadow-xl text-white space-y-6">
-                    <h3 class="font-bold text-slate-400 flex items-center border-b border-slate-800 pb-2 text-xs uppercase tracking-widest">Monatsabrechnung</h3>
-                    <div id="monthly-stats" class="space-y-4"></div>
-                 </div>
-                 <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-6">
-                    <h3 class="font-black text-slate-800 text-lg tracking-tight uppercase">Schnellbuchung</h3>
-                    <form id="quick-log-form" class="space-y-4">
-                        <select id="ql-customer" required class="w-full p-3 border border-slate-200 rounded-xl bg-white"></select>
-                        <input type="date" id="ql-date" required class="w-full p-3 border border-slate-200 rounded-xl">
-                        <input type="text" id="ql-title" placeholder="Tätigkeit..." required class="w-full p-3 border border-slate-200 rounded-xl">
-                        <input type="number" id="ql-duration" step="0.25" min="0" placeholder="Stunden (h)" required class="w-full p-4 border border-gray-200 rounded-2xl text-2xl font-black">
-                        <button type="submit" class="w-full bg-indigo-600 text-white p-4 rounded-2xl font-bold hover:bg-indigo-700 transition">JETZT BUCHEN</button>
-                    </form>
-                 </div>
-            </div>
-
-            <!-- TAB 5: MANAGEMENT -->
+            
+            <!-- TAB: SETUP -->
             <div id="tab-management" class="tab-content hidden">
-                <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-200 max-w-lg">
-                    <h3 class="font-bold text-slate-800 mb-4 text-sm uppercase">Mandantenstamm</h3>
-                    <form id="customer-form" class="flex gap-2 mb-6">
-                        <input type="text" id="cust-name" placeholder="Name..." required class="flex-grow p-3 border border-gray-300 rounded-xl">
-                        <button type="submit" class="bg-blue-600 text-white px-4 rounded-xl shadow-sm hover:bg-blue-700 transition"><i data-lucide="plus"></i></button>
-                    </form>
-                    <div id="customer-list" class="space-y-2"></div>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-    <!-- MODALS -->
-    <div id="edit-task-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-70 flex items-center justify-center p-4 z-50">
-        <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-md border border-gray-200">
-            <h2 class="text-xl font-bold mb-4">Task bearbeiten</h2>
-            <form id="edit-task-form" class="space-y-4">
-                <input type="hidden" id="edit-task-id">
-                <input type="text" id="edit-task-title" required class="w-full p-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
-                <select id="edit-task-project" class="w-full p-3 border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-indigo-500">
-                    <option value="">Keine Zuordnung</option>
-                </select>
-                <div class="grid grid-cols-2 gap-3 pt-2">
-                    <button type="button" onclick="window.closeEditModal()" class="p-4 text-slate-400 font-bold hover:bg-slate-50 rounded-2xl transition">Abbrechen</button>
-                    <button type="submit" class="p-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg hover:bg-indigo-700 transition">Speichern</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div id="project-detail-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-80 flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col md:flex-row">
-            <div class="p-8 md:w-2/3 overflow-y-auto space-y-6 border-r border-slate-100">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <span id="pd-customer" class="text-xs font-black uppercase text-indigo-500 tracking-widest">Kunde</span>
-                        <h2 id="pd-title" class="text-3xl font-bold text-slate-800 mt-1">Projekt</h2>
+                <section class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 text-center space-y-6">
+                    <i data-lucide="settings" class="w-12 h-12 text-slate-300 mx-auto"></i>
+                    <h2 class="text-xl font-bold">Verwaltung</h2>
+                    <div class="max-w-md mx-auto">
+                        <form id="add-customer-form" class="space-y-4 text-left">
+                            <div><label class="block text-xs font-bold text-gray-400 uppercase mb-1">Neuer Kunde</label><input type="text" id="new-customer-name" required placeholder="Name des Kunden" class="w-full p-2 border rounded-lg"></div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div><label class="block text-xs font-bold text-gray-400 uppercase mb-1">Tagessatz (€)</label><input type="number" id="new-customer-rate" placeholder="0" class="w-full p-2 border rounded-lg"></div>
+                                <div><label class="block text-xs font-bold text-gray-400 uppercase mb-1">Pauschale (€)</label><input type="number" id="new-customer-monthly-rate" placeholder="0" class="w-full p-2 border rounded-lg"></div>
+                            </div>
+                            <button type="submit" class="w-full bg-indigo-600 text-white p-2 rounded-lg font-bold">Mandant anlegen</button>
+                        </form>
                     </div>
-                    <button onclick="document.getElementById('project-detail-modal').classList.add('hidden')" class="text-slate-300 hover:text-slate-600 transition"><i data-lucide="x-circle" class="w-8 h-8"></i></button>
-                </div>
-                <section class="space-y-2">
-                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Beschreibung</h4>
-                    <textarea id="pd-desc" rows="3" class="w-full p-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-indigo-100 text-sm"></textarea>
+                    <div id="customer-management-list" class="space-y-2 max-w-md mx-auto text-left"></div>
                 </section>
-                <section class="space-y-4">
-                    <div class="flex justify-between items-center border-b border-slate-100 pb-2">
-                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Protokoll & Notizen</h4>
-                        <button onclick="window.prepareNewNote()" class="text-xs font-bold text-indigo-600 flex items-center"><i data-lucide="plus" class="w-3 h-3 mr-1"></i> Neu</button>
-                    </div>
-                    <div id="note-editor" class="hidden bg-yellow-50 p-4 rounded-2xl space-y-3 border border-yellow-100">
-                        <textarea id="note-input" rows="3" placeholder="..." class="w-full bg-transparent border-none outline-none text-sm text-yellow-900"></textarea>
-                        <div class="flex justify-end space-x-2">
-                            <button onclick="window.cancelNote()" class="px-3 py-1 text-xs font-bold text-slate-400">Abbrechen</button>
-                            <button id="save-note-btn" class="px-4 py-1 bg-yellow-600 text-white text-xs font-bold rounded-lg shadow-sm">Speichern</button>
-                        </div>
-                    </div>
-                    <div id="pd-notes-list" class="space-y-3"></div>
-                </section>
-                <div class="flex justify-end gap-3 pt-6 border-t border-slate-100">
-                    <button id="pd-save-main-btn" class="bg-indigo-600 text-white px-8 py-2.5 rounded-xl font-bold shadow-md">Speichern</button>
-                    <button id="pd-delete-btn" class="text-red-400 text-[10px] font-bold px-4 py-2 hover:text-red-600 transition uppercase tracking-widest">Projekt löschen</button>
-                </div>
-            </div>
-            <div class="p-8 bg-slate-50 md:w-1/3 overflow-y-auto space-y-6">
-                <section>
-                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center"><i data-lucide="link" class="w-4 h-4 mr-2"></i> Tasks verknüpfen</h4>
-                    <div class="flex gap-2">
-                        <select id="pd-link-task-select" class="flex-grow p-2 text-xs border border-slate-200 rounded-lg bg-white outline-none"></select>
-                        <button id="pd-link-task-btn" class="bg-slate-800 text-white p-2 rounded-lg hover:bg-black transition"><i data-lucide="plus" class="w-4 h-4"></i></button>
-                    </div>
-                </section>
-                <section>
-                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center"><i data-lucide="list-checks" class="w-4 h-4 mr-2"></i> Projekt-Tasks</h4>
-                    <div id="pd-tasks-list" class="space-y-3"></div>
-                </section>
-            </div>
-        </div>
-    </div>
-
-    <div id="time-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-70 flex items-center justify-center p-4 z-50">
-        <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-sm border border-gray-200 text-center text-slate-800">
-            <h2 class="text-xl font-bold mb-4 flex items-center justify-center text-gray-800"><i data-lucide="clock" class="mr-2 text-indigo-600"></i> Buchen</h2>
-            <p id="time-modal-task-name" class="text-xs text-slate-500 mb-6 font-bold uppercase"></p>
-            <div class="space-y-4 mb-6">
-                <input type="date" id="log-date" class="w-full p-3 border border-gray-200 rounded-xl font-bold">
-                <input type="number" id="task-duration" step="0.25" placeholder="Stunden (h)" class="w-full p-4 border border-gray-200 rounded-2xl text-2xl font-black text-center outline-none focus:ring-4 focus:ring-indigo-50">
-            </div>
-            <div class="grid grid-cols-2 gap-3">
-                <button id="cancel-time" class="p-4 text-slate-400 font-bold hover:bg-slate-50 rounded-2xl transition">Abbruch</button>
-                <button id="save-time" class="p-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg hover:bg-indigo-700 transition">Buchen</button>
             </div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
-        import { getFirestore, doc, deleteDoc, setDoc, onSnapshot, collection, addDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+        import { getFirestore, doc, deleteDoc, setDoc, onSnapshot, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{"apiKey": "AIzaSyDramsPfqWtBGdvHyMAos0nhyT0t4EMkAg","authDomain": "timetracker-7bf2a.firebaseapp.com","projectId": "timetracker-7bf2a","storageBucket": "timetracker-7bf2a.firebasestorage.app","messagingSenderId": "3152109841","appId": "1:3152109841:web:4e83e101949907c056acb0"}');
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = "consultancy-workflow-stable-v1";
-        const geminiApiKey = "";
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'consultancy-tracker-v6';
+        
+        let appInstance, db, auth, userId = null;
+        let customers = [], entries = [], currentPlan = { big: [''], medium: ['', '', ''], small: ['', '', '', '', ''], done: [] };
 
-        let userId = null;
-        let customers = [];
-        let tasks = [];
-        let projects = [];
-        let timeLogs = [];
-        let isLoginMode = true;
-        let activeProjectId = null;
-        let editingNoteId = null;
-        let pendingDropId = null;
-        let isSeeding = false;
-
-        const colors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316', '#14B8A6', '#6366F1'];
-
-        // --- AI & VOICE ---
-        let recognition = null;
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            recognition = new SpeechRecognition();
-            recognition.lang = 'de-DE';
-            recognition.onstart = () => {
-                document.querySelectorAll('[data-lucide="mic"]').forEach(el => el.classList.add('mic-active'));
-                const vi = document.getElementById('voice-indicator'); if(vi) vi.classList.remove('hidden');
-                const dvi = document.getElementById('dash-voice-indicator'); if(dvi) dvi.classList.remove('hidden');
-            };
-            recognition.onend = () => {
-                document.querySelectorAll('[data-lucide="mic"]').forEach(el => el.classList.remove('mic-active'));
-                const vi = document.getElementById('voice-indicator'); if(vi) vi.classList.add('hidden');
-                const dvi = document.getElementById('dash-voice-indicator'); if(dvi) dvi.classList.add('hidden');
-            };
-            recognition.onresult = (event) => processAiInput(event.results[0][0].transcript);
-        }
-
-        async function processAiInput(text) {
-            const customerNames = customers.map(c => c.name).join(', ');
-            const prompt = `Analysiere Text und extrahiere Mandant und Task-Titel. Mandanten: [${customerNames}]. Antwort nur JSON: {"customer": "Name", "task": "Titel"}. Text: "${text}"`;
-            try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${geminiApiKey}`, {
-                    method: 'POST', body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                });
-                const result = await response.json();
-                const aiData = JSON.parse(result.candidates?.[0]?.content?.parts?.[0]?.text.replace(/```json|```/g, '').trim());
-                const matchedCustomer = customers.find(c => c.name.toLowerCase() === aiData.customer?.toLowerCase());
-                await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'tasks'), {
-                    title: aiData.task || text, customerId: matchedCustomer ? matchedCustomer.id : "", projectId: "", status: 'backlog', date: new Date().toISOString().split('T')[0], createdAt: new Date().toISOString()
-                });
-            } catch (err) { console.error(err); }
-        }
-
-        // --- CORE FUNCTIONS ---
         async function init() {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) try { await signInWithCustomToken(auth, __initial_auth_token); } catch(e) {}
+            appInstance = initializeApp(firebaseConfig);
+            db = getFirestore(appInstance);
+            auth = getAuth(appInstance);
+
+            const initAuth = async () => {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            };
+
             onAuthStateChanged(auth, u => {
                 if (u) {
                     userId = u.uid;
-                    document.getElementById('login-center').classList.add('hidden');
-                    document.getElementById('main-content').classList.remove('hidden');
-                    document.getElementById('nav-tabs').classList.remove('hidden');
-                    document.getElementById('logout-btn').classList.remove('hidden');
-                    document.getElementById('user-info').textContent = u.email;
+                    document.getElementById('auth-status').textContent = `ID: ${userId.substring(0,8)}...`;
                     startListeners();
                 } else {
-                    document.getElementById('login-center').classList.remove('hidden');
-                    document.getElementById('main-content').classList.add('hidden');
+                    initAuth();
                 }
-                document.getElementById('loading-indicator').classList.add('hidden');
-                lucide.createIcons();
             });
         }
 
         function startListeners() {
-            const path = (coll) => collection(db, 'artifacts', appId, 'users', userId, coll);
-            onSnapshot(path('customers'), async (snap) => {
-                customers = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                if (customers.length === 0 && !isSeeding) await seedCustomers();
-                renderCustomers();
-                renderSelectors();
-                renderProjects();
-                renderDashboard();
-            });
-            onSnapshot(path('projects'), (snap) => {
-                projects = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                renderProjects();
-                renderSelectors();
-                renderDashboard();
-                if(activeProjectId) renderProjectDetails(activeProjectId);
-            });
-            onSnapshot(path('tasks'), (snap) => {
-                tasks = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                renderBoard();
-                renderDashboard();
-                if(activeProjectId) renderProjectDetails(activeProjectId);
-            });
-            onSnapshot(path('timeLogs'), (snap) => {
-                timeLogs = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                renderReports();
-                renderDashboard();
-            });
-        }
-
-        async function seedCustomers() {
-            isSeeding = true;
-            const defaults = ["BBG", "ANWR", "bonprix", "BOL", "SGD", "Tradebyte"];
-            try { for (let name of defaults) await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'customers'), { name, color: colors[customers.length % colors.length] }); } 
-            finally { isSeeding = false; }
-        }
-
-        function renderDashboard() {
-            const activeTasks = tasks.filter(t => t.status === 'progress').length;
-            const now = new Date();
-            const monthlyHours = timeLogs
-                .filter(l => new Date(l.timestamp).getMonth() === now.getMonth() && new Date(l.timestamp).getFullYear() === now.getFullYear())
-                .reduce((sum, l) => sum + (parseFloat(l.duration) || 0), 0);
-
-            document.getElementById('stat-active-tasks').textContent = `${activeTasks} Tasks`;
-            document.getElementById('stat-total-projects').textContent = `${projects.length} Themen`;
-            document.getElementById('stat-monthly-hours').textContent = `${monthlyHours.toFixed(2)} h`;
-
-            const container = document.getElementById('urgent-tasks-container');
-            const urgent = tasks.filter(t => t.isHighPriority && t.status !== 'done').sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+            if (!userId) return;
+            const userPath = `artifacts/${appId}/users/${userId}`;
             
-            if (urgent.length === 0) {
-                container.innerHTML = '';
-                document.getElementById('no-urgent-tasks').classList.remove('hidden');
-            } else {
-                document.getElementById('no-urgent-tasks').classList.add('hidden');
-                container.innerHTML = urgent.map(t => {
-                    const c = customers.find(x => x.id === t.customerId);
-                    const p = projects.find(x => x.id === t.projectId);
-                    return `<div class="bg-white p-5 rounded-3xl shadow-sm border border-l-[6px] border-slate-100" style="border-left-color: ${c ? c.color : '#cbd5e1'}"><div class="flex justify-between items-start mb-2"><span class="text-[9px] font-black uppercase text-indigo-400 tracking-widest">${p ? p.title : (c ? c.name : 'Allgemein')}</span><span class="text-[8px] font-bold text-slate-300">${new Date(t.createdAt).toLocaleDateString()}</span></div><h4 class="font-bold text-slate-800 leading-tight mb-3">${t.title}</h4><div class="flex justify-between items-center"><span class="px-2 py-0.5 bg-red-50 text-red-500 rounded-full text-[8px] font-black uppercase">Dringend</span><button onclick="window.switchTab('board')" class="text-indigo-600 font-bold text-[10px] uppercase hover:underline">Zum Board <i data-lucide="arrow-right" class="w-3 h-3 inline"></i></button></div></div>`;
-                }).join('');
-            }
+            // Kunden Listener
+            onSnapshot(collection(db, `artifacts`, appId, `users`, userId, `customers`), snap => {
+                customers = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                renderSelectors();
+                renderCustomerManagement();
+            }, err => console.error("Kunden-Sync Fehler", err));
+
+            // Einträge Listener
+            onSnapshot(collection(db, `artifacts`, appId, `users`, userId, `entries`), snap => {
+                entries = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                entries.sort((a,b) => new Date(b.date) - new Date(a.date));
+                renderEntries();
+                renderAnalysis();
+                updatePlanStats(); // Stats brauchen die aktuellen Entries für Gesamtüberblick
+            }, err => console.error("Entries-Sync Fehler", err));
+
+            // Tagesplan Listener
+            const today = new Date().toISOString().split('T')[0];
+            onSnapshot(doc(db, `artifacts`, appId, `users`, userId, `plans`, today), d => {
+                if(d.exists()) {
+                    currentPlan = d.data();
+                } else {
+                    currentPlan = { big: [''], medium: ['', '', ''], small: ['', '', '', '', ''], done: [] };
+                }
+                renderPlan();
+            }, err => console.error("Plan-Sync Fehler", err));
+
+            document.getElementById('loading-indicator').classList.add('hidden');
+            document.getElementById('main-content').classList.remove('hidden');
+            document.getElementById('entry-date').valueAsDate = new Date();
             lucide.createIcons();
         }
 
-        function renderCustomers() {
-            document.getElementById('customer-list').innerHTML = customers.map(c => `<div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl mb-2"><div class="flex items-center text-sm font-bold"><span class="w-2 h-2 rounded-full mr-2" style="background-color:${c.color}"></span>${c.name}</div><button onclick="window.deleteCustomer('${c.id}')" class="text-slate-300 hover:text-red-500 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`).join('');
-            lucide.createIcons();
-        }
+        // --- PLANNER LOGIC ---
 
-        function renderSelectors() {
-            const ids = ['task-customer', 'proj-customer', 'ql-customer', 'dash-task-customer'];
-            const opts = '<option value="" disabled selected>Kunde wählen...</option>' + customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-            ids.forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = opts; });
-            const tc = document.getElementById('task-customer');
-            if(tc) tc.onchange = (e) => {
-                const filtered = projects.filter(p => p.customerId === e.target.value);
-                document.getElementById('task-project').innerHTML = '<option value="">Projekt (opt.)</option>' + filtered.map(p => `<option value="${p.id}">${p.title}</option>`).join('');
+        function renderPlan() {
+            const renderSection = (id, items, type) => {
+                const container = document.getElementById(id);
+                if (!container) return;
+                container.innerHTML = items.map((val, idx) => `
+                    <div class="flex items-center space-x-3 group">
+                        <input type="checkbox" ${currentPlan.done && currentPlan.done.includes(`${type}-${idx}`) ? 'checked' : ''} 
+                            onchange="window.togglePlanTask('${type}', ${idx})"
+                            class="w-5 h-5 rounded-lg border-slate-200 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                        <input type="text" value="${val || ''}" placeholder="Was ist zu tun?" 
+                            onchange="window.updatePlanTask('${type}', ${idx}, this.value)"
+                            class="plan-input flex-grow ${currentPlan.done && currentPlan.done.includes(`${type}-${idx}`) ? 'task-done' : ''}">
+                    </div>
+                `).join('');
             };
+
+            renderSection('plan-section-big', currentPlan.big || [''], 'big');
+            renderSection('plan-section-medium', currentPlan.medium || ['', '', ''], 'medium');
+            renderSection('plan-section-small', currentPlan.small || ['', '', '', '', ''], 'small');
+            updatePlanStats();
+            lucide.createIcons();
         }
 
-        function renderProjects() {
-            const view = document.getElementById('project-board-view'); if(!view) return;
-            view.innerHTML = customers.map(c => {
-                const cProjs = projects.filter(p => p.customerId === c.id);
+        window.updatePlanTask = async (type, idx, val) => {
+            currentPlan[type][idx] = val;
+            savePlan();
+        };
+
+        window.togglePlanTask = async (type, idx) => {
+            const key = `${type}-${idx}`;
+            if(!currentPlan.done) currentPlan.done = [];
+            if(currentPlan.done.includes(key)) {
+                currentPlan.done = currentPlan.done.filter(k => k !== key);
+            } else {
+                currentPlan.done.push(key);
+            }
+            savePlan();
+        };
+
+        async function savePlan() {
+            if (!userId) return;
+            const today = new Date().toISOString().split('T')[0];
+            await setDoc(doc(db, `artifacts`, appId, `users`, userId, `plans`, today), currentPlan);
+        }
+
+        function updatePlanStats() {
+            const big = currentPlan.big || [];
+            const med = currentPlan.medium || [];
+            const sm = currentPlan.small || [];
+            
+            const total = big.filter(x => x.trim()).length + 
+                          med.filter(x => x.trim()).length + 
+                          sm.filter(x => x.trim()).length;
+            
+            const done = currentPlan.done ? currentPlan.done.length : 0;
+            const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+            
+            const pText = document.getElementById('plan-progress-percent');
+            const pBar = document.getElementById('plan-progress-bar');
+            const sText = document.getElementById('plan-stats-text');
+
+            if (pText) pText.textContent = `${percent}%`;
+            if (pBar) pBar.style.width = `${percent}%`;
+            
+            if(sText) {
+                if(total === 0) sText.textContent = "Schreibe deine Ziele für heute auf.";
+                else if(percent === 100) sText.textContent = "Hervorragend! Alles erledigt. Zeit für den Feierabend.";
+                else sText.textContent = `${done} von ${total} Zielen erreicht. Bleib fokussiert!`;
+            }
+        }
+
+        // --- TRACKING & MANAGEMENT ---
+
+        function renderEntries() {
+            const list = document.getElementById('entries-list');
+            if (!list) return;
+            list.innerHTML = entries.slice(0, 15).map(e => {
+                const customer = customers.find(c => c.id === e.customerId);
                 return `
-                    <div class="project-column bg-white p-6 rounded-3xl border border-slate-50 shadow-sm space-y-4">
-                        <h3 class="text-sm font-black uppercase text-slate-500 border-b pb-2 flex items-center"><span class="w-2 h-2 rounded-full mr-2" style="background-color:${c.color}"></span>${c.name}</h3>
-                        ${cProjs.map(p => {
-                            const pTasks = tasks.filter(t => t.projectId === p.id);
-                            const doneCount = pTasks.filter(t => t.status === 'done').length;
-                            return `
-                                <div class="project-card p-5 rounded-2xl flex flex-col space-y-3" onclick="window.openProjectDetails('${p.id}')">
-                                    <h4 class="font-bold text-sm leading-tight">${p.title}</h4>
-                                    <div class="space-y-1 pt-2 border-t border-yellow-200">
-                                        ${pTasks.slice(0, 3).map(t => `<div class="flex items-center text-[9px] text-slate-500 truncate"><span class="w-1.5 h-1.5 rounded-full mr-1 ${t.status === 'done' ? 'bg-green-500' : 'bg-orange-400'}"></span>${t.title}</div>`).join('')}
-                                    </div>
-                                    <div class="flex justify-between items-center text-[9px] font-black uppercase text-yellow-700 pt-1">
-                                        <span>Fortschritt</span>
-                                        <span>${doneCount}/${pTasks.length} Fertig</span>
-                                    </div>
-                                    <div class="mt-2 pt-2 border-t border-yellow-100 flex gap-2" onclick="event.stopPropagation()">
-                                        <input type="text" id="quick-task-${p.id}" placeholder="Neuer Task..." class="flex-grow p-1 text-[10px] bg-white border border-yellow-200 rounded outline-none" onkeyup="if(event.key==='Enter') window.quickAddTask('${p.id}', '${c.id}')">
-                                        <button onclick="window.quickAddTask('${p.id}', '${c.id}')" class="bg-yellow-600 text-white p-1 rounded"><i data-lucide="plus" class="w-3 h-3"></i></button>
-                                    </div>
-                                </div>`;
-                        }).join('')}
-                    </div>`;
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="px-4 py-3 text-xs font-medium text-slate-400">${e.date}</td>
+                        <td class="px-4 py-3 text-sm font-bold text-slate-700">${customer ? customer.name : 'Unbekannt'}</td>
+                        <td class="px-4 py-3 text-xs text-slate-500">${e.description}</td>
+                        <td class="px-4 py-3 text-sm font-black text-indigo-600 text-right">${e.hours}h</td>
+                        <td class="px-4 py-3 text-right"><button onclick="window.deleteEntry('${e.id}')" class="text-slate-300 hover:text-red-500 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td>
+                    </tr>
+                `;
             }).join('');
             lucide.createIcons();
         }
 
-        window.quickAddTask = async (pId, cId) => {
-            const input = document.getElementById(`quick-task-${pId}`);
-            if(!input.value.trim()) return;
-            await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'tasks'), {
-                title: input.value.trim(), customerId: cId, projectId: pId, status: 'backlog', date: new Date().toISOString().split('T')[0], createdAt: new Date().toISOString()
-            });
-            input.value = '';
-        };
+        function renderSelectors() {
+            const customerOptions = '<option value="" disabled selected>Kunde wählen...</option>' + 
+                                   customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            
+            // Sicherheitsabfragen für jedes Element
+            const cSelect = document.getElementById('customer-select');
+            if (cSelect) cSelect.innerHTML = customerOptions;
 
-        function renderBoard() {
-            const cols = { backlog: document.getElementById('col-backlog'), progress: document.getElementById('col-progress'), done: document.getElementById('col-done') };
-            Object.values(cols).forEach(c => c.innerHTML = '');
-            Object.keys(cols).forEach(status => {
-                const container = cols[status];
-                const grouped = customers.map(c => ({ c, tasks: tasks.filter(t => t.status === status && t.customerId === c.id) })).filter(g => g.tasks.length > 0);
-                grouped.forEach(g => {
-                    const gEl = document.createElement('div'); gEl.className = "space-y-2 mb-8 pointer-events-none";
-                    gEl.innerHTML = `<div class="text-[10px] font-black uppercase text-slate-300 ml-1 tracking-widest">${g.c.name}</div>`;
-                    container.appendChild(gEl);
-                    g.tasks.sort((a,b) => (b.isHighPriority ? 1 : 0) - (a.isHighPriority ? 1 : 0)).forEach(t => {
-                        const project = projects.find(p => p.id === t.projectId);
-                        const card = document.createElement('div');
-                        card.className = `task-card bg-white p-4 rounded-2xl shadow-sm border border-l-[6px] group relative pointer-events-auto ${t.isHighPriority ? 'priority-high' : ''}`;
-                        card.style.borderLeftColor = g.c.color; card.draggable = true; card.setAttribute('data-id', t.id);
-                        card.innerHTML = `<div class="flex justify-between items-start mb-1"><span class="text-[8px] font-black text-indigo-400 uppercase truncate">${project ? project.title : 'Allgemein'}</span><div class="flex space-x-1 opacity-0 group-hover:opacity-100 transition"><button onclick="window.togglePriority('${t.id}', ${!t.isHighPriority})"><i data-lucide="zap" class="w-3 h-3 ${t.isHighPriority ? 'text-red-500 fill-current' : 'text-slate-300'}"></i></button><button onclick="window.openEditModal('${t.id}')"><i data-lucide="pencil" class="w-3 h-3 text-slate-300"></i></button><button onclick="window.deleteTask('${t.id}')" class="text-slate-300 hover:text-red-500"><i data-lucide="x" class="w-3 h-3"></i></button></div></div><p class="text-sm font-bold text-slate-800 leading-tight">${t.title}</p><div class="mt-3 pt-2 border-t border-slate-50 flex justify-between text-[9px] text-slate-400 font-bold"><span>${new Date(t.date).toLocaleDateString()}</span>${status === 'progress' ? `<input type="number" step="0.25" value="${t.currentDuration || ''}" onchange="window.updateHours('${t.id}', this.value)" class="w-10 bg-indigo-50 text-indigo-600 rounded text-center outline-none">` : ''}</div>`;
-                        card.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', t.id); e.dataTransfer.effectAllowed = "move"; });
-                        container.appendChild(card);
-                    });
-                });
-            });
-            lucide.createIcons();
+            const qlSelect = document.getElementById('ql-customer');
+            if (qlSelect) qlSelect.innerHTML = customerOptions;
+
+            // In dieser Version nicht vorhanden, aber zur Sicherheit falls Claude es wieder einbaut:
+            const dashSelect = document.getElementById('dash-task-customer');
+            if (dashSelect) dashSelect.innerHTML = customerOptions;
         }
 
-        window.openProjectDetails = (id) => {
-            const p = projects.find(p => p.id === id); const c = customers.find(c => c.id === p.customerId); activeProjectId = id;
-            document.getElementById('pd-title').textContent = p.title; document.getElementById('pd-customer').textContent = c ? c.name : 'Unbekannt'; document.getElementById('pd-desc').value = p.desc || '';
-            document.getElementById('pd-notes-list').innerHTML = (p.notes || []).map(n => `<div class="bg-yellow-50 p-4 rounded-xl border border-yellow-100 group/note mb-2"><div class="flex justify-between items-start mb-1"><span class="text-[8px] font-bold text-yellow-600 uppercase">${new Date(n.date).toLocaleString()}</span><div class="flex space-x-2 opacity-0 group-hover/note:opacity-100 transition"><button onclick="window.editNote('${n.id}')"><i data-lucide="pencil" class="w-3 h-3 text-yellow-600"></i></button><button onclick="window.deleteNote('${n.id}')"><i data-lucide="trash-2" class="w-3 h-3 text-yellow-600"></i></button></div></div><p class="text-sm text-yellow-900 whitespace-pre-wrap">${n.text}</p></div>`).join('') || '<div class="text-center py-4 italic text-xs">Keine Notizen.</div>';
-            const availableTasks = tasks.filter(t => t.customerId === p.customerId && t.projectId !== id);
-            document.getElementById('pd-link-task-select').innerHTML = '<option value="">Task wählen...</option>' + availableTasks.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
-            document.getElementById('pd-tasks-list').innerHTML = tasks.filter(t => t.projectId === id).map(t => `<div class="p-3 bg-white rounded-xl shadow-sm text-xs flex justify-between items-center border-l-4" style="border-left-color:${t.status==='done'?'#22c55e':'#fb923c'}"><span class="font-bold text-slate-700 truncate mr-2">${t.title}</span><button onclick="window.unlinkTask('${t.id}')" class="text-slate-300 hover:text-red-500"><i data-lucide="link-2-off" class="w-3 h-3"></i></button></div>`).join('');
-            document.getElementById('project-detail-modal').classList.remove('hidden'); lucide.createIcons();
-        };
-
-        window.openEditModal = (id) => {
-            const t = tasks.find(x => x.id === id); if(!t) return;
-            document.getElementById('edit-task-id').value = id; document.getElementById('edit-task-title').value = t.title;
-            const cProjs = projects.filter(p => p.customerId === t.customerId);
-            document.getElementById('edit-task-project').innerHTML = '<option value="">Keine Zuordnung</option>' + cProjs.map(p => `<option value="${p.id}">${p.title}</option>`).join('');
-            document.getElementById('edit-task-project').value = t.projectId || "";
-            document.getElementById('edit-task-modal').classList.remove('hidden');
-        };
-
-        window.switchTab = (tabId) => {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-            const target = document.getElementById(`tab-${tabId}`);
-            if(target) target.classList.remove('hidden');
-            if(tabId === 'projects') renderProjects();
-            if(tabId === 'dashboard') renderDashboard();
-            lucide.createIcons();
-        };
-
-        window.startVoiceOnDashboard = () => { if(recognition) recognition.start(); else alert("Spracherkennung wird nicht unterstützt."); };
-        window.closeEditModal = () => document.getElementById('edit-task-modal').classList.add('hidden');
-        window.deleteCustomer = async (id) => { if(confirm("Mandant löschen?")) await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'customers', id)); };
-        window.deleteTask = async (id) => { if(confirm("Task löschen?")) await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id)); };
-        window.unlinkTask = async (id) => { if(confirm("Verknüpfung lösen?")) await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { projectId: "" }); };
-        window.togglePriority = async (id, v) => { await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { isHighPriority: v }); };
-        window.updateHours = async (id, v) => { await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { currentDuration: parseFloat(v) || 0 }); };
-
-        // --- SUBMITS ---
-        document.getElementById('dash-task-form').onsubmit = async (e) => {
-            e.preventDefault();
-            await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'tasks'), { title: document.getElementById('dash-task-title').value, customerId: document.getElementById('dash-task-customer').value, projectId: "", status: 'backlog', date: new Date().toISOString().split('T')[0], createdAt: new Date().toISOString() });
-            e.target.reset();
-        };
-        document.getElementById('task-form').onsubmit = async (e) => {
-            e.preventDefault();
-            await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'tasks'), { title: document.getElementById('task-title').value, customerId: document.getElementById('task-customer').value, projectId: document.getElementById('task-project').value || "", status: 'backlog', date: new Date().toISOString().split('T')[0], createdAt: new Date().toISOString() });
-            e.target.reset();
-        };
-        document.getElementById('quick-log-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const dur = parseFloat(document.getElementById('ql-duration').value);
-            if(dur > 0) {
-                await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'timeLogs'), { taskId: "quick", taskTitle: document.getElementById('ql-title').value, customerId: document.getElementById('ql-customer').value, duration: dur, timestamp: document.getElementById('ql-date').value });
-                e.target.reset(); document.getElementById('ql-date').value = new Date().toISOString().split('T')[0];
-                alert("Buchung erfolgreich.");
-            }
-        };
-
-        // --- DRAG & DROP ---
-        document.querySelectorAll('.drop-zone').forEach(z => {
-            z.ondragover = (e) => { e.preventDefault(); z.classList.add('drop-zone-active'); };
-            z.ondragleave = () => z.classList.remove('drop-zone-active');
-            z.ondrop = async (e) => {
-                e.preventDefault(); z.classList.remove('drop-zone-active');
-                const id = e.dataTransfer.getData('text/plain'); if(!id) return;
-                const status = z.dataset.status; const t = tasks.find(x => x.id === id); if(!t) return;
-                if(status === 'done') {
-                    document.getElementById('time-modal-task-name').textContent = t.title;
-                    document.getElementById('task-duration').value = t.currentDuration || "";
-                    document.getElementById('log-date').value = new Date().toISOString().split('T')[0];
-                    pendingDropId = id; document.getElementById('time-modal').classList.remove('hidden');
-                } else {
-                    await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { status, date: status === 'progress' ? new Date().toISOString().split('T')[0] : t.date });
-                }
+        // UI Tabs
+        document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.onclick = () => {
+                document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+                document.getElementById(`tab-${btn.dataset.tab}`).classList.remove('hidden');
+                lucide.createIcons();
             };
         });
 
-        document.getElementById('save-time').onclick = async () => {
-            const durValue = document.getElementById('task-duration').value;
-            const dur = parseFloat(durValue);
-            const date = document.getElementById('log-date').value;
-            const t = tasks.find(x => x.id === pendingDropId);
-            if(!isNaN(dur) && pendingDropId) {
-                await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'timeLogs'), { taskId: t.id, taskTitle: t.title, customerId: t.customerId, duration: dur, timestamp: date });
-                await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', pendingDropId), { status: 'done', currentDuration: 0 });
-                document.getElementById('time-modal').classList.add('hidden'); pendingDropId = null;
-            } else { alert("Dauer ungültig."); }
+        // Form Submit
+        document.getElementById('entry-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const data = {
+                date: document.getElementById('entry-date').value,
+                customerId: document.getElementById('customer-select').value,
+                hours: parseFloat(document.getElementById('entry-hours').value),
+                description: document.getElementById('entry-description').value,
+                createdAt: new Date().toISOString()
+            };
+            await addDoc(collection(db, `artifacts`, appId, `users`, userId, `entries`), data);
+            e.target.reset();
+            document.getElementById('entry-date').valueAsDate = new Date();
         };
 
-        function renderReports() {
-            const container = document.getElementById('monthly-stats'); const now = new Date();
-            const logs = timeLogs.filter(l => new Date(l.timestamp).getMonth() === now.getMonth());
-            container.innerHTML = customers.map(c => {
-                const total = logs.filter(l => l.customerId === c.id).reduce((sum, l) => sum + (parseFloat(l.duration) || 0), 0);
-                if (total === 0) return '';
-                return `<div class="bg-slate-800 bg-opacity-40 p-4 rounded-2xl border border-slate-700 flex justify-between items-center group mb-2"><span class="font-bold text-slate-200 text-sm">${c.name}</span><div class="flex items-center space-x-3"><button onclick="window.exportCSV('${c.id}')" class="p-1.5 text-slate-500 hover:text-white transition"><i data-lucide="download" class="w-4 h-4"></i></button><span class="text-xl font-black text-white">${total.toFixed(2)}h</span></div></div>`;
-            }).join('') || '<div class="text-center text-slate-500 py-10">Keine Daten.</div>';
+        // Customer selection changes rate display
+        document.getElementById('customer-select').onchange = (e) => {
+            const c = customers.find(x => x.id === e.target.value);
+            const rateDisp = document.getElementById('rate-display');
+            if(rateDisp && c) {
+                rateDisp.textContent = `Tagessatz: ${c.dailyRate || 0} € / Pauschale: ${c.monthlyRate || 0} €`;
+            }
+        };
+
+        // Setup Submit
+        document.getElementById('add-customer-form').onsubmit = async (e) => {
+            e.preventDefault();
+            await addDoc(collection(db, `artifacts`, appId, `users`, userId, `customers`), {
+                name: document.getElementById('new-customer-name').value,
+                dailyRate: parseFloat(document.getElementById('new-customer-rate').value) || 0,
+                monthlyRate: parseFloat(document.getElementById('new-customer-monthly-rate').value) || 0
+            });
+            e.target.reset();
+        };
+
+        function renderCustomerManagement() {
+            const list = document.getElementById('customer-management-list');
+            if(!list) return;
+            list.innerHTML = customers.map(c => `
+                <div class="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <span class="font-bold text-sm text-slate-700">${c.name}</span>
+                    <button onclick="window.deleteCustomer('${c.id}')" class="text-slate-300 hover:text-red-600 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                </div>
+            `).join('');
             lucide.createIcons();
         }
 
-        document.querySelectorAll('.tab-btn').forEach(b => b.onclick = () => window.switchTab(b.dataset.tab));
-        document.getElementById('logout-btn').onclick = () => signOut(auth);
-        document.getElementById('voice-input-btn').onclick = () => { if(recognition) recognition.start(); };
-        document.getElementById('auth-form').onsubmit = async (e) => {
-            e.preventDefault();
-            try {
-                if(isLoginMode) await signInWithEmailAndPassword(auth, document.getElementById('auth-email').value, document.getElementById('auth-password').value);
-                else await createUserWithEmailAndPassword(auth, document.getElementById('auth-email').value, document.getElementById('auth-password').value);
-            } catch(err) { document.getElementById('auth-message').textContent = err.message; }
-        };
-        document.getElementById('toggle-auth-mode').onclick = () => { isLoginMode = !isLoginMode; document.getElementById('auth-title').textContent = isLoginMode ? 'Anmelden' : 'Registrieren'; document.getElementById('auth-submit-btn').textContent = isLoginMode ? 'Login' : 'Registrieren'; };
-        document.getElementById('cancel-time').onclick = () => { document.getElementById('time-modal').classList.add('hidden'); pendingDropId = null; };
+        function renderAnalysis() {
+            const summary = document.getElementById('revenue-summary');
+            if (!summary) return;
+            const now = new Date();
+            const monthEntries = entries.filter(e => {
+                const d = new Date(e.date);
+                return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+            });
+            const hours = monthEntries.reduce((sum, e) => sum + e.hours, 0);
+            summary.innerHTML = `
+                <div class="bg-indigo-50 p-6 rounded-2xl text-center border border-indigo-100">
+                    <p class="text-xs font-black uppercase text-indigo-400 mb-1 tracking-widest">Stunden aktuell</p>
+                    <p class="text-3xl font-black text-indigo-600">${hours.toFixed(2)} h</p>
+                </div>
+            `;
+        }
+
+        window.deleteEntry = async (id) => { if(confirm("Eintrag wirklich löschen?")) await deleteDoc(doc(db, `artifacts`, appId, `users`, userId, `entries`, id)); };
+        window.deleteCustomer = async (id) => { if(confirm("Mandanten und alle Daten löschen?")) await deleteDoc(doc(db, `artifacts`, appId, `users`, userId, `customers`, id)); };
 
         window.onload = init;
-        window.switchTab = switchTab;
-        window.prepareNewNote = () => { editingNoteId = null; document.getElementById('note-input').value = ""; document.getElementById('note-editor').classList.remove('hidden'); };
-        window.cancelNote = () => document.getElementById('note-editor').classList.add('hidden');
-        window.editNote = (id) => { const p = projects.find(p => p.id === activeProjectId); const n = p.notes.find(x => x.id === id); editingNoteId = id; document.getElementById('note-input').value = n.text; document.getElementById('note-editor').classList.remove('hidden'); };
-        window.exportCSV = (custId) => {
-            const customer = customers.find(c => c.id === custId);
-            const now = new Date();
-            const logs = timeLogs.filter(l => l.customerId === custId && new Date(l.timestamp).getMonth() === now.getMonth());
-            let csv = "\uFEFFDatum;Projekt;Dauer (h)\n";
-            logs.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp)).forEach(l => { 
-                csv += `${new Date(l.timestamp).toLocaleDateString()};"${l.taskTitle.replace(/"/g, '""')}";${l.duration.toString().replace('.', ',')}\n`; 
-            });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `Report_${customer.name}.csv`; link.click();
-        };
     </script>
 </body>
 </html>
