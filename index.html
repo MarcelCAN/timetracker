@@ -43,12 +43,17 @@
         .task-done { text-decoration: line-through; opacity: 0.5; }
 
         .tab-content.hidden { display: none; }
+
+        .drop-zone {
+            min-height: 200px;
+            flex-grow: 1;
+        }
     </style>
     <script type="module" src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body class="p-4 md:p-8">
 
-    <div id="app" class="max-w-5xl mx-auto space-y-6">
+    <div id="app" class="max-w-[1400px] mx-auto space-y-6">
 
         <header class="flex flex-col sm:flex-row justify-between items-center pb-4 border-b border-gray-200">
             <div class="flex items-center space-x-3">
@@ -77,16 +82,27 @@
 
             <!-- TAB: TAGESPLAN (1-3-5 Strategie) -->
             <div id="tab-plan" class="tab-content space-y-8">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
                     
-                    <div class="lg:col-span-2 space-y-6">
-                        <header>
-                            <h2 class="text-2xl font-black text-gray-800">Dein Fokus für heute</h2>
-                            <p class="text-sm text-gray-500">Nach der 1-3-5 Regel: Beende die Flut im Kopf.</p>
+                    <!-- Linke Seite: Planungs-Slots -->
+                    <div class="lg:col-span-3 space-y-6">
+                        <header class="flex justify-between items-end">
+                            <div>
+                                <h2 class="text-2xl font-black text-gray-800">Dein Fokus für heute</h2>
+                                <p class="text-sm text-gray-500">Wähle aus deinen Tasks oder schreibe frei.</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="flex items-center space-x-2">
+                                    <span id="plan-progress-percent" class="text-xl font-black text-indigo-600">0%</span>
+                                    <div class="w-32 bg-gray-200 rounded-full h-2">
+                                        <div id="plan-progress-bar" class="bg-indigo-600 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                                <p id="plan-stats-text" class="text-[10px] text-gray-400 font-bold uppercase mt-1">Status laden...</p>
+                            </div>
                         </header>
 
-                        <!-- Die 1-3-5 Sektionen -->
-                        <div id="planner-container" class="space-y-6">
+                        <div id="planner-container" class="grid grid-cols-1 gap-6">
                             <!-- 1 Big Thing -->
                             <section class="bg-white p-6 rounded-2xl shadow-sm border border-indigo-100">
                                 <h3 class="text-xs font-black text-indigo-600 uppercase tracking-widest mb-4 flex items-center">
@@ -95,43 +111,37 @@
                                 <div id="plan-section-big" class="space-y-3"></div>
                             </section>
 
-                            <!-- 3 Medium Things -->
-                            <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                                <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center">
-                                    <i data-lucide="list" class="w-4 h-4 mr-2 text-slate-400"></i> 3 Mittlere Aufgaben (30-60 Min.)
-                                </h3>
-                                <div id="plan-section-medium" class="space-y-3"></div>
-                            </section>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- 3 Medium Things -->
+                                <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                                    <h3 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center">
+                                        <i data-lucide="list" class="w-4 h-4 mr-2"></i> 3 Mittlere Aufgaben (30-60m)
+                                    </h3>
+                                    <div id="plan-section-medium" class="space-y-3"></div>
+                                </section>
 
-                            <!-- 5 Small Things -->
-                            <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                                <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center">
-                                    <i data-lucide="zap" class="w-4 h-4 mr-2 text-yellow-500"></i> 5 Kleine "Quick Wins" (<15 Min.)
-                                </h3>
-                                <div id="plan-section-small" class="space-y-3"></div>
-                            </section>
+                                <!-- 5 Small Things -->
+                                <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                                    <h3 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center">
+                                        <i data-lucide="zap" class="w-4 h-4 mr-2 text-yellow-500"></i> 5 Kleine "Quick Wins"
+                                    </h3>
+                                    <div id="plan-section-small" class="space-y-3"></div>
+                                </section>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Sidebar Stats for the day -->
+                    <!-- Rechte Seite: Task-Pool (Backlog) -->
                     <div class="space-y-6">
-                        <div class="bg-indigo-600 text-white p-6 rounded-3xl shadow-xl">
-                            <h4 class="font-bold text-lg mb-4">Tagesfortschritt</h4>
-                            <div class="space-y-4">
-                                <div>
-                                    <div class="flex justify-between text-xs font-bold mb-1 uppercase opacity-80"><span>Erledigt</span><span id="plan-progress-percent">0%</span></div>
-                                    <div class="w-full bg-indigo-800 rounded-full h-2">
-                                        <div id="plan-progress-bar" class="bg-white h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
-                                    </div>
-                                </div>
-                                <p id="plan-stats-text" class="text-sm opacity-90 leading-relaxed italic">Noch kein Task für heute geplant.</p>
+                        <section class="bg-slate-800 text-white p-6 rounded-3xl shadow-xl h-full flex flex-col max-h-[800px]">
+                            <h4 class="font-bold text-lg mb-2 flex items-center"><i data-lucide="archive" class="w-5 h-5 mr-2"></i> Offene Tasks</h4>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase mb-4 tracking-wider">Klick zum Planen (+1, +3, +5)</p>
+                            
+                            <div id="task-pool" class="space-y-3 overflow-y-auto flex-grow pr-2">
+                                <!-- Hier landen die Tasks aus dem Backlog -->
+                                <div class="text-center py-10 text-slate-500 italic text-sm">Lade Tasks...</div>
                             </div>
-                        </div>
-                        
-                        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                            <h4 class="font-bold text-gray-800 mb-2 flex items-center"><i data-lucide="info" class="w-4 h-4 mr-2 text-indigo-500"></i> Tipp</h4>
-                            <p class="text-xs text-gray-500 leading-relaxed">Plane deinen Tag am Vorabend oder als erste Amtshandlung morgens. Was nicht auf der Liste steht, existiert heute nicht.</p>
-                        </div>
+                        </section>
                     </div>
                 </div>
             </div>
@@ -161,9 +171,7 @@
                 <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 text-center py-12">
                     <div class="bg-indigo-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-600"><i data-lucide="pie-chart"></i></div>
                     <h2 class="text-xl font-bold mb-2">Analyse</h2>
-                    <div id="revenue-summary" class="flex justify-center items-center">
-                        <!-- Stundenanzeige -->
-                    </div>
+                    <div id="revenue-summary" class="flex justify-center items-center"></div>
                 </section>
             </div>
             
@@ -182,7 +190,7 @@
                             <button type="submit" class="w-full bg-indigo-600 text-white p-2 rounded-lg font-bold">Mandant anlegen</button>
                         </form>
                     </div>
-                    <div id="customer-management-list" class="space-y-2 max-w-md mx-auto text-left"></div>
+                    <div id="customer-management-list" class="space-y-2 max-w-md mx-auto text-left mt-8"></div>
                 </section>
             </div>
         </div>
@@ -191,16 +199,16 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
-        import { getFirestore, doc, deleteDoc, setDoc, onSnapshot, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+        import { getFirestore, doc, deleteDoc, setDoc, onSnapshot, collection, addDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{"apiKey": "AIzaSyDramsPfqWtBGdvHyMAos0nhyT0t4EMkAg","authDomain": "timetracker-7bf2a.firebaseapp.com","projectId": "timetracker-7bf2a","storageBucket": "timetracker-7bf2a.firebasestorage.app","messagingSenderId": "3152109841","appId": "1:3152109841:web:4e83e101949907c056acb0"}');
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'consultancy-tracker-v6';
+        const appId = "consultancy-workflow-stable-v1"; // Wir nutzen die stabile Board-ID
         
-        let appInstance, db, auth, userId = null;
-        let customers = [], entries = [], currentPlan = { big: [''], medium: ['', '', ''], small: ['', '', '', '', ''], done: [] };
+        let db, auth, userId = null;
+        let customers = [], entries = [], tasks = [], currentPlan = { big: [''], medium: ['', '', ''], small: ['', '', '', '', ''], done: [] };
 
         async function init() {
-            appInstance = initializeApp(firebaseConfig);
+            const appInstance = initializeApp(firebaseConfig);
             db = getFirestore(appInstance);
             auth = getAuth(appInstance);
 
@@ -215,7 +223,7 @@
             onAuthStateChanged(auth, u => {
                 if (u) {
                     userId = u.uid;
-                    document.getElementById('auth-status').textContent = `ID: ${userId.substring(0,8)}...`;
+                    document.getElementById('auth-status').textContent = `User: ${u.email || userId.substring(0,8)}`;
                     startListeners();
                 } else {
                     initAuth();
@@ -225,40 +233,97 @@
 
         function startListeners() {
             if (!userId) return;
-            const userPath = `artifacts/${appId}/users/${userId}`;
+            const rootPath = `artifacts/${appId}/users/${userId}`;
             
             // Kunden Listener
-            onSnapshot(collection(db, `artifacts`, appId, `users`, userId, `customers`), snap => {
+            onSnapshot(collection(db, `${rootPath}/customers`), snap => {
                 customers = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 renderSelectors();
                 renderCustomerManagement();
-            }, err => console.error("Kunden-Sync Fehler", err));
+                renderTaskPool(); // Neu: Pool braucht Kunden-Infos
+            });
 
-            // Einträge Listener
-            onSnapshot(collection(db, `artifacts`, appId, `users`, userId, `entries`), snap => {
+            // Tasks Listener (vom operativen Board)
+            onSnapshot(collection(db, `${rootPath}/tasks`), snap => {
+                tasks = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                renderTaskPool();
+            });
+
+            // Einträge Listener (Tracker)
+            onSnapshot(collection(db, `${rootPath}/entries`), snap => {
                 entries = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 entries.sort((a,b) => new Date(b.date) - new Date(a.date));
                 renderEntries();
                 renderAnalysis();
-                updatePlanStats(); // Stats brauchen die aktuellen Entries für Gesamtüberblick
-            }, err => console.error("Entries-Sync Fehler", err));
+            });
 
             // Tagesplan Listener
             const today = new Date().toISOString().split('T')[0];
-            onSnapshot(doc(db, `artifacts`, appId, `users`, userId, `plans`, today), d => {
+            onSnapshot(doc(db, `${rootPath}/plans`, today), d => {
                 if(d.exists()) {
                     currentPlan = d.data();
                 } else {
                     currentPlan = { big: [''], medium: ['', '', ''], small: ['', '', '', '', ''], done: [] };
                 }
                 renderPlan();
-            }, err => console.error("Plan-Sync Fehler", err));
+            });
 
             document.getElementById('loading-indicator').classList.add('hidden');
             document.getElementById('main-content').classList.remove('hidden');
-            document.getElementById('entry-date').valueAsDate = new Date();
+            const dateInput = document.getElementById('entry-date');
+            if(dateInput) dateInput.valueAsDate = new Date();
             lucide.createIcons();
         }
+
+        // --- TASK POOL LOGIC ---
+
+        function renderTaskPool() {
+            const container = document.getElementById('task-pool');
+            if (!container) return;
+
+            // Nur offene Tasks zeigen
+            const openTasks = tasks.filter(t => t.status !== 'done');
+            
+            if (openTasks.length === 0) {
+                container.innerHTML = '<div class="text-center py-10 text-slate-500 italic text-xs">Keine offenen Tasks im Board.</div>';
+                return;
+            }
+
+            container.innerHTML = openTasks.map(t => {
+                const customer = customers.find(c => c.id === t.customerId);
+                return `
+                    <div class="bg-slate-700 p-3 rounded-xl border border-slate-600 group transition hover:border-slate-400">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-[8px] font-black uppercase tracking-widest" style="color: ${customer ? '#818cf8' : '#94a3b8'}">
+                                ${customer ? customer.name : 'Unbekannt'}
+                            </span>
+                            <div class="flex space-x-1">
+                                <button onclick="window.assignToPlan('${t.id}', 'big')" title="+1 (Groß)" class="w-5 h-5 flex items-center justify-center bg-indigo-600 rounded text-[10px] font-bold hover:bg-indigo-500">1</button>
+                                <button onclick="window.assignToPlan('${t.id}', 'medium')" title="+3 (Mittel)" class="w-5 h-5 flex items-center justify-center bg-slate-500 rounded text-[10px] font-bold hover:bg-slate-400">3</button>
+                                <button onclick="window.assignToPlan('${t.id}', 'small')" title="+5 (Klein)" class="w-5 h-5 flex items-center justify-center bg-yellow-600 rounded text-[10px] font-bold hover:bg-yellow-500">5</button>
+                            </div>
+                        </div>
+                        <p class="text-xs font-medium text-slate-100 leading-tight">${t.title}</p>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        window.assignToPlan = async (taskId, type) => {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return;
+
+            const slots = currentPlan[type];
+            // Finde den ersten leeren Slot
+            const freeIdx = slots.findIndex(s => !s || s.trim() === "");
+            
+            if (freeIdx !== -1) {
+                currentPlan[type][freeIdx] = task.title;
+                await savePlan();
+            } else {
+                alert(`Alle Slots für "${type === 'big' ? 'Groß' : type === 'medium' ? 'Mittel' : 'Klein'}" sind bereits belegt.`);
+            }
+        };
 
         // --- PLANNER LOGIC ---
 
@@ -266,12 +331,12 @@
             const renderSection = (id, items, type) => {
                 const container = document.getElementById(id);
                 if (!container) return;
-                container.innerHTML = items.map((val, idx) => `
+                container.innerHTML = (items || []).map((val, idx) => `
                     <div class="flex items-center space-x-3 group">
                         <input type="checkbox" ${currentPlan.done && currentPlan.done.includes(`${type}-${idx}`) ? 'checked' : ''} 
                             onchange="window.togglePlanTask('${type}', ${idx})"
                             class="w-5 h-5 rounded-lg border-slate-200 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
-                        <input type="text" value="${val || ''}" placeholder="Was ist zu tun?" 
+                        <input type="text" value="${val || ''}" placeholder="..." 
                             onchange="window.updatePlanTask('${type}', ${idx}, this.value)"
                             class="plan-input flex-grow ${currentPlan.done && currentPlan.done.includes(`${type}-${idx}`) ? 'task-done' : ''}">
                     </div>
@@ -304,18 +369,14 @@
         async function savePlan() {
             if (!userId) return;
             const today = new Date().toISOString().split('T')[0];
-            await setDoc(doc(db, `artifacts`, appId, `users`, userId, `plans`, today), currentPlan);
+            await setDoc(doc(db, `artifacts/consultancy-workflow-stable-v1/users/${userId}/plans`, today), currentPlan);
         }
 
         function updatePlanStats() {
             const big = currentPlan.big || [];
             const med = currentPlan.medium || [];
             const sm = currentPlan.small || [];
-            
-            const total = big.filter(x => x.trim()).length + 
-                          med.filter(x => x.trim()).length + 
-                          sm.filter(x => x.trim()).length;
-            
+            const total = big.filter(x => x.trim()).length + med.filter(x => x.trim()).length + sm.filter(x => x.trim()).length;
             const done = currentPlan.done ? currentPlan.done.length : 0;
             const percent = total > 0 ? Math.round((done / total) * 100) : 0;
             
@@ -325,15 +386,14 @@
 
             if (pText) pText.textContent = `${percent}%`;
             if (pBar) pBar.style.width = `${percent}%`;
-            
             if(sText) {
-                if(total === 0) sText.textContent = "Schreibe deine Ziele für heute auf.";
-                else if(percent === 100) sText.textContent = "Hervorragend! Alles erledigt. Zeit für den Feierabend.";
-                else sText.textContent = `${done} von ${total} Zielen erreicht. Bleib fokussiert!`;
+                if(total === 0) sText.textContent = "Keine Ziele gesetzt.";
+                else if(percent === 100) sText.textContent = "Alles erledigt!";
+                else sText.textContent = `${done} von ${total} erledigt.`;
             }
         }
 
-        // --- TRACKING & MANAGEMENT ---
+        // --- TRACKING RENDERING ---
 
         function renderEntries() {
             const list = document.getElementById('entries-list');
@@ -346,7 +406,7 @@
                         <td class="px-4 py-3 text-sm font-bold text-slate-700">${customer ? customer.name : 'Unbekannt'}</td>
                         <td class="px-4 py-3 text-xs text-slate-500">${e.description}</td>
                         <td class="px-4 py-3 text-sm font-black text-indigo-600 text-right">${e.hours}h</td>
-                        <td class="px-4 py-3 text-right"><button onclick="window.deleteEntry('${e.id}')" class="text-slate-300 hover:text-red-500 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td>
+                        <td class="px-4 py-3 text-right"><button onclick="window.deleteEntry('${e.id}')" class="text-slate-300 hover:text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td>
                     </tr>
                 `;
             }).join('');
@@ -356,31 +416,25 @@
         function renderSelectors() {
             const customerOptions = '<option value="" disabled selected>Kunde wählen...</option>' + 
                                    customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-            
-            // Sicherheitsabfragen für jedes Element
             const cSelect = document.getElementById('customer-select');
             if (cSelect) cSelect.innerHTML = customerOptions;
-
             const qlSelect = document.getElementById('ql-customer');
             if (qlSelect) qlSelect.innerHTML = customerOptions;
-
-            // In dieser Version nicht vorhanden, aber zur Sicherheit falls Claude es wieder einbaut:
-            const dashSelect = document.getElementById('dash-task-customer');
-            if (dashSelect) dashSelect.innerHTML = customerOptions;
         }
 
-        // UI Tabs
+        // --- TAB SWITCHING ---
         document.querySelectorAll('.tab-button').forEach(btn => {
             btn.onclick = () => {
                 document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-                document.getElementById(`tab-${btn.dataset.tab}`).classList.remove('hidden');
+                const target = document.getElementById(`tab-${btn.dataset.tab}`);
+                if(target) target.classList.remove('hidden');
                 lucide.createIcons();
             };
         });
 
-        // Form Submit
+        // --- FORM SUBMITS ---
         document.getElementById('entry-form').onsubmit = async (e) => {
             e.preventDefault();
             const data = {
@@ -390,24 +444,14 @@
                 description: document.getElementById('entry-description').value,
                 createdAt: new Date().toISOString()
             };
-            await addDoc(collection(db, `artifacts`, appId, `users`, userId, `entries`), data);
+            await addDoc(collection(db, `artifacts/consultancy-workflow-stable-v1/users/${userId}/entries`), data);
             e.target.reset();
             document.getElementById('entry-date').valueAsDate = new Date();
         };
 
-        // Customer selection changes rate display
-        document.getElementById('customer-select').onchange = (e) => {
-            const c = customers.find(x => x.id === e.target.value);
-            const rateDisp = document.getElementById('rate-display');
-            if(rateDisp && c) {
-                rateDisp.textContent = `Tagessatz: ${c.dailyRate || 0} € / Pauschale: ${c.monthlyRate || 0} €`;
-            }
-        };
-
-        // Setup Submit
         document.getElementById('add-customer-form').onsubmit = async (e) => {
             e.preventDefault();
-            await addDoc(collection(db, `artifacts`, appId, `users`, userId, `customers`), {
+            await addDoc(collection(db, `artifacts/consultancy-workflow-stable-v1/users/${userId}/customers`), {
                 name: document.getElementById('new-customer-name').value,
                 dailyRate: parseFloat(document.getElementById('new-customer-rate').value) || 0,
                 monthlyRate: parseFloat(document.getElementById('new-customer-monthly-rate').value) || 0
@@ -419,7 +463,7 @@
             const list = document.getElementById('customer-management-list');
             if(!list) return;
             list.innerHTML = customers.map(c => `
-                <div class="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <div class="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-slate-100">
                     <span class="font-bold text-sm text-slate-700">${c.name}</span>
                     <button onclick="window.deleteCustomer('${c.id}')" class="text-slate-300 hover:text-red-600 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                 </div>
@@ -431,21 +475,14 @@
             const summary = document.getElementById('revenue-summary');
             if (!summary) return;
             const now = new Date();
-            const monthEntries = entries.filter(e => {
-                const d = new Date(e.date);
-                return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-            });
-            const hours = monthEntries.reduce((sum, e) => sum + e.hours, 0);
-            summary.innerHTML = `
-                <div class="bg-indigo-50 p-6 rounded-2xl text-center border border-indigo-100">
-                    <p class="text-xs font-black uppercase text-indigo-400 mb-1 tracking-widest">Stunden aktuell</p>
-                    <p class="text-3xl font-black text-indigo-600">${hours.toFixed(2)} h</p>
-                </div>
-            `;
+            const hours = entries
+                .filter(e => { const d = new Date(e.date); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); })
+                .reduce((sum, e) => sum + e.hours, 0);
+            summary.innerHTML = `<div class="bg-indigo-50 p-6 rounded-2xl text-center border border-indigo-100 w-full max-w-xs"><p class="text-xs font-black uppercase text-indigo-400 mb-1">Stunden Aktuell</p><p class="text-3xl font-black text-indigo-600">${hours.toFixed(2)} h</p></div>`;
         }
 
-        window.deleteEntry = async (id) => { if(confirm("Eintrag wirklich löschen?")) await deleteDoc(doc(db, `artifacts`, appId, `users`, userId, `entries`, id)); };
-        window.deleteCustomer = async (id) => { if(confirm("Mandanten und alle Daten löschen?")) await deleteDoc(doc(db, `artifacts`, appId, `users`, userId, `customers`, id)); };
+        window.deleteEntry = async (id) => { if(confirm("Löschen?")) await deleteDoc(doc(db, `artifacts/consultancy-workflow-stable-v1/users/${userId}/entries`, id)); };
+        window.deleteCustomer = async (id) => { if(confirm("Löschen?")) await deleteDoc(doc(db, `artifacts/consultancy-workflow-stable-v1/users/${userId}/customers`, id)); };
 
         window.onload = init;
     </script>
