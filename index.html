@@ -110,7 +110,7 @@
                 </div>
             </div>
             <div class="flex items-center space-x-4 mt-4 sm:mt-0">
-                <div id="auth-status" class="text-xs font-bold text-slate-400 px-3 py-1 bg-slate-50 rounded-full"></div>
+                <div id="auth-status" class="text-xs font-bold text-slate-400 px-3 py-1 bg-slate-50 rounded-full">Initialisierung...</div>
                 <button id="logout-btn" class="hidden bg-red-50 text-red-600 px-4 py-2 rounded-xl text-xs font-black hover:bg-red-100 transition uppercase tracking-wider">Logout</button>
             </div>
         </header>
@@ -214,11 +214,11 @@
                         <div id="col-backlog" class="drop-zone" data-status="backlog"></div>
                     </div>
                     <div class="bg-white p-5 rounded-[2.5rem] shadow-sm border border-gray-200 flex flex-col min-h-[700px]">
-                        <h3 class="font-black text-orange-500 text-[10px] uppercase tracking-[0.2em] border-b pb-3 mb-6 px-2">Aktiv</h3>
+                        <h3 class="font-black text-orange-500 text-[10px] uppercase tracking-[0.2em] border-b pb-3 mb-6 px-2">In Bearbeitung</h3>
                         <div id="col-progress" class="drop-zone" data-status="progress"></div>
                     </div>
                     <div class="bg-white p-5 rounded-[2.5rem] shadow-sm border border-gray-200 flex flex-col min-h-[700px]">
-                        <h3 class="font-black text-green-500 text-[10px] uppercase tracking-[0.2em] border-b pb-3 mb-6 px-2">Fertig</h3>
+                        <h3 class="font-black text-green-500 text-[10px] uppercase tracking-[0.2em] border-b pb-3 mb-6 px-2">Erledigt</h3>
                         <div id="col-done" class="drop-zone" data-status="done"></div>
                     </div>
                 </div>
@@ -361,6 +361,19 @@
         </div>
     </div>
 
+    <!-- Time Booking Modal -->
+    <div id="time-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-80 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div class="bg-white p-8 rounded-[3rem] shadow-2xl w-full max-w-sm border border-gray-200 text-center">
+            <h2 class="text-2xl font-black mb-4 flex justify-center text-gray-800 tracking-tight"><i data-lucide="clock" class="mr-3 text-indigo-600 w-8 h-8"></i> Buchen</h2>
+            <p id="time-modal-task-name" class="text-[10px] text-slate-400 mb-8 font-black uppercase tracking-widest border-b pb-4"></p>
+            <div class="space-y-6 mb-8 text-left">
+                <input type="date" id="log-date" class="w-full p-4 border border-slate-100 bg-slate-50 rounded-2xl font-black text-indigo-600 outline-none">
+                <input type="number" id="task-duration" step="0.25" placeholder="0.00" class="w-full p-6 border border-slate-100 bg-slate-50 rounded-3xl text-5xl font-black text-center focus:ring-4 focus:ring-indigo-50 outline-none">
+            </div>
+            <div class="grid grid-cols-2 gap-4"><button id="cancel-time" class="p-5 text-slate-400 font-bold hover:bg-slate-50 rounded-2xl transition uppercase text-xs tracking-widest">Abbruch</button><button id="save-time" class="p-5 bg-indigo-600 text-white font-black rounded-2xl shadow-xl hover:bg-indigo-700 transition uppercase text-xs tracking-widest">Buchen</button></div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
@@ -391,16 +404,16 @@
 
         const colors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316', '#14B8A6', '#6366F1'];
 
-        // --- RENDER FUNKTIONEN (DEFINITION VOR INITIALISIERUNG UM REFERENCE ERROR ZU VERMEIDEN) ---
+        // --- RENDER FUNKTIONEN (DEFINITION AM ANFANG) ---
 
-        const renderCustomers = () => {
+        function renderCustomers() {
             const list = document.getElementById('customer-list');
             if (!list) return;
             list.innerHTML = customers.map(c => `<div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl mb-2 border border-slate-100"><div class="flex items-center text-sm font-bold"><span class="w-2 h-2 rounded-full mr-3" style="background-color:${c.color}"></span>${c.name}</div><button onclick="window.deleteCustomer('${c.id}')" class="text-slate-300 hover:text-red-500 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`).join('');
             lucide.createIcons();
-        };
+        }
 
-        const renderSelectors = () => {
+        function renderSelectors() {
             const ids = ['dash-task-customer', 'ql-customer', 'board-customer-filter', 'edit-task-customer', 'task-customer', 'proj-customer'];
             const opts = customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
             ids.forEach(id => {
@@ -417,9 +430,9 @@
                 const ps = document.getElementById('task-project');
                 if(ps) ps.innerHTML = '<option value="">Thema (optional)</option>' + filtered.map(p => `<option value="${p.id}">${p.title}</option>`).join('');
             };
-        };
+        }
 
-        const renderReports = () => {
+        function renderReports() {
             const container = document.getElementById('monthly-stats');
             if(!container) return;
             const now = new Date();
@@ -430,9 +443,9 @@
                 return `<div class="bg-slate-800 bg-opacity-40 p-5 rounded-[1.5rem] border border-slate-700 flex justify-between items-center mb-3 transition hover:bg-opacity-50"><span class="font-bold text-slate-200">${cust.name}</span><div class="flex items-center space-x-3"><button onclick="window.exportCSV('${cust.id}')" class="p-2 text-slate-500 hover:text-white transition"><i data-lucide="download" class="w-4 h-4"></i></button><span class="text-2xl font-black text-white">${total.toFixed(2)}h</span></div></div>`;
             }).join('') || '<div class="text-center py-10 text-slate-500 text-sm italic font-medium uppercase tracking-widest">Keine Buchungen vorhanden.</div>';
             lucide.createIcons();
-        };
+        }
 
-        const renderDashboard = () => {
+        function renderDashboard() {
             const activeCount = tasks.filter(t => t.status === 'progress').length;
             const now = new Date();
             const monthlyHours = timeLogs
@@ -458,9 +471,9 @@
                 }).join('');
             }
             lucide.createIcons();
-        };
+        }
 
-        const renderProjects = () => {
+        function renderProjects() {
             const view = document.getElementById('project-board-view'); if (!view) return;
             view.innerHTML = customers.map(c => {
                 const cProjs = projects.filter(p => p.customerId === c.id);
@@ -471,9 +484,9 @@
                 }).join('')}</div></div>`;
             }).join('');
             lucide.createIcons();
-        };
+        }
 
-        const renderBoard = () => {
+        function renderBoard() {
             const filterEl = document.getElementById('board-customer-filter');
             const filter = filterEl ? filterEl.value : 'all';
             const cols = { backlog: document.getElementById('col-backlog'), progress: document.getElementById('col-progress'), done: document.getElementById('col-done') };
@@ -499,9 +512,9 @@
                 });
             });
             lucide.createIcons();
-        };
+        }
 
-        const renderTaskPool = () => {
+        function renderTaskPool() {
             const container = document.getElementById('task-pool'); if (!container) return;
             const openTasks = tasks.filter(t => t.status !== 'done');
             if (openTasks.length === 0) { container.innerHTML = '<div class="text-center py-10 text-slate-600 italic text-sm">Keine offenen Tasks.</div>'; return; }
@@ -510,19 +523,9 @@
                 return `<div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 group transition shadow-lg hover:border-slate-500"><div class="flex justify-between items-start mb-2"><span class="text-[8px] font-black uppercase text-indigo-400 tracking-widest">${c ? c.name : '...'}</span><div class="flex space-x-1.5"><button onclick="window.assignToPlan('${t.id}', 'big')" class="w-6 h-6 bg-indigo-600 rounded-lg text-[10px] font-black hover:bg-indigo-500 transition shadow-lg">1</button><button onclick="window.assignToPlan('${t.id}', 'medium')" class="w-6 h-6 bg-slate-600 rounded-lg text-[10px] font-black hover:bg-slate-500 transition">3</button><button onclick="window.assignToPlan('${t.id}', 'small')" class="w-6 h-6 bg-yellow-600 rounded-lg text-[10px] font-black hover:bg-yellow-500 transition">5</button></div></div><p class="text-xs text-slate-100 font-medium leading-relaxed">${t.title}</p></div>`;
             }).join('');
             lucide.createIcons();
-        };
+        }
 
-        const updatePlanStats = () => {
-            const total = (currentPlan.big||[]).filter(x=>x.trim()).length + (currentPlan.medium||[]).filter(x=>x.trim()).length + (currentPlan.small||[]).filter(x=>x.trim()).length;
-            const done = currentPlan.done ? currentPlan.done.length : 0;
-            const percent = total > 0 ? Math.round((done / total) * 100) : 0;
-            const pPct = document.getElementById('plan-progress-percent');
-            const pBar = document.getElementById('plan-progress-bar');
-            if(pPct) pPct.textContent = `${percent}%`;
-            if(pBar) pBar.style.width = `${percent}%`;
-        };
-
-        const renderPlan = () => {
+        function renderPlan() {
             const renderSec = (id, items, type) => {
                 const c = document.getElementById(id); if (!c) return;
                 c.innerHTML = (items || []).map((val, idx) => `<div class="flex items-center space-x-3 mb-2"><input type="checkbox" ${currentPlan.done && currentPlan.done.includes(`${type}-${idx}`) ? 'checked' : ''} onchange="window.togglePlanTask('${type}', ${idx})" class="w-6 h-6 rounded-xl border-slate-200 text-indigo-600 cursor-pointer transition focus:ring-offset-2"><input type="text" value="${val || ''}" placeholder="Was ist geplant?" onchange="window.updatePlanTask('${type}', ${idx}, this.value)" class="plan-input flex-grow font-semibold text-slate-700 ${currentPlan.done && currentPlan.done.includes(`${type}-${idx}`) ? 'task-done' : ''}"></div>`).join('');
@@ -532,7 +535,17 @@
             renderSec('plan-section-small', currentPlan.small || ['', '', '', '', ''], 'small');
             updatePlanStats();
             lucide.createIcons();
-        };
+        }
+
+        function updatePlanStats() {
+            const total = (currentPlan.big||[]).filter(x=>x.trim()).length + (currentPlan.medium||[]).filter(x=>x.trim()).length + (currentPlan.small||[]).filter(x=>x.trim()).length;
+            const done = currentPlan.done ? currentPlan.done.length : 0;
+            const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+            const pPct = document.getElementById('plan-progress-percent');
+            const pBar = document.getElementById('plan-progress-bar');
+            if(pPct) pPct.textContent = `${percent}%`;
+            if(pBar) pBar.style.width = `${percent}%`;
+        }
 
         // --- AUTH & LISTENERS INITIALISIERUNG ---
 
@@ -548,27 +561,32 @@
                     checkPreviousDayForOpenTasks(date);
                 }
                 renderPlan();
+            }, err => {
+                console.error("Plan listener error", err);
             });
         };
 
         const checkPreviousDayForOpenTasks = async (currentDateStr) => {
             const current = new Date(currentDateStr); current.setDate(current.getDate() - 1);
             const prevStr = current.toISOString().split('T')[0];
-            const d = await getDoc(doc(db, 'artifacts', appId, 'users', userId, 'plans', prevStr));
-            if(d.exists()) {
-                const prevPlan = d.data();
-                let hasOpen = false;
-                ['big', 'medium', 'small'].forEach(type => {
-                    (prevPlan[type] || []).forEach((val, idx) => {
-                        if(val && val.trim() !== "" && !(prevPlan.done && prevPlan.done.includes(`${type}-${idx}`))) hasOpen = true;
+            try {
+                const d = await getDoc(doc(db, 'artifacts', appId, 'users', userId, 'plans', prevStr));
+                if(d.exists()) {
+                    const prevPlan = d.data();
+                    let hasOpen = false;
+                    ['big', 'medium', 'small'].forEach(type => {
+                        (prevPlan[type] || []).forEach((val, idx) => {
+                            if(val && val.trim() !== "" && !(prevPlan.done && prevPlan.done.includes(`${type}-${idx}`))) hasOpen = true;
+                        });
                     });
-                });
-                if(hasOpen) document.getElementById('carry-over-zone')?.classList.remove('hidden');
-            }
+                    if(hasOpen) document.getElementById('carry-over-zone')?.classList.remove('hidden');
+                }
+            } catch(e) {}
         };
 
         const startListeners = () => {
             const path = (coll) => collection(db, 'artifacts', appId, 'users', userId, coll);
+            
             onSnapshot(path('customers'), async (snap) => {
                 customers = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 if (customers.length === 0 && !isSeeding) await seedCustomers();
@@ -600,7 +618,16 @@
         // --- WINDOW GLOBALS ---
 
         window.init = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) try { await signInWithCustomToken(auth, __initial_auth_token); } catch(e) {}
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch(e) {
+                console.error("Auth error", e);
+            }
+            
             onAuthStateChanged(auth, u => {
                 if (u) {
                     userId = u.uid;
@@ -610,7 +637,6 @@
                     document.getElementById('main-content').classList.remove('hidden');
                     startListeners();
                 } else {
-                    signInAnonymously(auth);
                     document.getElementById('login-center').classList.remove('hidden');
                     document.getElementById('main-content').classList.add('hidden');
                 }
@@ -656,7 +682,10 @@
             await window.savePlan();
         };
 
-        window.savePlan = async () => { await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'plans', selectedPlanDate), currentPlan); };
+        window.savePlan = async () => { 
+            if(!userId) return;
+            await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'plans', selectedPlanDate), currentPlan); 
+        };
 
         window.carryOverOpenTasks = async () => {
             const current = new Date(selectedPlanDate); current.setDate(current.getDate() - 1);
@@ -683,6 +712,32 @@
             await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'tasks'), { title: input.value.trim(), customerId: cId, projectId: pId, status: 'backlog', date: new Date().toISOString().split('T')[0], createdAt: new Date().toISOString() });
             input.value = '';
         };
+
+        // --- KI & VOICE (Zusatzlogik) ---
+        let recognition = null;
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.lang = 'de-DE';
+            recognition.onstart = () => { document.querySelectorAll('[data-lucide="mic"]').forEach(el => el.classList.add('mic-active')); document.getElementById('dash-voice-indicator')?.classList.remove('hidden'); };
+            recognition.onend = () => { document.querySelectorAll('[data-lucide="mic"]').forEach(el => el.classList.remove('mic-active')); document.getElementById('dash-voice-indicator')?.classList.add('hidden'); };
+            recognition.onresult = async (event) => {
+                const text = event.results[0][0].transcript;
+                const customerNames = customers.map(c => c.name).join(', ');
+                const prompt = `Analysiere Text und extrahiere Mandant und Task-Titel. Mandanten: [${customerNames}]. Antwort JSON: {"customer": "Name", "task": "Titel"}. Text: "${text}"`;
+                try {
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${geminiApiKey}`, {
+                        method: 'POST', body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                    });
+                    const result = await response.json();
+                    const aiData = JSON.parse(result.candidates?.[0]?.content?.parts?.[0]?.text.replace(/```json|```/g, '').trim());
+                    const matched = customers.find(c => c.name.toLowerCase() === aiData.customer?.toLowerCase());
+                    await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'tasks'), {
+                        title: aiData.task || text, customerId: matched ? matched.id : "", projectId: "", status: 'backlog', date: new Date().toISOString().split('T')[0], createdAt: new Date().toISOString()
+                    });
+                } catch (err) {}
+            };
+        }
 
         window.startVoiceInput = () => { if(recognition) recognition.start(); else alert("Spracherkennung nicht unterstützt."); };
         window.closeEditModal = () => document.getElementById('edit-task-modal').classList.add('hidden');
@@ -712,7 +767,7 @@
         };
 
         window.unlinkTask = async (id) => { await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { projectId: "" }); };
-        
+
         window.exportCSV = (custId) => {
             const customer = customers.find(c => c.id === custId); const now = new Date();
             const logs = timeLogs.filter(l => l.customerId === custId && new Date(l.timestamp).getMonth() === now.getMonth());
@@ -722,7 +777,8 @@
             const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `Report_${customer.name}.csv`; link.click();
         };
 
-        // --- SUBMITS & LISTENERS ---
+        // --- SUBMITS ---
+        
         document.getElementById('plan-date-picker').onchange = (e) => { selectedPlanDate = e.target.value; startPlanListener(selectedPlanDate); };
         document.querySelectorAll('.tab-button').forEach(b => b.onclick = () => window.switchTab(b.dataset.tab));
         document.getElementById('logout-btn').onclick = () => signOut(auth);
@@ -772,14 +828,18 @@
         });
 
         document.getElementById('save-time').onclick = async () => {
-            const dur = parseFloat(document.getElementById('task-duration').value);
+            const durValue = document.getElementById('task-duration').value;
+            const dur = parseFloat(durValue);
+            const date = document.getElementById('log-date').value;
             const t = tasks.find(x => x.id === pendingDropId);
             if(!isNaN(dur) && t) {
-                await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'timeLogs'), { taskId: t.id, taskTitle: t.title, customerId: t.customerId, duration: dur, timestamp: document.getElementById('log-date').value });
+                await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'timeLogs'), { taskId: t.id, taskTitle: t.title, customerId: t.customerId, duration: dur, timestamp: date });
                 await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', pendingDropId), { status: 'done', currentDuration: 0 });
                 document.getElementById('time-modal').classList.add('hidden'); pendingDropId = null;
-            }
+            } else { alert("Bitte Dauer eingeben."); }
         };
+
+        document.getElementById('cancel-time').onclick = () => document.getElementById('time-modal').classList.add('hidden');
 
         document.getElementById('customer-form').onsubmit = async (e) => {
             e.preventDefault();
