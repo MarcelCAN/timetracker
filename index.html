@@ -106,7 +106,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-black text-gray-900 tracking-tight">Consultancy OS</h1>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Workflow Management</p>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Workflow & Tagesplanung</p>
                 </div>
             </div>
             <div class="flex items-center space-x-4 mt-4 sm:mt-0">
@@ -120,7 +120,7 @@
             <button class="tab-button active" data-tab="dashboard"><i data-lucide="home" class="w-4 h-4 inline mr-2"></i>Dashboard</button>
             <button class="tab-button" data-tab="board"><i data-lucide="trello" class="w-4 h-4 inline mr-2"></i>Board</button>
             <button class="tab-button" data-tab="projects"><i data-lucide="map" class="w-4 h-4 inline mr-2"></i>Landkarte</button>
-            <button class="tab-button" data-tab="plan"><i data-lucide="calendar-check" class="w-4 h-4 inline mr-2"></i>Tagesplan</button>
+            <button class="tab-button" data-tab="plan"><i data-lucide="calendar-check" class="w-4 h-4 inline mr-2"></i>Tagesplan (1-3-5)</button>
             <button class="tab-button" data-tab="analysis"><i data-lucide="bar-chart-3" class="w-4 h-4 inline mr-2"></i>Zeiterfassung</button>
             <button class="tab-button" data-tab="management"><i data-lucide="settings" class="w-4 h-4 inline mr-2"></i>Setup</button>
         </nav>
@@ -151,15 +151,15 @@
             <!-- TAB: DASHBOARD -->
             <div id="tab-dashboard" class="tab-content space-y-8 animate-in fade-in duration-500">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex items-center space-x-5">
+                    <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex items-center space-x-5 transition hover:shadow-md">
                         <div class="bg-orange-100 p-4 rounded-3xl text-orange-600 shadow-inner"><i data-lucide="activity" class="w-6 h-6"></i></div>
                         <div><p class="text-xs font-black uppercase text-slate-400 tracking-widest">In Bearbeitung</p><p id="stat-active-tasks" class="text-3xl font-black text-slate-800">0 Tasks</p></div>
                     </div>
-                    <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex items-center space-x-5">
+                    <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex items-center space-x-5 transition hover:shadow-md">
                         <div class="bg-indigo-100 p-4 rounded-3xl text-indigo-600 shadow-inner"><i data-lucide="layers" class="w-6 h-6"></i></div>
                         <div><p class="text-xs font-black uppercase text-slate-400 tracking-widest">Aktive Themen</p><p id="stat-total-projects" class="text-3xl font-black text-slate-800">0 Themen</p></div>
                     </div>
-                    <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex items-center space-x-5">
+                    <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex items-center space-x-5 transition hover:shadow-md">
                         <div class="bg-green-100 p-4 rounded-3xl text-green-600 shadow-inner"><i data-lucide="clock" class="w-6 h-6"></i></div>
                         <div><p class="text-xs font-black uppercase text-slate-400 tracking-widest">Dieser Monat</p><p id="stat-monthly-hours" class="text-3xl font-black text-slate-800">0.00 h</p></div>
                     </div>
@@ -214,11 +214,11 @@
                         <div id="col-backlog" class="drop-zone" data-status="backlog"></div>
                     </div>
                     <div class="bg-white p-5 rounded-[2.5rem] shadow-sm border border-gray-200 flex flex-col min-h-[700px]">
-                        <h3 class="font-black text-orange-500 text-[10px] uppercase tracking-[0.2em] border-b pb-3 mb-6 px-2">In Bearbeitung</h3>
+                        <h3 class="font-black text-orange-500 text-[10px] uppercase tracking-[0.2em] border-b pb-3 mb-6 px-2">Aktiv</h3>
                         <div id="col-progress" class="drop-zone" data-status="progress"></div>
                     </div>
                     <div class="bg-white p-5 rounded-[2.5rem] shadow-sm border border-gray-200 flex flex-col min-h-[700px]">
-                        <h3 class="font-black text-green-500 text-[10px] uppercase tracking-[0.2em] border-b pb-3 mb-6 px-2">Erledigt</h3>
+                        <h3 class="font-black text-green-500 text-[10px] uppercase tracking-[0.2em] border-b pb-3 mb-6 px-2">Fertig</h3>
                         <div id="col-done" class="drop-zone" data-status="done"></div>
                     </div>
                 </div>
@@ -242,13 +242,13 @@
             <div id="tab-plan" class="tab-content hidden space-y-8 animate-in fade-in duration-500">
                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
                     <div class="lg:col-span-3 space-y-8">
-                        <header class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm">
+                        <header class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm transition hover:shadow-md">
                             <div>
                                 <div class="flex items-center space-x-4 mb-2">
                                     <h2 class="text-3xl font-black text-gray-800 tracking-tight">Tagesfokus</h2>
-                                    <input type="date" id="plan-date-picker" class="p-2 text-sm border-none bg-indigo-50 text-indigo-700 font-black rounded-xl focus:ring-0 cursor-pointer">
+                                    <input type="date" id="plan-date-picker" class="p-2 text-sm border-none bg-indigo-50 text-indigo-700 font-black rounded-xl focus:ring-0 cursor-pointer transition hover:bg-indigo-100">
                                 </div>
-                                <p class="text-sm text-slate-400 font-medium">Fokussierung nach der 1-3-5 Methode.</p>
+                                <p class="text-sm text-slate-400 font-medium">Priorisierung nach der 1-3-5 Methode.</p>
                                 
                                 <div id="carry-over-zone" class="hidden mt-4">
                                     <button onclick="window.carryOverOpenTasks()" class="bg-orange-50 text-orange-600 border border-orange-200 px-5 py-2.5 rounded-2xl text-xs font-black hover:bg-orange-100 transition flex items-center shadow-sm uppercase tracking-wider">
@@ -260,21 +260,21 @@
                             <div class="text-right space-y-1">
                                 <span id="plan-progress-percent" class="text-4xl font-black text-indigo-600">0%</span>
                                 <div class="w-48 bg-gray-100 rounded-full h-3"><div id="plan-progress-bar" class="bg-indigo-600 h-3 rounded-full transition-all duration-700" style="width: 0%"></div></div>
-                                <p class="text-[10px] font-black uppercase text-slate-300 tracking-widest text-center">Heute</p>
+                                <p class="text-[10px] font-black uppercase text-slate-300 tracking-widest text-center mt-1">Fortschritt</p>
                             </div>
                         </header>
 
                         <div id="planner-container" class="space-y-8">
-                            <section class="bg-white p-8 rounded-[3rem] border border-indigo-100 shadow-sm">
+                            <section class="bg-white p-8 rounded-[3rem] border border-indigo-100 shadow-sm transition hover:shadow-md">
                                 <h3 class="text-xs font-black text-indigo-600 uppercase mb-6 flex items-center tracking-[0.2em]"><i data-lucide="crown" class="w-5 h-5 mr-3"></i> 1 Großes Thema</h3>
                                 <div id="plan-section-big" class="space-y-4"></div>
                             </section>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <section class="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm">
+                                <section class="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm transition hover:shadow-md">
                                     <h3 class="text-xs font-black text-slate-400 uppercase mb-6 flex items-center tracking-[0.2em]"><i data-lucide="list" class="w-5 h-5 mr-3 text-slate-300"></i> 3 Mittlere Aufgaben</h3>
                                     <div id="plan-section-medium" class="space-y-4"></div>
                                 </section>
-                                <section class="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm">
+                                <section class="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm transition hover:shadow-md">
                                     <h3 class="text-xs font-black text-slate-400 uppercase mb-6 flex items-center tracking-[0.2em]"><i data-lucide="zap" class="w-5 h-5 mr-3 text-yellow-500"></i> 5 Quick Wins</h3>
                                     <div id="plan-section-small" class="space-y-4"></div>
                                 </section>
@@ -284,23 +284,20 @@
                     
                     <div class="bg-slate-900 text-white p-8 rounded-[3.5rem] shadow-2xl flex flex-col h-[calc(100vh-180px)] sticky top-6">
                         <h4 class="text-xl font-black flex items-center mb-2 tracking-tight"><i data-lucide="archive" class="w-6 h-6 mr-3 text-indigo-400"></i> Task-Pool</h4>
-                        <p class="text-[10px] text-slate-500 font-bold uppercase mb-6 tracking-widest leading-relaxed">Klick (1, 3, 5) zum Planen:</p>
+                        <p class="text-[10px] text-slate-500 font-bold uppercase mb-6 tracking-widest leading-relaxed">Plane aus deinem Board:</p>
                         <div id="task-pool" class="space-y-4 overflow-y-auto flex-grow pr-2"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- TAB: ANALYSIS -->
+            <!-- TAB: ZEITERFASSUNG -->
             <div id="tab-analysis" class="tab-content hidden grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in fade-in duration-500">
                  <div class="bg-slate-900 p-10 rounded-[3rem] shadow-xl text-white space-y-8">
-                    <h3 class="font-black text-slate-400 border-b border-slate-800 pb-4 text-xs uppercase tracking-[0.2em]">Monats-Übersicht</h3>
+                    <h3 class="font-black text-slate-400 border-b border-slate-800 pb-4 text-xs uppercase tracking-[0.2em]">Leistungs-Report</h3>
                     <div id="monthly-stats" class="space-y-4"></div>
                  </div>
                  <div class="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-200 space-y-8 self-start">
-                    <div>
-                        <h3 class="font-black text-slate-800 text-2xl tracking-tight uppercase">Schnellbuchung</h3>
-                        <p class="text-sm text-slate-400">Erfassung ohne Task-Zuweisung</p>
-                    </div>
+                    <h3 class="font-black text-slate-800 text-2xl tracking-tight uppercase">Direktbuchung</h3>
                     <form id="quick-log-form" class="space-y-5">
                         <div class="grid grid-cols-2 gap-4">
                             <select id="ql-customer" required class="w-full p-4 border border-slate-200 rounded-2xl bg-slate-50 font-bold text-sm"></select>
@@ -308,17 +305,17 @@
                         </div>
                         <input type="text" id="ql-title" placeholder="Tätigkeit..." required class="w-full p-4 border border-slate-200 rounded-2xl text-sm font-medium">
                         <input type="number" id="ql-duration" step="0.25" min="0" placeholder="0.00" required class="w-full p-6 border border-gray-100 bg-slate-50 rounded-3xl text-4xl font-black text-center focus:ring-4 focus:ring-indigo-50 outline-none">
-                        <button type="submit" class="w-full bg-indigo-600 text-white p-5 rounded-2xl font-black hover:bg-indigo-700 transition shadow-xl shadow-indigo-100 uppercase tracking-widest text-xs">Buchen</button>
+                        <button type="submit" class="w-full bg-indigo-600 text-white p-5 rounded-2xl font-black hover:bg-indigo-700 transition shadow-xl uppercase tracking-widest text-xs">Verbuchen</button>
                     </form>
                  </div>
             </div>
 
-            <!-- TAB: MANAGEMENT -->
+            <!-- TAB: SETUP -->
             <div id="tab-management" class="tab-content hidden animate-in fade-in duration-500">
                 <div class="bg-white p-10 rounded-[3rem] border border-slate-100 max-w-xl mx-auto shadow-sm">
-                    <h3 class="font-black mb-8 text-xs uppercase tracking-[0.2em] text-slate-400 border-b pb-4">Mandanten</h3>
+                    <h3 class="font-black mb-8 text-xs uppercase tracking-[0.2em] text-slate-400 border-b pb-4">Mandantenverwaltung</h3>
                     <form id="customer-form" class="flex gap-3 mb-10">
-                        <input type="text" id="cust-name" placeholder="Name..." required class="flex-grow p-4 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-bold">
+                        <input type="text" id="cust-name" placeholder="Neuer Name..." required class="flex-grow p-4 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-bold">
                         <button type="submit" class="bg-blue-600 text-white px-8 rounded-2xl shadow-lg hover:bg-blue-700 transition"><i data-lucide="plus"></i></button>
                     </form>
                     <div id="customer-list" class="space-y-3"></div>
@@ -328,7 +325,6 @@
     </div>
 
     <!-- MODALS -->
-    <!-- Task Edit Modal -->
     <div id="edit-task-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-80 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
         <div class="bg-white p-8 rounded-[3rem] shadow-2xl w-full max-w-md border border-gray-100">
             <h2 class="text-2xl font-black text-slate-800 mb-6 tracking-tight">Task bearbeiten</h2>
@@ -347,7 +343,6 @@
         </div>
     </div>
 
-    <!-- Project Detail Modal -->
     <div id="project-detail-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-90 flex items-center justify-center p-4 z-50 backdrop-blur-md">
         <div class="bg-white rounded-[3.5rem] shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col md:flex-row">
             <div class="p-10 md:w-2/3 overflow-y-auto space-y-8 border-r border-slate-100">
@@ -356,11 +351,7 @@
                     <button onclick="document.getElementById('project-detail-modal').classList.add('hidden')" class="text-slate-300 hover:text-slate-600 transition"><i data-lucide="x-circle" class="w-10 h-10"></i></button>
                 </div>
                 <textarea id="pd-desc" rows="3" class="w-full p-5 bg-slate-50 border-none rounded-3xl outline-none focus:ring-2 focus:ring-indigo-100 text-sm font-medium" placeholder="Worum geht es?"></textarea>
-                <section class="space-y-5">
-                    <div class="flex justify-between items-center border-b pb-3"><h4 class="text-xs font-black text-slate-400 uppercase tracking-widest">Notizen</h4><button onclick="window.prepareNewNote()" class="text-xs font-black text-indigo-600 hover:text-indigo-800 flex items-center uppercase tracking-widest"><i data-lucide="plus" class="w-4 h-4 mr-2"></i> Neu</button></div>
-                    <div id="note-editor" class="hidden bg-yellow-50 p-6 rounded-3xl space-y-4 border border-yellow-100"><textarea id="note-input" rows="4" class="w-full bg-transparent border-none outline-none text-sm text-yellow-900 font-medium" placeholder="Inhalt..."></textarea><div class="flex justify-end space-x-3"><button onclick="window.cancelNote()" class="text-xs font-bold text-slate-400 px-4 uppercase">Abbruch</button><button id="save-note-btn" class="bg-yellow-600 text-white text-xs font-black px-6 py-2 rounded-xl uppercase tracking-widest">Speichern</button></div></div>
-                    <div id="pd-notes-list" class="space-y-4"></div>
-                </section>
+                <div id="pd-notes-list" class="space-y-4"></div>
                 <div class="flex justify-end gap-4 pt-8 border-t border-slate-50"><button id="pd-save-main-btn" class="bg-slate-900 text-white px-10 py-4 rounded-2xl font-black shadow-xl uppercase text-xs tracking-widest">Speichern</button><button id="pd-delete-btn" class="text-red-400 text-[10px] font-black uppercase tracking-widest">Löschen</button></div>
             </div>
             <div class="p-10 bg-slate-50 md:w-1/3 overflow-y-auto space-y-8">
@@ -370,25 +361,12 @@
         </div>
     </div>
 
-    <!-- Time Booking Modal -->
-    <div id="time-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-80 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-        <div class="bg-white p-8 rounded-[3rem] shadow-2xl w-full max-w-sm border border-gray-200 text-center">
-            <h2 class="text-2xl font-black mb-4 flex justify-center text-gray-800 tracking-tight"><i data-lucide="clock" class="mr-3 text-indigo-600 w-8 h-8"></i> Buchen</h2>
-            <p id="time-modal-task-name" class="text-[10px] text-slate-400 mb-8 font-black uppercase tracking-widest border-b pb-4"></p>
-            <div class="space-y-6 mb-8 text-left">
-                <input type="date" id="log-date" class="w-full p-4 border border-slate-100 bg-slate-50 rounded-2xl font-black text-indigo-600 outline-none">
-                <input type="number" id="task-duration" step="0.25" placeholder="0.00" class="w-full p-6 border border-slate-100 bg-slate-50 rounded-3xl text-5xl font-black text-center focus:ring-4 focus:ring-indigo-50 outline-none">
-            </div>
-            <div class="grid grid-cols-2 gap-4"><button id="cancel-time" class="p-5 text-slate-400 font-bold hover:bg-slate-50 rounded-2xl transition uppercase text-xs tracking-widest">Abbruch</button><button id="save-time" class="p-5 bg-indigo-600 text-white font-black rounded-2xl shadow-xl hover:bg-indigo-700 transition uppercase text-xs tracking-widest">Buchen</button></div>
-        </div>
-    </div>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
         import { getFirestore, doc, deleteDoc, setDoc, onSnapshot, collection, addDoc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
-        // Firebase Config
+        // --- KONFIGURATION ---
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{"apiKey": "AIzaSyDramsPfqWtBGdvHyMAos0nhyT0t4EMkAg","authDomain": "timetracker-7bf2a.firebaseapp.com","projectId": "timetracker-7bf2a","storageBucket": "timetracker-7bf2a.firebasestorage.app","messagingSenderId": "3152109841","appId": "1:3152109841:web:4e83e101949907c056acb0"}');
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -396,7 +374,7 @@
         const appId = "consultancy-workflow-stable-v1";
         const geminiApiKey = "";
 
-        // State
+        // --- STATE ---
         let userId = null;
         let customers = [];
         let tasks = [];
@@ -413,16 +391,16 @@
 
         const colors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316', '#14B8A6', '#6366F1'];
 
-        // --- RENDER FUNKTIONEN (DEFINITION AM ANFANG) ---
+        // --- RENDER FUNKTIONEN (DEFINITION VOR INITIALISIERUNG UM REFERENCE ERROR ZU VERMEIDEN) ---
 
-        function renderCustomers() {
+        const renderCustomers = () => {
             const list = document.getElementById('customer-list');
             if (!list) return;
             list.innerHTML = customers.map(c => `<div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl mb-2 border border-slate-100"><div class="flex items-center text-sm font-bold"><span class="w-2 h-2 rounded-full mr-3" style="background-color:${c.color}"></span>${c.name}</div><button onclick="window.deleteCustomer('${c.id}')" class="text-slate-300 hover:text-red-500 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`).join('');
             lucide.createIcons();
-        }
+        };
 
-        function renderSelectors() {
+        const renderSelectors = () => {
             const ids = ['dash-task-customer', 'ql-customer', 'board-customer-filter', 'edit-task-customer', 'task-customer', 'proj-customer'];
             const opts = customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
             ids.forEach(id => {
@@ -431,11 +409,17 @@
                 const prev = el.value;
                 if(id === 'board-customer-filter') el.innerHTML = '<option value="all">Alle Mandanten</option>' + opts;
                 else el.innerHTML = '<option value="" disabled selected>Wählen...</option>' + opts;
-                if(prev) el.value = prev;
+                if(prev && [...el.options].some(o => o.value === prev)) el.value = prev;
             });
-        }
+            const tc = document.getElementById('task-customer');
+            if(tc) tc.onchange = (e) => {
+                const filtered = projects.filter(p => p.customerId === e.target.value);
+                const ps = document.getElementById('task-project');
+                if(ps) ps.innerHTML = '<option value="">Thema (optional)</option>' + filtered.map(p => `<option value="${p.id}">${p.title}</option>`).join('');
+            };
+        };
 
-        function renderReports() {
+        const renderReports = () => {
             const container = document.getElementById('monthly-stats');
             if(!container) return;
             const now = new Date();
@@ -443,12 +427,12 @@
             container.innerHTML = customers.map(cust => {
                 const total = logs.filter(l => l.customerId === cust.id).reduce((s, l) => s + (parseFloat(l.duration) || 0), 0);
                 if (total === 0) return '';
-                return `<div class="bg-slate-800 bg-opacity-40 p-5 rounded-[1.5rem] border border-slate-700 flex justify-between items-center mb-3"><span class="font-bold text-slate-200">${cust.name}</span><div class="flex items-center space-x-3"><button onclick="window.exportCSV('${cust.id}')" class="p-2 text-slate-500 hover:text-white transition"><i data-lucide="download" class="w-4 h-4"></i></button><span class="text-2xl font-black text-white">${total.toFixed(2)}h</span></div></div>`;
+                return `<div class="bg-slate-800 bg-opacity-40 p-5 rounded-[1.5rem] border border-slate-700 flex justify-between items-center mb-3 transition hover:bg-opacity-50"><span class="font-bold text-slate-200">${cust.name}</span><div class="flex items-center space-x-3"><button onclick="window.exportCSV('${cust.id}')" class="p-2 text-slate-500 hover:text-white transition"><i data-lucide="download" class="w-4 h-4"></i></button><span class="text-2xl font-black text-white">${total.toFixed(2)}h</span></div></div>`;
             }).join('') || '<div class="text-center py-10 text-slate-500 text-sm italic font-medium uppercase tracking-widest">Keine Buchungen vorhanden.</div>';
             lucide.createIcons();
-        }
+        };
 
-        function renderDashboard() {
+        const renderDashboard = () => {
             const activeCount = tasks.filter(t => t.status === 'progress').length;
             const now = new Date();
             const monthlyHours = timeLogs
@@ -470,26 +454,26 @@
                 container.innerHTML = urgent.map(t => {
                     const c = customers.find(x => x.id === t.customerId);
                     const p = projects.find(x => x.id === t.projectId);
-                    return `<div class="bg-white p-6 rounded-[2rem] shadow-sm border border-l-[8px] border-slate-100 transition" style="border-left-color: ${c ? c.color : '#cbd5e1'}"><div class="flex justify-between items-start mb-2"><span class="text-[9px] font-black uppercase text-indigo-400 tracking-widest">${p ? p.title : (c ? c.name : 'Allgemein')}</span><span class="text-[8px] font-bold text-slate-300 uppercase">${new Date(t.createdAt).toLocaleDateString()}</span></div><h4 class="font-bold text-slate-800 leading-tight mb-4 text-base">${t.title}</h4><button onclick="window.switchTab('board')" class="text-indigo-600 font-black text-[9px] uppercase hover:underline">Zum Board <i data-lucide="chevron-right" class="w-3 h-3 inline"></i></button></div>`;
+                    return `<div class="bg-white p-6 rounded-[2rem] shadow-sm border border-l-[8px] border-slate-100 transition hover:shadow-md" style="border-left-color: ${c ? c.color : '#cbd5e1'}"><div class="flex justify-between items-start mb-2"><span class="text-[9px] font-black uppercase text-indigo-400 tracking-widest">${p ? p.title : (c ? c.name : 'Allgemein')}</span><span class="text-[8px] font-bold text-slate-300 uppercase">${new Date(t.createdAt).toLocaleDateString()}</span></div><h4 class="font-bold text-slate-800 leading-tight mb-4 text-base">${t.title}</h4><button onclick="window.switchTab('board')" class="text-indigo-600 font-black text-[9px] uppercase hover:underline">Board öffnen <i data-lucide="chevron-right" class="w-3 h-3 inline"></i></button></div>`;
                 }).join('');
             }
             lucide.createIcons();
-        }
+        };
 
-        function renderProjects() {
+        const renderProjects = () => {
             const view = document.getElementById('project-board-view'); if (!view) return;
             view.innerHTML = customers.map(c => {
                 const cProjs = projects.filter(p => p.customerId === c.id);
-                return `<div class="project-column bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col space-y-5"><div class="flex items-center justify-between pb-3 border-b"><div class="flex items-center space-x-2"><span class="w-3 h-3 rounded-full" style="background-color: ${c.color}"></span><h3 class="text-sm font-black uppercase text-slate-600 truncate max-w-[200px]">${c.name}</h3></div><span class="text-[10px] bg-indigo-50 text-indigo-500 font-black px-2 py-0.5 rounded-full">${cProjs.length}</span></div><div class="grid grid-cols-1 gap-4">${cProjs.map(p => {
+                return `<div class="project-column bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col space-y-5 transition hover:shadow-md"><div class="flex items-center justify-between pb-3 border-b"><div class="flex items-center space-x-2"><span class="w-3 h-3 rounded-full" style="background-color: ${c.color}"></span><h3 class="text-sm font-black uppercase text-slate-600 truncate max-w-[200px]">${c.name}</h3></div><span class="text-[10px] bg-indigo-50 text-indigo-500 font-black px-2 py-0.5 rounded-full">${cProjs.length}</span></div><div class="grid grid-cols-1 gap-4">${cProjs.map(p => {
                     const pTasks = tasks.filter(t => t.projectId === p.id);
                     const doneTasks = pTasks.filter(t => t.status === 'done').length;
-                    return `<div class="project-card p-5 rounded-2xl flex flex-col space-y-3" onclick="window.openProjectDetails('${p.id}')"><h4 class="font-bold text-slate-800 leading-tight">${p.title}</h4><div class="space-y-1.5 pt-2 border-t border-yellow-200">${pTasks.slice(0, 5).map(t => `<div class="flex items-center text-[10px] text-slate-500 truncate"><span class="w-1.5 h-1.5 rounded-full mr-2 ${t.status === 'done' ? 'bg-green-500' : 'bg-orange-400'}"></span>${t.title}</div>`).join('')}</div><div class="flex justify-between items-center text-[9px] font-black text-yellow-700 pt-1 uppercase"><span>Progress</span><span>${doneTasks}/${pTasks.length} Done</span></div><div class="mt-2 pt-2 border-t border-yellow-100 flex gap-2" onclick="event.stopPropagation()"><input type="text" id="quick-task-${p.id}" placeholder="Task..." class="flex-grow p-1 text-[10px] bg-white border border-yellow-200 rounded outline-none font-semibold" onkeyup="if(event.key==='Enter') window.quickAddTaskOnMap('${p.id}', '${c.id}')"><button onclick="window.quickAddTaskOnMap('${p.id}', '${c.id}')" class="bg-yellow-600 text-white p-1 rounded shadow-sm hover:bg-yellow-700"><i data-lucide="plus" class="w-3 h-3"></i></button></div></div>`;
+                    return `<div class="project-card p-5 rounded-2xl flex flex-col space-y-3" onclick="window.openProjectDetails('${p.id}')"><h4 class="font-bold text-slate-800 leading-tight">${p.title}</h4><div class="space-y-1.5 pt-2 border-t border-yellow-200">${pTasks.slice(0, 5).map(t => `<div class="flex items-center text-[10px] text-slate-500 truncate"><span class="w-1.5 h-1.5 rounded-full mr-2 ${t.status === 'done' ? 'bg-green-500' : 'bg-orange-400'}"></span>${t.title}</div>`).join('')}</div><div class="flex justify-between items-center text-[9px] font-black text-yellow-700 pt-1 uppercase"><span>Progress</span><span>${doneTasks}/${pTasks.length} Done</span></div><div class="mt-2 pt-2 border-t border-yellow-100 flex gap-2" onclick="event.stopPropagation()"><input type="text" id="quick-task-${p.id}" placeholder="Task..." class="flex-grow p-1 text-[10px] bg-white border border-yellow-200 rounded outline-none font-semibold" onkeyup="if(event.key==='Enter') window.quickAddTaskOnMap('${p.id}', '${c.id}')"><button onclick="window.quickAddTaskOnMap('${p.id}', '${c.id}')" class="bg-yellow-600 text-white p-1 rounded shadow-sm hover:bg-yellow-700 transition"><i data-lucide="plus" class="w-3 h-3"></i></button></div></div>`;
                 }).join('')}</div></div>`;
             }).join('');
             lucide.createIcons();
-        }
+        };
 
-        function renderBoard() {
+        const renderBoard = () => {
             const filterEl = document.getElementById('board-customer-filter');
             const filter = filterEl ? filterEl.value : 'all';
             const cols = { backlog: document.getElementById('col-backlog'), progress: document.getElementById('col-progress'), done: document.getElementById('col-done') };
@@ -515,32 +499,20 @@
                 });
             });
             lucide.createIcons();
-        }
+        };
 
-        function renderTaskPool() {
+        const renderTaskPool = () => {
             const container = document.getElementById('task-pool'); if (!container) return;
             const openTasks = tasks.filter(t => t.status !== 'done');
             if (openTasks.length === 0) { container.innerHTML = '<div class="text-center py-10 text-slate-600 italic text-sm">Keine offenen Tasks.</div>'; return; }
             container.innerHTML = openTasks.map(t => {
                 const c = customers.find(x => x.id === t.customerId);
-                return `<div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 group transition shadow-lg"><div class="flex justify-between items-start mb-2"><span class="text-[8px] font-black uppercase text-indigo-400 tracking-widest">${c ? c.name : '...'}</span><div class="flex space-x-1.5"><button onclick="window.assignToPlan('${t.id}', 'big')" class="w-6 h-6 bg-indigo-600 rounded-lg text-[10px] font-black hover:bg-indigo-500 transition">1</button><button onclick="window.assignToPlan('${t.id}', 'medium')" class="w-6 h-6 bg-slate-600 rounded-lg text-[10px] font-black hover:bg-slate-500 transition">3</button><button onclick="window.assignToPlan('${t.id}', 'small')" class="w-6 h-6 bg-yellow-600 rounded-lg text-[10px] font-black hover:bg-yellow-500 transition">5</button></div></div><p class="text-xs text-slate-100 font-medium leading-relaxed">${t.title}</p></div>`;
+                return `<div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 group transition shadow-lg hover:border-slate-500"><div class="flex justify-between items-start mb-2"><span class="text-[8px] font-black uppercase text-indigo-400 tracking-widest">${c ? c.name : '...'}</span><div class="flex space-x-1.5"><button onclick="window.assignToPlan('${t.id}', 'big')" class="w-6 h-6 bg-indigo-600 rounded-lg text-[10px] font-black hover:bg-indigo-500 transition shadow-lg">1</button><button onclick="window.assignToPlan('${t.id}', 'medium')" class="w-6 h-6 bg-slate-600 rounded-lg text-[10px] font-black hover:bg-slate-500 transition">3</button><button onclick="window.assignToPlan('${t.id}', 'small')" class="w-6 h-6 bg-yellow-600 rounded-lg text-[10px] font-black hover:bg-yellow-500 transition">5</button></div></div><p class="text-xs text-slate-100 font-medium leading-relaxed">${t.title}</p></div>`;
             }).join('');
             lucide.createIcons();
-        }
+        };
 
-        function renderPlan() {
-            const renderSec = (id, items, type) => {
-                const c = document.getElementById(id); if (!c) return;
-                c.innerHTML = (items || []).map((val, idx) => `<div class="flex items-center space-x-3 mb-2"><input type="checkbox" ${currentPlan.done && currentPlan.done.includes(`${type}-${idx}`) ? 'checked' : ''} onchange="window.togglePlanTask('${type}', ${idx})" class="w-6 h-6 rounded-xl border-slate-200 text-indigo-600 cursor-pointer transition focus:ring-offset-2"><input type="text" value="${val || ''}" placeholder="Leer..." onchange="window.updatePlanTask('${type}', ${idx}, this.value)" class="plan-input flex-grow font-semibold text-slate-700 ${currentPlan.done && currentPlan.done.includes(`${type}-${idx}`) ? 'task-done' : ''}"></div>`).join('');
-            };
-            renderSec('plan-section-big', currentPlan.big || [''], 'big');
-            renderSec('plan-section-medium', currentPlan.medium || ['', '', ''], 'medium');
-            renderSec('plan-section-small', currentPlan.small || ['', '', '', '', ''], 'small');
-            updatePlanStats();
-            lucide.createIcons();
-        }
-
-        function updatePlanStats() {
+        const updatePlanStats = () => {
             const total = (currentPlan.big||[]).filter(x=>x.trim()).length + (currentPlan.medium||[]).filter(x=>x.trim()).length + (currentPlan.small||[]).filter(x=>x.trim()).length;
             const done = currentPlan.done ? currentPlan.done.length : 0;
             const percent = total > 0 ? Math.round((done / total) * 100) : 0;
@@ -548,11 +520,23 @@
             const pBar = document.getElementById('plan-progress-bar');
             if(pPct) pPct.textContent = `${percent}%`;
             if(pBar) pBar.style.width = `${percent}%`;
-        }
+        };
+
+        const renderPlan = () => {
+            const renderSec = (id, items, type) => {
+                const c = document.getElementById(id); if (!c) return;
+                c.innerHTML = (items || []).map((val, idx) => `<div class="flex items-center space-x-3 mb-2"><input type="checkbox" ${currentPlan.done && currentPlan.done.includes(`${type}-${idx}`) ? 'checked' : ''} onchange="window.togglePlanTask('${type}', ${idx})" class="w-6 h-6 rounded-xl border-slate-200 text-indigo-600 cursor-pointer transition focus:ring-offset-2"><input type="text" value="${val || ''}" placeholder="Was ist geplant?" onchange="window.updatePlanTask('${type}', ${idx}, this.value)" class="plan-input flex-grow font-semibold text-slate-700 ${currentPlan.done && currentPlan.done.includes(`${type}-${idx}`) ? 'task-done' : ''}"></div>`).join('');
+            };
+            renderSec('plan-section-big', currentPlan.big || [''], 'big');
+            renderSec('plan-section-medium', currentPlan.medium || ['', '', ''], 'medium');
+            renderSec('plan-section-small', currentPlan.small || ['', '', '', '', ''], 'small');
+            updatePlanStats();
+            lucide.createIcons();
+        };
 
         // --- AUTH & LISTENERS INITIALISIERUNG ---
 
-        function startPlanListener(date) {
+        const startPlanListener = (date) => {
             if (planUnsubscribe) planUnsubscribe();
             const p = doc(db, 'artifacts', appId, 'users', userId, 'plans', date);
             planUnsubscribe = onSnapshot(p, d => {
@@ -565,9 +549,9 @@
                 }
                 renderPlan();
             });
-        }
+        };
 
-        async function checkPreviousDayForOpenTasks(currentDateStr) {
+        const checkPreviousDayForOpenTasks = async (currentDateStr) => {
             const current = new Date(currentDateStr); current.setDate(current.getDate() - 1);
             const prevStr = current.toISOString().split('T')[0];
             const d = await getDoc(doc(db, 'artifacts', appId, 'users', userId, 'plans', prevStr));
@@ -581,9 +565,9 @@
                 });
                 if(hasOpen) document.getElementById('carry-over-zone')?.classList.remove('hidden');
             }
-        }
+        };
 
-        function startListeners() {
+        const startListeners = () => {
             const path = (coll) => collection(db, 'artifacts', appId, 'users', userId, coll);
             onSnapshot(path('customers'), async (snap) => {
                 customers = snap.docs.map(d => ({id: d.id, ...d.data()}));
@@ -604,14 +588,14 @@
                 renderReports(); renderDashboard();
             });
             startPlanListener(selectedPlanDate);
-        }
+        };
 
-        async function seedCustomers() {
+        const seedCustomers = async () => {
             isSeeding = true;
-            const defaults = ["BBG", "ANWR", "bonprix", "BOL", "SGD", "Tradebyte"];
+            const defaults = ["Mandant A", "Mandant B"];
             try { for (let name of defaults) await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'customers'), { name, color: colors[customers.length % colors.length] }); } 
             finally { isSeeding = false; }
-        }
+        };
 
         // --- WINDOW GLOBALS ---
 
@@ -643,6 +627,8 @@
             if(tabId === 'projects') renderProjects();
             if(tabId === 'dashboard') renderDashboard();
             if(tabId === 'plan') { renderPlan(); renderTaskPool(); }
+            if(tabId === 'board') renderBoard();
+            if(tabId === 'analysis') renderReports();
             lucide.createIcons();
         };
 
@@ -698,19 +684,16 @@
             input.value = '';
         };
 
-        window.startVoiceInput = () => { /* Recognition logic... */ };
+        window.startVoiceInput = () => { if(recognition) recognition.start(); else alert("Spracherkennung nicht unterstützt."); };
         window.closeEditModal = () => document.getElementById('edit-task-modal').classList.add('hidden');
-        window.deleteCustomer = async (id) => { if(confirm("Löschen?")) await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'customers', id)); };
+        window.deleteCustomer = async (id) => { if(confirm("Mandant löschen?")) await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'customers', id)); };
         window.deleteTask = async (id) => { if(confirm("Task löschen?")) await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id)); };
         window.togglePriority = async (id, v) => { await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { isHighPriority: v }); };
         window.updateHours = async (id, v) => { await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { currentDuration: parseFloat(v) || 0 }); };
 
-        window.prepareNewNote = () => { editingNoteId = null; document.getElementById('note-input').value = ""; document.getElementById('note-editor').classList.remove('hidden'); };
-        window.cancelNote = () => document.getElementById('note-editor').classList.add('hidden');
         window.openProjectDetails = (id) => {
             const p = projects.find(p => p.id === id); const c = customers.find(c => c.id === p.customerId); activeProjectId = id;
             document.getElementById('pd-title').textContent = p.title; document.getElementById('pd-customer').textContent = c ? c.name : 'Unbekannt'; document.getElementById('pd-desc').value = p.desc || '';
-            document.getElementById('pd-notes-list').innerHTML = (p.notes || []).map(n => `<div class="bg-yellow-50 p-4 rounded-xl border border-yellow-100 group/note mb-2"><div class="flex justify-between items-start mb-1"><span class="text-[8px] font-bold text-yellow-600 uppercase">${new Date(n.date).toLocaleString()}</span><div class="flex space-x-2 opacity-0 group-hover/note:opacity-100 transition"><button onclick="window.editNote('${n.id}')"><i data-lucide="pencil" class="w-3 h-3"></i></button><button onclick="window.deleteNote('${n.id}')"><i data-lucide="trash-2" class="w-3 h-3 text-yellow-600"></i></button></div></div><p class="text-sm text-yellow-900 whitespace-pre-wrap">${n.text}</p></div>`).join('') || '<div class="text-center py-4 italic text-xs">Keine Notizen.</div>';
             const availableTasks = tasks.filter(t => t.customerId === p.customerId && t.projectId !== id);
             document.getElementById('pd-link-task-select').innerHTML = '<option value="">Task wählen...</option>' + availableTasks.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
             document.getElementById('pd-tasks-list').innerHTML = tasks.filter(t => t.projectId === id).map(t => `<div class="p-3 bg-white rounded-xl shadow-sm text-xs flex justify-between items-center border-l-4" style="border-left-color:${t.status==='done'?'#22c55e':'#fb923c'}"><span class="font-bold text-slate-700 truncate mr-2">${t.title}</span><button onclick="window.unlinkTask('${t.id}')" class="text-slate-300 hover:text-red-500"><i data-lucide="link-2-off" class="w-3 h-3"></i></button></div>`).join('');
@@ -740,13 +723,10 @@
         };
 
         // --- SUBMITS & LISTENERS ---
-        
         document.getElementById('plan-date-picker').onchange = (e) => { selectedPlanDate = e.target.value; startPlanListener(selectedPlanDate); };
-
         document.querySelectorAll('.tab-button').forEach(b => b.onclick = () => window.switchTab(b.dataset.tab));
-
         document.getElementById('logout-btn').onclick = () => signOut(auth);
-
+        
         document.getElementById('dash-task-form').onsubmit = async (e) => {
             e.preventDefault();
             await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'tasks'), { title: document.getElementById('dash-task-title').value, customerId: document.getElementById('dash-task-customer').value, projectId: "", status: 'backlog', date: new Date().toISOString().split('T')[0], createdAt: new Date().toISOString() });
@@ -759,8 +739,19 @@
             if(dur > 0) {
                 await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'timeLogs'), { taskId: "quick", taskTitle: document.getElementById('ql-title').value, customerId: document.getElementById('ql-customer').value, duration: dur, timestamp: document.getElementById('ql-date').value });
                 e.target.reset(); document.getElementById('ql-date').value = new Date().toISOString().split('T')[0];
+                alert("Buchung gespeichert!");
             }
         };
+
+        document.getElementById('edit-task-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('edit-task-id').value;
+            await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { title: document.getElementById('edit-task-title').value, customerId: document.getElementById('edit-task-customer').value, projectId: document.getElementById('edit-task-project').value });
+            window.closeEditModal();
+        };
+
+        document.getElementById('pd-save-main-btn').onclick = async () => { await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'projects', activeProjectId), { desc: document.getElementById('pd-desc').value }); alert("Projekt-Details gespeichert."); };
+        document.getElementById('pd-link-task-btn').onclick = async () => { const tId = document.getElementById('pd-link-task-select').value; if(tId) await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', tId), { projectId: activeProjectId }); };
 
         document.querySelectorAll('.drop-zone').forEach(z => {
             z.ondragover = (e) => { e.preventDefault(); z.classList.add('drop-zone-active'); };
@@ -788,14 +779,6 @@
                 await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', pendingDropId), { status: 'done', currentDuration: 0 });
                 document.getElementById('time-modal').classList.add('hidden'); pendingDropId = null;
             }
-        };
-
-        document.getElementById('auth-form').onsubmit = async (e) => {
-            e.preventDefault();
-            try {
-                if(isLoginMode) await signInWithEmailAndPassword(auth, document.getElementById('auth-email').value, document.getElementById('auth-password').value);
-                else await createUserWithEmailAndPassword(auth, document.getElementById('auth-email').value, document.getElementById('auth-password').value);
-            } catch(err) { document.getElementById('auth-message').textContent = err.message; }
         };
 
         document.getElementById('customer-form').onsubmit = async (e) => {
