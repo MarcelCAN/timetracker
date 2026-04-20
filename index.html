@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consultancy OS - Ultimate Stability</title>
+    <title>Consultancy OS - Pro Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
@@ -111,7 +111,7 @@
                 </div>
             </div>
             <div class="flex items-center space-x-4 mt-4 sm:mt-0">
-                <div id="auth-status" class="text-xs font-bold text-slate-400 px-4 py-1.5 bg-slate-50 rounded-full">Verbinde Cloud...</div>
+                <div id="auth-status" class="text-xs font-bold text-slate-400 px-4 py-1.5 bg-slate-50 rounded-full">Verbindung wird aufgebaut...</div>
                 <button id="logout-btn" class="hidden bg-red-50 text-red-600 px-4 py-2 rounded-xl text-xs font-black hover:bg-red-100 transition uppercase tracking-wider">Logout</button>
             </div>
         </header>
@@ -129,7 +129,7 @@
         <!-- Loading Indicator -->
         <div id="loading-indicator" class="text-center py-32">
             <div class="animate-spin h-14 w-14 text-indigo-600 mx-auto border-4 border-t-transparent rounded-full mb-6"></div>
-            <p class="text-sm text-slate-500 font-black uppercase tracking-widest animate-pulse">Synchronisiere Cloud-Daten...</p>
+            <p class="text-sm text-slate-500 font-black uppercase tracking-widest animate-pulse">Lade Workspace...</p>
         </div>
 
         <!-- Login Section -->
@@ -142,7 +142,7 @@
                     <p id="auth-message" class="text-sm text-red-500 text-center font-bold"></p>
                     <button type="submit" id="auth-submit-btn" class="w-full bg-indigo-600 text-white p-4 rounded-2xl font-black hover:bg-indigo-700 transition shadow-xl shadow-indigo-100">Anmelden</button>
                 </form>
-                <button id="toggle-auth-mode" class="w-full mt-8 text-sm text-indigo-600 font-black hover:underline uppercase tracking-widest text-center">Registrieren</button>
+                <button id="toggle-auth-mode" class="w-full mt-8 text-sm text-indigo-600 font-bold hover:underline uppercase tracking-widest text-center">Registrieren</button>
             </div>
         </div>
 
@@ -150,7 +150,7 @@
         <div id="main-content" class="hidden space-y-6">
 
             <!-- TAB: DASHBOARD -->
-            <div id="tab-dashboard" class="tab-content space-y-8 animate-in fade-in duration-500">
+            <div id="tab-dashboard" class="tab-content space-y-8">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex items-center space-x-5 transition hover:shadow-md">
                         <div class="bg-orange-100 p-4 rounded-3xl text-orange-600 shadow-inner"><i data-lucide="activity" class="w-7 h-7"></i></div>
@@ -162,7 +162,7 @@
                     </div>
                     <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex items-center space-x-5 transition hover:shadow-md">
                         <div class="bg-green-100 p-4 rounded-3xl text-green-600 shadow-inner"><i data-lucide="clock" class="w-7 h-7"></i></div>
-                        <div><p class="text-xs font-black uppercase text-slate-400 tracking-widest">Monat</p><p id="stat-monthly-hours" class="text-3xl font-black text-slate-800">0.00 h</p></div>
+                        <div><p class="text-xs font-black uppercase text-slate-400 tracking-widest">Stunden</p><p id="stat-monthly-hours" class="text-3xl font-black text-slate-800">0.00 h</p></div>
                     </div>
                 </div>
 
@@ -181,12 +181,12 @@
                         <form id="dash-task-form" class="space-y-4">
                             <div class="relative">
                                 <input type="text" id="dash-task-title" placeholder="Was ist zu tun?" required class="w-full p-4 pr-12 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 transition font-semibold">
-                                <button type="button" id="mic-btn" title="KI Sprach-Eingabe" class="absolute right-4 top-4 text-slate-400 hover:text-indigo-600 transition">
+                                <button type="button" id="mic-btn" onclick="window.startVoiceInput()" title="KI Sprach-Eingabe" class="absolute right-4 top-4 text-slate-400 hover:text-indigo-600 transition">
                                     <i data-lucide="mic" class="w-6 h-6"></i>
                                 </button>
                             </div>
                             <select id="dash-task-customer" required class="w-full p-4 border border-slate-200 rounded-2xl bg-slate-50 font-bold text-sm text-slate-600 outline-none"></select>
-                            <button type="submit" class="w-full bg-slate-900 text-white p-4 rounded-2xl font-black hover:bg-black transition shadow-xl uppercase tracking-widest text-xs">Anlegen</button>
+                            <button type="submit" class="w-full bg-slate-900 text-white p-4 rounded-2xl font-black hover:bg-black transition shadow-xl uppercase tracking-widest text-xs">Task anlegen</button>
                         </form>
                     </div>
                 </div>
@@ -205,7 +205,7 @@
                         <div id="col-backlog" class="drop-zone" data-status="backlog"></div>
                     </div>
                     <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-gray-200 flex flex-col min-h-[750px]">
-                        <h3 class="font-black text-orange-500 text-[10px] uppercase tracking-[0.25em] border-b pb-4 mb-8 px-2">Aktiv</h3>
+                        <h3 class="font-black text-orange-500 text-[10px] uppercase tracking-[0.25em] border-b pb-4 mb-8 px-2">In Bearbeitung</h3>
                         <div id="col-progress" class="drop-zone" data-status="progress"></div>
                     </div>
                     <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-gray-200 flex flex-col min-h-[750px]">
@@ -216,12 +216,12 @@
             </div>
 
             <!-- TAB: LANDKARTE -->
-            <div id="tab-projects" class="tab-content hidden space-y-8 animate-in fade-in duration-500">
+            <div id="tab-projects" class="tab-content hidden space-y-8">
                 <div id="project-board-view" class="project-grid-container pb-20"></div>
             </div>
 
             <!-- TAB: TAGESPLAN -->
-            <div id="tab-plan" class="tab-content hidden space-y-8 animate-in fade-in duration-500">
+            <div id="tab-plan" class="tab-content hidden space-y-8">
                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
                     <div class="lg:col-span-3 space-y-8">
                         <header class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 bg-white p-10 rounded-[3.5rem] border border-slate-100 shadow-sm transition hover:shadow-md">
@@ -231,19 +231,28 @@
                             </div>
                             <div id="carry-over-zone" class="hidden">
                                 <button onclick="window.carryOverOpenTasks()" class="bg-orange-50 text-orange-600 border border-orange-200 px-6 py-3 rounded-2xl text-xs font-black hover:bg-orange-100 transition uppercase tracking-wider">
-                                    <i data-lucide="rotate-ccw" class="w-4 h-4 mr-3"></i> Punkte vom Vortag?
+                                    <i data-lucide="rotate-ccw" class="w-4 h-4 mr-3"></i> Übernahme?
                                 </button>
                             </div>
                             <div class="text-right space-y-2">
                                 <span id="plan-progress-percent" class="text-5xl font-black text-indigo-600 tracking-tighter">0%</span>
-                                <div class="w-56 bg-gray-100 rounded-full h-4 shadow-inner"><div id="plan-progress-bar" class="bg-indigo-600 h-4 rounded-full transition-all duration-1000" style="width: 0%"></div></div>
+                                <div class="w-56 bg-gray-100 rounded-full h-4 shadow-inner"><div id="plan-progress-bar" class="bg-indigo-600 h-4 rounded-full transition-all duration-1000 shadow-lg" style="width: 0%"></div></div>
                             </div>
                         </header>
                         <div id="planner-container" class="space-y-8">
-                            <section class="bg-white p-10 rounded-[3.5rem] border border-indigo-100 shadow-sm"><h3 class="text-xs font-black text-indigo-600 uppercase mb-8 flex items-center tracking-[0.3em]"><i data-lucide="crown" class="w-6 h-6 mr-4"></i> 1 Großes Thema</h3><div id="plan-section-big" class="space-y-5"></div></section>
+                            <section class="bg-white p-10 rounded-[3.5rem] border border-indigo-100 shadow-sm transition hover:shadow-md">
+                                <h3 class="text-xs font-black text-indigo-600 uppercase mb-8 flex items-center tracking-[0.3em]"><i data-lucide="crown" class="w-6 h-6 mr-4"></i> 1 Großes Thema</h3>
+                                <div id="plan-section-big" class="space-y-5"></div>
+                            </section>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <section class="bg-white p-10 rounded-[3.5rem] border border-slate-100 shadow-sm"><h3 class="text-xs font-black text-slate-400 uppercase mb-8 flex items-center tracking-[0.2em]"><i data-lucide="list" class="w-6 h-6 mr-4 text-slate-300"></i> 3 Mittlere Aufgaben</h3><div id="plan-section-medium" class="space-y-5"></div></section>
-                                <section class="bg-white p-10 rounded-[3.5rem] border border-slate-100 shadow-sm"><h3 class="text-xs font-black text-slate-400 uppercase mb-8 flex items-center tracking-[0.2em]"><i data-lucide="zap" class="w-6 h-6 mr-4 text-yellow-500"></i> 5 Quick Wins</h3><div id="plan-section-small" class="space-y-5"></div></section>
+                                <section class="bg-white p-10 rounded-[3.5rem] border border-slate-100 shadow-sm transition hover:shadow-md">
+                                    <h3 class="text-xs font-black text-slate-400 uppercase mb-8 flex items-center tracking-[0.2em]"><i data-lucide="list" class="w-6 h-6 mr-4 text-slate-300"></i> 3 Mittlere Aufgaben</h3>
+                                    <div id="plan-section-medium" class="space-y-5"></div>
+                                </section>
+                                <section class="bg-white p-10 rounded-[3.5rem] border border-slate-100 shadow-sm transition hover:shadow-md">
+                                    <h3 class="text-xs font-black text-slate-400 uppercase mb-8 flex items-center tracking-[0.2em]"><i data-lucide="zap" class="w-6 h-6 mr-4 text-yellow-500"></i> 5 Quick Wins</h3>
+                                    <div id="plan-section-small" class="space-y-5"></div>
+                                </section>
                             </div>
                         </div>
                     </div>
@@ -254,22 +263,22 @@
                 </div>
             </div>
 
-            <!-- TAB: ANALYSIS -->
+            <!-- TAB: ZEITERFASSUNG -->
             <div id="tab-analysis" class="tab-content hidden grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in fade-in duration-500">
                  <div class="bg-slate-900 p-12 rounded-[3.5rem] shadow-xl text-white space-y-10">
-                    <h3 class="font-black text-slate-400 border-b border-slate-800 pb-6 text-xs uppercase tracking-[0.3em]">Leistungs-Report</h3>
+                    <h3 class="font-black text-slate-400 border-b border-slate-800 pb-6 text-xs uppercase tracking-[0.3em]">Übersicht</h3>
                     <div id="monthly-stats" class="space-y-5"></div>
                  </div>
                  <div class="bg-white p-12 rounded-[3.5rem] shadow-sm border border-slate-200 space-y-10 self-start">
                     <h3 class="font-black text-slate-800 text-3xl tracking-tight uppercase">Direktbuchung</h3>
                     <form id="quick-log-form" class="space-y-6">
                         <div class="grid grid-cols-2 gap-5">
-                            <select id="ql-customer" required class="w-full p-4 border border-slate-100 bg-slate-50 rounded-2xl font-bold text-sm outline-none"></select>
+                            <select id="ql-customer" required class="w-full p-4 border border-slate-100 bg-slate-50 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-indigo-500"></select>
                             <input type="date" id="ql-date" required class="w-full p-4 border border-slate-100 bg-slate-50 rounded-2xl font-black text-sm text-indigo-600 outline-none">
                         </div>
-                        <input type="text" id="ql-title" placeholder="Tätigkeit..." required class="w-full p-5 border border-slate-100 bg-slate-50 rounded-2xl text-sm font-semibold outline-none focus:ring-2 focus:ring-indigo-500">
+                        <input type="text" id="ql-title" placeholder="Was hast du getan?" required class="w-full p-5 border border-slate-100 bg-slate-50 rounded-2xl text-sm font-semibold outline-none focus:ring-2 focus:ring-indigo-500">
                         <input type="number" id="ql-duration" step="0.25" min="0" placeholder="0.00" required class="w-full p-8 border border-gray-50 bg-slate-50 rounded-[2.5rem] text-6xl font-black text-center focus:ring-4 focus:ring-indigo-50 outline-none">
-                        <button type="submit" class="w-full bg-indigo-600 text-white p-6 rounded-2xl font-black hover:bg-indigo-700 transition shadow-2xl uppercase tracking-widest text-xs">Verbuchen</button>
+                        <button type="submit" class="w-full bg-indigo-600 text-white p-6 rounded-2xl font-black hover:bg-indigo-700 transition shadow-2xl uppercase tracking-widest text-xs">Buchen</button>
                     </form>
                  </div>
             </div>
@@ -288,16 +297,15 @@
         </div>
     </div>
 
-    <!-- Modals are omitted for brevity in logic-fix explanation but included in the code block -->
+    <!-- Modal: Edit Task -->
     <div id="edit-task-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-80 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-        <div class="bg-white p-10 rounded-[3.5rem] shadow-2xl w-full max-w-md border border-gray-100">
-            <h2 class="text-3xl font-black text-slate-800 mb-8 tracking-tight">Task bearbeiten</h2>
+        <div class="bg-white p-10 rounded-[3.5rem] shadow-2xl w-full max-w-md border border-gray-100 text-slate-800">
+            <h2 class="text-3xl font-black mb-8 tracking-tight">Task bearbeiten</h2>
             <form id="edit-task-form" class="space-y-6">
                 <input type="hidden" id="edit-task-id">
                 <input type="text" id="edit-task-title" required class="w-full p-5 border border-slate-100 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-lg">
                 <div class="grid grid-cols-2 gap-4">
                     <select id="edit-task-customer" required class="w-full p-4 border border-slate-100 bg-slate-50 rounded-xl font-bold text-xs"></select>
-                    <select id="edit-task-project" class="w-full p-4 border border-slate-100 bg-slate-50 rounded-xl font-bold text-xs"><option value="">Kein Thema</option></select>
                 </div>
                 <div class="grid grid-cols-2 gap-4 pt-6">
                     <button type="button" onclick="window.closeEditModal()" class="p-5 text-slate-400 font-black uppercase tracking-widest text-[10px]">Abbruch</button>
@@ -307,19 +315,35 @@
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
-        import { getFirestore, doc, deleteDoc, setDoc, onSnapshot, collection, addDoc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+    <!-- Modal: Timebooking -->
+    <div id="time-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-80 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div class="bg-white p-8 rounded-[3rem] shadow-2xl w-full max-w-sm border border-gray-200 text-center text-slate-800">
+            <h2 class="text-2xl font-black mb-4 flex justify-center tracking-tight"><i data-lucide="clock" class="mr-3 text-indigo-600 w-8 h-8"></i> Buchen</h2>
+            <p id="time-modal-task-name" class="text-[10px] text-slate-400 mb-8 font-black uppercase tracking-widest border-b pb-4"></p>
+            <div class="space-y-6 mb-8 text-left">
+                <input type="date" id="log-date" class="w-full p-4 border border-slate-100 bg-slate-50 rounded-2xl font-black text-indigo-600 outline-none">
+                <input type="number" id="task-duration" step="0.25" placeholder="0.00" class="w-full p-6 border border-slate-100 bg-slate-50 rounded-3xl text-5xl font-black text-center focus:ring-4 focus:ring-indigo-50 outline-none">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <button id="cancel-time" onclick="window.closeTimeModal()" class="p-5 text-slate-400 font-bold hover:bg-slate-50 rounded-2xl transition uppercase text-xs tracking-widest">Abbruch</button>
+                <button id="save-time" onclick="window.saveTimeEntry()" class="p-5 bg-indigo-600 text-white font-black rounded-2xl shadow-xl hover:bg-indigo-700 transition uppercase text-xs tracking-widest">Buchen</button>
+            </div>
+        </div>
+    </div>
 
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken, signOut } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getFirestore, doc, deleteDoc, setDoc, onSnapshot, collection, addDoc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+
+        // --- KONFIGURATION ---
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{"apiKey": "AIzaSyDramsPfqWtBGdvHyMAos0nhyT0t4EMkAg","authDomain": "timetracker-7bf2a.firebaseapp.com","projectId": "timetracker-7bf2a","storageBucket": "timetracker-7bf2a.firebasestorage.app","messagingSenderId": "3152109841","appId": "1:3152109841:web:4e83e101949907c056acb0"}');
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
         const appId = "consultancy-workflow-stable-v1";
-        const geminiApiKey = "";
 
-        // Global State
+        // --- GLOBAL STATE ---
         let userId = null;
         let customers = [];
         let tasks = [];
@@ -330,23 +354,23 @@
         let selectedPlanDate = new Date().toISOString().split('T')[0];
         let pendingDropId = null;
 
-        // --- RENDER FUNCTIONS (HOISTED) ---
+        const colors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316', '#14B8A6', '#6366F1'];
 
-        function updateUI() {
-            renderCustomers();
-            renderSelectors();
-            renderDashboard();
-            renderProjects();
-            renderBoard();
-            renderTaskPool();
-            renderReports();
-            renderPlan();
-        }
+        // --- RENDER FUNKTIONEN (VOR DEFINIERT FÜR HOISTING) ---
 
         function renderCustomers() {
             const list = document.getElementById('customer-list');
             if (!list) return;
-            list.innerHTML = customers.map(c => `<div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl mb-3 border border-slate-100 transition hover:bg-slate-100 group"><div class="flex items-center text-sm font-bold"><span class="w-3 h-3 rounded-full mr-3 shadow-inner" style="background-color:${c.color}"></span>${c.name}</div><button onclick="window.deleteCustomer('${c.id}')" class="text-slate-300 hover:text-red-500 transition opacity-0 group-hover:opacity-100"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`).join('');
+            list.innerHTML = customers.map(c => `
+                <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl mb-3 border border-slate-100 group transition hover:bg-slate-100">
+                    <div class="flex items-center text-sm font-black text-slate-700">
+                        <span class="w-3 h-3 rounded-full mr-4 shadow-inner" style="background-color:${c.color}"></span>${c.name}
+                    </div>
+                    <button onclick="window.deleteCustomer('${c.id}')" class="text-slate-300 hover:text-red-500 transition opacity-0 group-hover:opacity-100">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            `).join('');
             lucide.createIcons();
         }
 
@@ -361,6 +385,18 @@
                     if(prev) el.value = prev;
                 }
             });
+        }
+
+        function renderReports() {
+            const container = document.getElementById('monthly-stats');
+            if(!container) return;
+            const now = new Date();
+            const logs = timeLogs.filter(l => new Date(l.timestamp).getMonth() === now.getMonth());
+            container.innerHTML = customers.map(cust => {
+                const total = logs.filter(l => l.customerId === cust.id).reduce((s, l) => s + (parseFloat(l.duration) || 0), 0);
+                if (total === 0) return '';
+                return `<div class="bg-slate-800 bg-opacity-40 p-6 rounded-[2rem] border border-slate-700 flex justify-between items-center mb-4"><span class="font-bold text-slate-200 text-lg">${cust.name}</span><span class="text-3xl font-black text-white tracking-tighter">${total.toFixed(2)}h</span></div>`;
+            }).join('') || '<div class="text-center py-12 text-slate-500 text-sm font-black uppercase tracking-widest opacity-40">Keine Daten vorhanden.</div>';
         }
 
         function renderDashboard() {
@@ -385,20 +421,14 @@
                     document.getElementById('no-urgent-tasks')?.classList.add('hidden');
                     container.innerHTML = urgent.map(t => {
                         const c = customers.find(x => x.id === t.customerId);
-                        return `<div class="bg-white p-6 rounded-[2rem] shadow-sm border border-l-[8px] transition hover:shadow-md" style="border-left-color: ${c ? c.color : '#cbd5e1'}"><div class="flex justify-between items-start mb-2"><span class="text-[9px] font-black uppercase text-indigo-400">${c ? c.name : 'Allgemein'}</span></div><h4 class="font-bold text-slate-800 leading-tight mb-4">${t.title}</h4><button onclick="window.switchTab('board')" class="text-indigo-600 font-black text-[9px] uppercase hover:underline">Board öffnen</button></div>`;
+                        return `<div class="bg-white p-7 rounded-[2.5rem] shadow-sm border border-l-[10px] border-slate-100 transition hover:shadow-xl" style="border-left-color: ${c ? c.color : '#cbd5e1'}">
+                            <div class="flex justify-between items-start mb-3"><span class="text-[10px] font-black uppercase text-indigo-400 tracking-[0.2em]">${c ? c.name : 'Allgemein'}</span></div>
+                            <h4 class="font-bold text-slate-900 leading-snug mb-5 text-xl tracking-tight">${t.title}</h4>
+                            <button onclick="window.switchTab('board')" class="text-indigo-600 font-black text-[10px] uppercase hover:underline">Board öffnen</button>
+                        </div>`;
                     }).join('');
                 }
             }
-            lucide.createIcons();
-        }
-
-        function renderProjects() {
-            const view = document.getElementById('project-board-view');
-            if (!view) return;
-            view.innerHTML = customers.map(c => {
-                const cProjs = projects.filter(p => p.customerId === c.id);
-                return `<div class="project-column bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col space-y-5"><div class="flex items-center justify-between pb-3 border-b"><h3 class="text-sm font-black uppercase text-slate-600 tracking-widest">${c.name}</h3><span class="text-[10px] bg-indigo-50 text-indigo-500 font-black px-2 py-0.5 rounded-full">${cProjs.length}</span></div><div class="grid grid-cols-1 gap-4">${cProjs.map(p => `<div class="project-card p-5 rounded-2xl flex flex-col space-y-2"><h4 class="font-bold text-slate-800 text-lg">${p.title}</h4></div>`).join('')}</div></div>`;
-            }).join('');
             lucide.createIcons();
         }
 
@@ -413,14 +443,14 @@
                 if(filter !== 'all') fTasks = fTasks.filter(t => t.customerId === filter);
                 const grouped = customers.map(c => ({ c, tasks: fTasks.filter(t => t.customerId === c.id) })).filter(g => g.tasks.length > 0);
                 grouped.forEach(g => {
-                    const gEl = document.createElement('div'); gEl.className = "space-y-2 mb-8";
-                    gEl.innerHTML = `<div class="text-[10px] font-black uppercase text-slate-300 ml-2 tracking-widest">${g.c.name}</div>`;
+                    const gEl = document.createElement('div'); gEl.className = "space-y-3 mb-10";
+                    gEl.innerHTML = `<div class="text-[10px] font-black uppercase text-slate-300 ml-2 tracking-[0.25em] flex items-center"><span class="w-2.5 h-2.5 rounded-full mr-3 shadow-inner" style="background-color:${g.c.color}"></span>${g.c.name}</div>`;
                     container.appendChild(gEl);
                     g.tasks.forEach(t => {
                         const card = document.createElement('div');
-                        card.className = `task-card bg-white p-5 rounded-3xl shadow-sm border border-slate-200 border-l-[8px] group relative ${t.isHighPriority ? 'priority-high' : ''}`;
+                        card.className = `task-card bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 border-l-[10px] group relative ${t.isHighPriority ? 'priority-high' : ''}`;
                         card.style.borderLeftColor = g.c.color; card.draggable = true; card.setAttribute('data-id', t.id);
-                        card.innerHTML = `<div class="flex justify-between items-start mb-2"><span class="text-[8px] font-black text-indigo-400 uppercase truncate">Allgemein</span><div class="flex space-x-1 opacity-0 group-hover:opacity-100 transition"><button onclick="window.togglePriority('${t.id}', ${!t.isHighPriority})"><i data-lucide="zap" class="w-3.5 h-3.5 ${t.isHighPriority ? 'text-red-500 fill-current' : 'text-slate-300'}"></i></button><button onclick="window.deleteTask('${t.id}')" class="text-slate-300 hover:text-red-500 transition"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div></div><p class="text-sm font-bold text-slate-800 leading-tight">${t.title}</p>`;
+                        card.innerHTML = `<div class="flex justify-between items-start mb-2"><span class="text-[8px] font-black text-indigo-400 uppercase">Task</span><div class="flex space-x-2 opacity-0 group-hover:opacity-100 transition"><button onclick="window.togglePriority('${t.id}', ${!t.isHighPriority})"><i data-lucide="zap" class="w-4 h-4 ${t.isHighPriority ? 'text-red-500 fill-current' : 'text-slate-300'}"></i></button><button onclick="window.openEditModal('${t.id}')"><i data-lucide="pencil" class="w-4 h-4 text-slate-300 hover:text-indigo-500 transition"></i></button><button onclick="window.deleteTask('${t.id}')" class="text-slate-300 hover:text-red-500 transition"><i data-lucide="x" class="w-4 h-4"></i></button></div></div><p class="text-sm font-bold text-slate-800 leading-tight">${t.title}</p>`;
                         card.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', t.id); e.dataTransfer.effectAllowed = "move"; });
                         container.appendChild(card);
                     });
@@ -434,7 +464,7 @@
             const openTasks = tasks.filter(t => t.status !== 'done');
             container.innerHTML = openTasks.map(t => {
                 const c = customers.find(x => x.id === t.customerId);
-                return `<div class="bg-slate-800 p-4 rounded-[1.5rem] border border-slate-700 mb-3"><div class="flex justify-between items-start mb-2"><span class="text-[8px] font-black uppercase text-indigo-400 tracking-widest">${c ? c.name : '...'}</span><div class="flex space-x-1.5"><button onclick="window.assignToPlan('${t.id}', 'big')" class="w-6 h-6 bg-indigo-600 rounded-lg text-[10px] font-black">1</button><button onclick="window.assignToPlan('${t.id}', 'medium')" class="w-6 h-6 bg-slate-600 rounded-lg text-[10px] font-black">3</button><button onclick="window.assignToPlan('${t.id}', 'small')" class="w-6 h-6 bg-yellow-600 rounded-lg text-[10px] font-black">5</button></div></div><p class="text-xs text-slate-100 font-semibold leading-relaxed">${t.title}</p></div>`;
+                return `<div class="bg-slate-800 p-5 rounded-[2rem] border border-slate-700 group transition shadow-xl hover:border-indigo-500/50 mb-4"><div class="flex justify-between items-start mb-3"><span class="text-[9px] font-black uppercase text-indigo-400 tracking-[0.2em] truncate max-w-[100px]">${c ? c.name : '...'}</span><div class="flex space-x-1.5"><button onclick="window.assignToPlan('${t.id}', 'big')" class="w-7 h-7 bg-indigo-600 rounded-xl text-[11px] font-black">1</button><button onclick="window.assignToPlan('${t.id}', 'medium')" class="w-7 h-7 bg-slate-600 rounded-xl text-[11px] font-black">3</button><button onclick="window.assignToPlan('${t.id}', 'small')" class="w-7 h-7 bg-yellow-600 rounded-xl text-[11px] font-black">5</button></div></div><p class="text-xs text-slate-100 font-bold leading-relaxed">${t.title}</p></div>`;
             }).join('');
             lucide.createIcons();
         }
@@ -442,86 +472,136 @@
         function renderPlan() {
             const renderSec = (id, items, type) => {
                 const c = document.getElementById(id); if (!c) return;
-                c.innerHTML = (items || []).map((val, idx) => `<div class="flex items-center space-x-4 mb-3"><input type="checkbox" ${currentPlan.done && currentPlan.done.includes(`${type}-${idx}`) ? 'checked' : ''} onchange="window.togglePlanTask('${type}', ${idx})" class="w-6 h-6 rounded-xl border-slate-200 text-indigo-600 cursor-pointer transition focus:ring-offset-2"><input type="text" value="${val || ''}" placeholder="..." onchange="window.updatePlanTask('${type}', ${idx}, this.value)" class="plan-input flex-grow font-bold text-slate-800 ${currentPlan.done && currentPlan.done.includes(`${type}-${idx}`) ? 'task-done' : ''}"></div>`).join('');
+                c.innerHTML = (items || []).map((val, idx) => `<div class="flex items-center space-x-4 mb-4"><input type="checkbox" ${currentPlan.done && currentPlan.done.includes(`${type}-${idx}`) ? 'checked' : ''} onchange="window.togglePlanTask('${type}', ${idx})" class="w-7 h-7 rounded-2xl border-slate-200 text-indigo-600 cursor-pointer transition focus:ring-offset-2"><input type="text" value="${val || ''}" placeholder="..." onchange="window.updatePlanTask('${type}', ${idx}, this.value)" class="plan-input flex-grow font-black text-slate-800 tracking-tight ${currentPlan.done && currentPlan.done.includes(`${type}-${idx}`) ? 'task-done' : ''}"></div>`).join('');
             };
             renderSec('plan-section-big', currentPlan.big || [''], 'big');
             renderSec('plan-section-medium', currentPlan.medium || ['', '', ''], 'medium');
             renderSec('plan-section-small', currentPlan.small || ['', '', '', '', ''], 'small');
             updatePlanStats();
-            lucide.createIcons();
         }
 
-        // --- AUTH & LISTENERS ---
+        function updatePlanStats() {
+            const total = (currentPlan.big||[]).filter(x=>x.trim()).length + (currentPlan.medium||[]).filter(x=>x.trim()).length + (currentPlan.small||[]).filter(x=>x.trim()).length;
+            const done = currentPlan.done ? currentPlan.done.length : 0;
+            const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+            if(document.getElementById('plan-progress-percent')) document.getElementById('plan-progress-percent').textContent = `${percent}%`;
+            if(document.getElementById('plan-progress-bar')) document.getElementById('plan-progress-bar').style.width = `${percent}%`;
+        }
+
+        // --- AUTH & BOOTING ---
+
+        window.init = async () => {
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const loginCenter = document.getElementById('login-center');
+            const mainContent = document.getElementById('main-content');
+            const authStatus = document.getElementById('auth-status');
+
+            onAuthStateChanged(auth, u => {
+                if (u) {
+                    userId = u.uid;
+                    if(authStatus) authStatus.textContent = `Verbunden: ${userId.substring(0,8)}`;
+                    if(loginCenter) loginCenter.classList.add('hidden');
+                    if(loadingIndicator) loadingIndicator.classList.add('hidden');
+                    if(mainContent) mainContent.classList.remove('hidden');
+                    document.getElementById('nav-tabs')?.classList.remove('hidden');
+                    document.getElementById('logout-btn')?.classList.remove('hidden');
+                    startListeners();
+                } else {
+                    if(authStatus) authStatus.textContent = "Nicht angemeldet";
+                    if(loadingIndicator) loadingIndicator.classList.add('hidden');
+                    if(loginCenter) loginCenter.classList.remove('hidden');
+                    if(mainContent) mainContent.classList.add('hidden');
+                }
+                lucide.createIcons();
+            });
+
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch(e) {
+                console.error("Auth Failure:", e);
+                if(loadingIndicator) loadingIndicator.classList.add('hidden');
+                if(loginCenter) loginCenter.classList.remove('hidden');
+            }
+        };
 
         function startListeners() {
             const path = (coll) => collection(db, 'artifacts', appId, 'users', userId, coll);
             
             onSnapshot(path('customers'), snap => {
                 customers = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                updateUI();
-            });
-            onSnapshot(path('projects'), snap => {
-                projects = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                updateUI();
-            });
-            onSnapshot(path('tasks'), snap => {
-                tasks = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                updateUI();
-            });
-            onSnapshot(path('timeLogs'), snap => {
-                timeLogs = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                updateUI();
+                renderCustomers();
+                renderSelectors();
+                renderDashboard();
             });
             
-            // Verhindert Unendliches Laden
-            setTimeout(() => {
-                document.getElementById('loading-indicator').classList.add('hidden');
-                document.getElementById('main-content').classList.remove('hidden');
-                document.getElementById('nav-tabs').classList.remove('hidden');
-            }, 3000);
+            onSnapshot(path('tasks'), snap => {
+                tasks = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                renderBoard();
+                renderDashboard();
+                renderTaskPool();
+            });
+            
+            onSnapshot(path('timeLogs'), snap => {
+                timeLogs = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                renderReports();
+                renderDashboard();
+            });
+
+            startPlanListener(selectedPlanDate);
         }
 
         function startPlanListener(date) {
             if (planUnsubscribe) planUnsubscribe();
             const p = doc(db, 'artifacts', appId, 'users', userId, 'plans', date);
             planUnsubscribe = onSnapshot(p, d => {
-                if(d.exists()) currentPlan = d.data();
-                else currentPlan = { big: [''], medium: ['', '', ''], small: ['', '', '', '', ''], done: [] };
+                if(d.exists()) {
+                    currentPlan = d.data();
+                    document.getElementById('carry-over-zone')?.classList.add('hidden');
+                } else {
+                    currentPlan = { big: [''], medium: ['', '', ''], small: ['', '', '', '', ''], done: [] };
+                    checkPreviousDayForOpenTasks(date);
+                }
                 renderPlan();
             });
         }
 
-        // --- WINDOW GLOBALS ---
-
-        window.init = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token);
-            else await signInAnonymously(auth);
-            
-            onAuthStateChanged(auth, u => {
-                if (u) {
-                    userId = u.uid;
-                    document.getElementById('auth-status').textContent = `User: ${userId.substring(0,8)}`;
-                    document.getElementById('login-center').classList.add('hidden');
-                    startListeners();
-                    startPlanListener(selectedPlanDate);
-                } else {
-                    document.getElementById('login-center').classList.remove('hidden');
-                    document.getElementById('main-content').classList.add('hidden');
+        async function checkPreviousDayForOpenTasks(currentDateStr) {
+            const current = new Date(currentDateStr); current.setDate(current.getDate() - 1);
+            const prevStr = current.toISOString().split('T')[0];
+            try {
+                const d = await getDoc(doc(db, 'artifacts', appId, 'users', userId, 'plans', prevStr));
+                if(d.exists()) {
+                    const prevPlan = d.data();
+                    let hasOpen = false;
+                    ['big', 'medium', 'small'].forEach(type => {
+                        (prevPlan[type] || []).forEach((val, idx) => {
+                            if(val && val.trim() !== "" && !(prevPlan.done && prevPlan.done.includes(`${type}-${idx}`))) hasOpen = true;
+                        });
+                    });
+                    if(hasOpen) document.getElementById('carry-over-zone')?.classList.remove('hidden');
                 }
-            });
-        };
+            } catch(e) {}
+        }
+
+        // --- GLOBAL INTERACTIONS ---
 
         window.switchTab = (tabId) => {
             document.querySelectorAll('.tab-button').forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
             document.getElementById(`tab-${tabId}`).classList.remove('hidden');
-            updateUI();
         };
 
         window.assignToPlan = async (taskId, type) => {
             const t = tasks.find(x => x.id === taskId);
             const freeIdx = currentPlan[type].findIndex(s => !s || s.trim() === "");
-            if (freeIdx !== -1) { currentPlan[type][freeIdx] = t.title; await window.savePlan(); }
+            if (freeIdx !== -1) { 
+                currentPlan[type][freeIdx] = t.title; 
+                await window.savePlan(); 
+            }
         };
 
         window.updatePlanTask = async (type, idx, val) => {
@@ -560,10 +640,22 @@
             }
         };
 
-        window.deleteCustomer = async (id) => { if(confirm("Löschen?")) await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'customers', id)); };
+        window.deleteCustomer = async (id) => { if(confirm("Mandant löschen?")) await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'customers', id)); };
         window.deleteTask = async (id) => { if(confirm("Task löschen?")) await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id)); };
         window.togglePriority = async (id, v) => { await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { isHighPriority: v }); };
         window.updateHours = async (id, v) => { await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { currentDuration: parseFloat(v) || 0 }); };
+        window.openEditModal = (id) => {
+            const t = tasks.find(x => x.id === id); if(!t) return;
+            document.getElementById('edit-task-id').value = id;
+            document.getElementById('edit-task-title').value = t.title;
+            const cS = document.getElementById('edit-task-customer');
+            if(cS) {
+                cS.innerHTML = customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+                cS.value = t.customerId || "";
+            }
+            document.getElementById('edit-task-modal').classList.remove('hidden');
+        };
+        window.closeEditModal = () => document.getElementById('edit-task-modal').classList.add('hidden');
 
         // Submits
         document.getElementById('dash-task-form').onsubmit = async (e) => {
@@ -575,13 +667,48 @@
         document.getElementById('quick-log-form').onsubmit = async (e) => {
             e.preventDefault();
             await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'timeLogs'), { taskTitle: document.getElementById('ql-title').value, customerId: document.getElementById('ql-customer').value, duration: parseFloat(document.getElementById('ql-duration').value), timestamp: document.getElementById('ql-date').value });
-            e.target.reset(); alert("Gebucht!");
+            e.target.reset();
         };
 
         document.getElementById('customer-form').onsubmit = async (e) => {
             e.preventDefault();
             await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'customers'), { name: document.getElementById('cust-name').value, color: colors[customers.length % colors.length] });
             e.target.reset();
+        };
+
+        // Drag & Drop
+        document.querySelectorAll('.drop-zone').forEach(z => {
+            z.ondragover = (e) => { e.preventDefault(); z.classList.add('drop-zone-active'); };
+            z.ondragleave = () => z.classList.remove('drop-zone-active');
+            z.ondrop = async (e) => {
+                e.preventDefault(); z.classList.remove('drop-zone-active');
+                const id = e.dataTransfer.getData('text/plain'); if(!id) return;
+                const status = z.dataset.status;
+                const t = tasks.find(x => x.id === id); if(!t) return;
+                
+                if(status === 'done') {
+                    document.getElementById('time-modal-task-name').textContent = t.title;
+                    document.getElementById('task-duration').value = t.currentDuration || "";
+                    document.getElementById('log-date').value = new Date().toISOString().split('T')[0];
+                    pendingDropId = id; 
+                    document.getElementById('time-modal').classList.remove('hidden');
+                } else {
+                    await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { status, date: status === 'progress' ? new Date().toISOString().split('T')[0] : t.date });
+                }
+            };
+        });
+
+        window.closeTimeModal = () => document.getElementById('time-modal').classList.add('hidden');
+        window.saveTimeEntry = async () => {
+            const durValue = document.getElementById('task-duration').value;
+            const dur = parseFloat(durValue);
+            const date = document.getElementById('log-date').value;
+            const t = tasks.find(x => x.id === pendingDropId);
+            if(!isNaN(dur) && t) {
+                await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'timeLogs'), { taskId: t.id, taskTitle: t.title, customerId: t.customerId, duration: dur, timestamp: date });
+                await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', pendingDropId), { status: 'done', currentDuration: 0 });
+                window.closeTimeModal();
+            }
         };
 
         // --- STARTUP ---
