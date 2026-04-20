@@ -290,7 +290,7 @@
                 </div>
             </div>
 
-            <!-- TAB: ZEITERFASSUNG -->
+            <!-- TAB: ZEITERFASSUNG / REPORTS -->
             <div id="tab-analysis" class="tab-content hidden grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in fade-in duration-500">
                  <div class="bg-slate-900 p-10 rounded-[3rem] shadow-xl text-white space-y-8">
                     <h3 class="font-black text-slate-400 border-b border-slate-800 pb-4 text-xs uppercase tracking-[0.2em]">Leistungs-Report</h3>
@@ -325,6 +325,7 @@
     </div>
 
     <!-- MODALS -->
+    <!-- Task Edit Modal -->
     <div id="edit-task-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-80 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
         <div class="bg-white p-8 rounded-[3rem] shadow-2xl w-full max-w-md border border-gray-100">
             <h2 class="text-2xl font-black text-slate-800 mb-6 tracking-tight">Task bearbeiten</h2>
@@ -343,6 +344,7 @@
         </div>
     </div>
 
+    <!-- Project Detail Modal -->
     <div id="project-detail-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-90 flex items-center justify-center p-4 z-50 backdrop-blur-md">
         <div class="bg-white rounded-[3.5rem] shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col md:flex-row">
             <div class="p-10 md:w-2/3 overflow-y-auto space-y-8 border-r border-slate-100">
@@ -404,12 +406,12 @@
 
         const colors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316', '#14B8A6', '#6366F1'];
 
-        // --- RENDER FUNKTIONEN (DEFINITION AM ANFANG) ---
+        // --- HOISTED RENDER FUNCTIONS ---
 
         function renderCustomers() {
             const list = document.getElementById('customer-list');
             if (!list) return;
-            list.innerHTML = customers.map(c => `<div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl mb-2 border border-slate-100"><div class="flex items-center text-sm font-bold"><span class="w-2 h-2 rounded-full mr-3" style="background-color:${c.color}"></span>${c.name}</div><button onclick="window.deleteCustomer('${c.id}')" class="text-slate-300 hover:text-red-500 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`).join('');
+            list.innerHTML = customers.map(c => `<div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl mb-2 border border-slate-100 transition hover:bg-slate-100 group"><div class="flex items-center text-sm font-bold"><span class="w-3 h-3 rounded-full mr-3 shadow-sm" style="background-color:${c.color}"></span>${c.name}</div><button onclick="window.deleteCustomer('${c.id}')" class="text-slate-300 hover:text-red-500 transition opacity-0 group-hover:opacity-100"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`).join('');
             lucide.createIcons();
         }
 
@@ -440,8 +442,8 @@
             container.innerHTML = customers.map(cust => {
                 const total = logs.filter(l => l.customerId === cust.id).reduce((s, l) => s + (parseFloat(l.duration) || 0), 0);
                 if (total === 0) return '';
-                return `<div class="bg-slate-800 bg-opacity-40 p-5 rounded-[1.5rem] border border-slate-700 flex justify-between items-center mb-3 transition hover:bg-opacity-50"><span class="font-bold text-slate-200">${cust.name}</span><div class="flex items-center space-x-3"><button onclick="window.exportCSV('${cust.id}')" class="p-2 text-slate-500 hover:text-white transition"><i data-lucide="download" class="w-4 h-4"></i></button><span class="text-2xl font-black text-white">${total.toFixed(2)}h</span></div></div>`;
-            }).join('') || '<div class="text-center py-10 text-slate-500 text-sm italic font-medium uppercase tracking-widest">Keine Buchungen vorhanden.</div>';
+                return `<div class="bg-slate-800 bg-opacity-40 p-6 rounded-[2rem] border border-slate-700 flex justify-between items-center mb-4 transition hover:bg-opacity-60"><span class="font-bold text-slate-200">${cust.name}</span><div class="flex items-center space-x-3"><button onclick="window.exportCSV('${cust.id}')" class="p-2 text-slate-500 hover:text-white transition"><i data-lucide="download" class="w-5 h-5"></i></button><span class="text-3xl font-black text-white tracking-tighter">${total.toFixed(2)}h</span></div></div>`;
+            }).join('') || '<div class="text-center py-12 text-slate-500 text-sm font-bold uppercase tracking-widest opacity-50">Keine Buchungen vorhanden.</div>';
             lucide.createIcons();
         }
 
@@ -477,10 +479,10 @@
             const view = document.getElementById('project-board-view'); if (!view) return;
             view.innerHTML = customers.map(c => {
                 const cProjs = projects.filter(p => p.customerId === c.id);
-                return `<div class="project-column bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col space-y-5 transition hover:shadow-md"><div class="flex items-center justify-between pb-3 border-b"><div class="flex items-center space-x-2"><span class="w-3 h-3 rounded-full" style="background-color: ${c.color}"></span><h3 class="text-sm font-black uppercase text-slate-600 truncate max-w-[200px]">${c.name}</h3></div><span class="text-[10px] bg-indigo-50 text-indigo-500 font-black px-2 py-0.5 rounded-full">${cProjs.length}</span></div><div class="grid grid-cols-1 gap-4">${cProjs.map(p => {
+                return `<div class="project-column bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col space-y-5 transition hover:shadow-md"><div class="flex items-center justify-between pb-3 border-b"><div class="flex items-center space-x-2"><span class="w-3 h-3 rounded-full shadow-inner" style="background-color: ${c.color}"></span><h3 class="text-sm font-black uppercase text-slate-600 truncate max-w-[200px]">${c.name}</h3></div><span class="text-[10px] bg-indigo-50 text-indigo-500 font-black px-2 py-0.5 rounded-full">${cProjs.length}</span></div><div class="grid grid-cols-1 gap-4">${cProjs.map(p => {
                     const pTasks = tasks.filter(t => t.projectId === p.id);
                     const doneTasks = pTasks.filter(t => t.status === 'done').length;
-                    return `<div class="project-card p-5 rounded-2xl flex flex-col space-y-3" onclick="window.openProjectDetails('${p.id}')"><h4 class="font-bold text-slate-800 leading-tight">${p.title}</h4><div class="space-y-1.5 pt-2 border-t border-yellow-200">${pTasks.slice(0, 5).map(t => `<div class="flex items-center text-[10px] text-slate-500 truncate"><span class="w-1.5 h-1.5 rounded-full mr-2 ${t.status === 'done' ? 'bg-green-500' : 'bg-orange-400'}"></span>${t.title}</div>`).join('')}</div><div class="flex justify-between items-center text-[9px] font-black text-yellow-700 pt-1 uppercase"><span>Progress</span><span>${doneTasks}/${pTasks.length} Done</span></div><div class="mt-2 pt-2 border-t border-yellow-100 flex gap-2" onclick="event.stopPropagation()"><input type="text" id="quick-task-${p.id}" placeholder="Task..." class="flex-grow p-1 text-[10px] bg-white border border-yellow-200 rounded outline-none font-semibold" onkeyup="if(event.key==='Enter') window.quickAddTaskOnMap('${p.id}', '${c.id}')"><button onclick="window.quickAddTaskOnMap('${p.id}', '${c.id}')" class="bg-yellow-600 text-white p-1 rounded shadow-sm hover:bg-yellow-700 transition"><i data-lucide="plus" class="w-3 h-3"></i></button></div></div>`;
+                    return `<div class="project-card p-5 rounded-2xl flex flex-col space-y-3 transition cursor-pointer" onclick="window.openProjectDetails('${p.id}')"><h4 class="font-bold text-slate-800 leading-tight">${p.title}</h4><div class="space-y-1.5 pt-2 border-t border-yellow-200">${pTasks.slice(0, 5).map(t => `<div class="flex items-center text-[10px] text-slate-500 truncate font-medium"><span class="w-1.5 h-1.5 rounded-full mr-2 ${t.status === 'done' ? 'bg-green-500' : 'bg-orange-400'}"></span>${t.title}</div>`).join('')}</div><div class="flex justify-between items-center text-[9px] font-black text-yellow-700 pt-1 uppercase tracking-widest opacity-80"><span>Progress</span><span>${doneTasks}/${pTasks.length} Done</span></div><div class="mt-2 pt-2 border-t border-yellow-100 flex gap-2" onclick="event.stopPropagation()"><input type="text" id="quick-task-${p.id}" placeholder="Task..." class="flex-grow p-1.5 text-[10px] bg-white border border-yellow-200 rounded-xl outline-none font-bold" onkeyup="if(event.key==='Enter') window.quickAddTaskOnMap('${p.id}', '${c.id}')"><button onclick="window.quickAddTaskOnMap('${p.id}', '${c.id}')" class="bg-yellow-600 text-white p-1.5 rounded-lg shadow-sm hover:bg-yellow-700"><i data-lucide="plus" class="w-4 h-4"></i></button></div></div>`;
                 }).join('')}</div></div>`;
             }).join('');
             lucide.createIcons();
@@ -498,14 +500,14 @@
                 const grouped = customers.map(c => ({ c, tasks: fTasks.filter(t => t.customerId === c.id) })).filter(g => g.tasks.length > 0);
                 grouped.forEach(g => {
                     const gEl = document.createElement('div'); gEl.className = "space-y-2 mb-8 pointer-events-none";
-                    gEl.innerHTML = `<div class="text-[10px] font-black uppercase text-slate-300 ml-1 tracking-widest">${g.c.name}</div>`;
+                    gEl.innerHTML = `<div class="text-[10px] font-black uppercase text-slate-300 ml-1 tracking-[0.2em] flex items-center"><span class="w-2 h-2 rounded-full mr-2" style="background-color:${g.c.color}"></span>${g.c.name}</div>`;
                     container.appendChild(gEl);
                     g.tasks.sort((a,b) => (b.isHighPriority ? 1 : 0) - (a.isHighPriority ? 1 : 0)).forEach(t => {
                         const project = projects.find(p => p.id === t.projectId);
                         const card = document.createElement('div');
                         card.className = `task-card bg-white p-5 rounded-3xl shadow-sm border border-slate-200 border-l-[8px] group relative pointer-events-auto ${t.isHighPriority ? 'priority-high' : ''}`;
                         card.style.borderLeftColor = g.c.color; card.draggable = true; card.setAttribute('data-id', t.id);
-                        card.innerHTML = `<div class="flex justify-between items-start mb-2"><span class="text-[8px] font-black text-indigo-400 uppercase truncate">${project ? project.title : 'Allgemein'}</span><div class="flex space-x-1 opacity-0 group-hover:opacity-100 transition"><button onclick="window.togglePriority('${t.id}', ${!t.isHighPriority})"><i data-lucide="zap" class="w-3 h-3 ${t.isHighPriority ? 'text-red-500 fill-current' : 'text-slate-300'}"></i></button><button onclick="window.openEditModal('${t.id}')"><i data-lucide="pencil" class="w-3 h-3 text-slate-300 hover:text-indigo-500 transition"></i></button><button onclick="window.deleteTask('${t.id}')" class="text-slate-300 hover:text-red-500 transition"><i data-lucide="x" class="w-3 h-3"></i></button></div></div><p class="text-sm font-bold text-slate-800 leading-tight">${t.title}</p><div class="mt-4 flex justify-between items-center text-[9px] text-slate-400 font-bold border-t pt-2 border-slate-50 uppercase tracking-widest"><span>${new Date(t.date).toLocaleDateString()}</span>${status === 'progress' ? `<input type="number" step="0.25" placeholder="h" value="${t.currentDuration || ''}" onchange="window.updateHours('${t.id}', this.value)" class="w-10 bg-indigo-50 text-indigo-600 font-black rounded text-center outline-none border-none">` : ''}</div>`;
+                        card.innerHTML = `<div class="flex justify-between items-start mb-2"><span class="text-[8px] font-black text-indigo-400 uppercase truncate tracking-widest">${project ? project.title : 'Allgemein'}</span><div class="flex space-x-1 opacity-0 group-hover:opacity-100 transition"><button onclick="window.togglePriority('${t.id}', ${!t.isHighPriority})"><i data-lucide="zap" class="w-3.5 h-3.5 ${t.isHighPriority ? 'text-red-500 fill-current' : 'text-slate-300'}"></i></button><button onclick="window.openEditModal('${t.id}')"><i data-lucide="pencil" class="w-3.5 h-3.5 text-slate-300 hover:text-indigo-500 transition"></i></button><button onclick="window.deleteTask('${t.id}')" class="text-slate-300 hover:text-red-500 transition"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div></div><p class="text-sm font-bold text-slate-800 leading-tight">${t.title}</p><div class="mt-4 flex justify-between items-center text-[10px] text-slate-400 font-black tracking-widest border-t pt-3 border-slate-50 uppercase"><span>${new Date(t.date).toLocaleDateString()}</span>${status === 'progress' ? `<div class="bg-indigo-50 text-indigo-700 px-2 py-1 rounded-xl flex items-center space-x-1"><input type="number" step="0.25" placeholder="h" value="${t.currentDuration || ''}" onchange="window.updateHours('${t.id}', this.value)" class="w-8 bg-transparent text-center font-black outline-none border-none ring-0"><span>H</span></div>` : ''}</div>`;
                         card.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', t.id); e.dataTransfer.effectAllowed = "move"; });
                         container.appendChild(card);
                     });
@@ -517,10 +519,10 @@
         function renderTaskPool() {
             const container = document.getElementById('task-pool'); if (!container) return;
             const openTasks = tasks.filter(t => t.status !== 'done');
-            if (openTasks.length === 0) { container.innerHTML = '<div class="text-center py-10 text-slate-600 italic text-sm">Keine offenen Tasks.</div>'; return; }
+            if (openTasks.length === 0) { container.innerHTML = '<div class="text-center py-16 text-slate-500 italic text-sm font-bold uppercase tracking-widest opacity-40">Keine offenen Tasks.</div>'; return; }
             container.innerHTML = openTasks.map(t => {
                 const c = customers.find(x => x.id === t.customerId);
-                return `<div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 group transition shadow-lg hover:border-slate-500"><div class="flex justify-between items-start mb-2"><span class="text-[8px] font-black uppercase text-indigo-400 tracking-widest">${c ? c.name : '...'}</span><div class="flex space-x-1.5"><button onclick="window.assignToPlan('${t.id}', 'big')" class="w-6 h-6 bg-indigo-600 rounded-lg text-[10px] font-black hover:bg-indigo-500 transition shadow-lg">1</button><button onclick="window.assignToPlan('${t.id}', 'medium')" class="w-6 h-6 bg-slate-600 rounded-lg text-[10px] font-black hover:bg-slate-500 transition">3</button><button onclick="window.assignToPlan('${t.id}', 'small')" class="w-6 h-6 bg-yellow-600 rounded-lg text-[10px] font-black hover:bg-yellow-500 transition">5</button></div></div><p class="text-xs text-slate-100 font-medium leading-relaxed">${t.title}</p></div>`;
+                return `<div class="bg-slate-800 p-4 rounded-3xl border border-slate-700 group transition shadow-lg hover:border-indigo-500/50"><div class="flex justify-between items-start mb-2"><span class="text-[8px] font-black uppercase text-indigo-400 tracking-[0.2em]">${c ? c.name : '...'}</span><div class="flex space-x-1.5"><button onclick="window.assignToPlan('${t.id}', 'big')" class="w-6 h-6 bg-indigo-600 rounded-xl text-[10px] font-black hover:bg-indigo-500 transition shadow-indigo-900/40 shadow-lg">1</button><button onclick="window.assignToPlan('${t.id}', 'medium')" class="w-6 h-6 bg-slate-600 rounded-xl text-[10px] font-black hover:bg-slate-500 transition">3</button><button onclick="window.assignToPlan('${t.id}', 'small')" class="w-6 h-6 bg-yellow-600 rounded-xl text-[10px] font-black hover:bg-yellow-500 transition shadow-yellow-900/20 shadow-lg">5</button></div></div><p class="text-xs text-slate-100 font-semibold leading-relaxed">${t.title}</p></div>`;
             }).join('');
             lucide.createIcons();
         }
@@ -528,7 +530,7 @@
         function renderPlan() {
             const renderSec = (id, items, type) => {
                 const c = document.getElementById(id); if (!c) return;
-                c.innerHTML = (items || []).map((val, idx) => `<div class="flex items-center space-x-3 mb-2"><input type="checkbox" ${currentPlan.done && currentPlan.done.includes(`${type}-${idx}`) ? 'checked' : ''} onchange="window.togglePlanTask('${type}', ${idx})" class="w-6 h-6 rounded-xl border-slate-200 text-indigo-600 cursor-pointer transition focus:ring-offset-2"><input type="text" value="${val || ''}" placeholder="Was ist geplant?" onchange="window.updatePlanTask('${type}', ${idx}, this.value)" class="plan-input flex-grow font-semibold text-slate-700 ${currentPlan.done && currentPlan.done.includes(`${type}-${idx}`) ? 'task-done' : ''}"></div>`).join('');
+                c.innerHTML = (items || []).map((val, idx) => `<div class="flex items-center space-x-4 mb-3"><input type="checkbox" ${currentPlan.done && currentPlan.done.includes(`${type}-${idx}`) ? 'checked' : ''} onchange="window.togglePlanTask('${type}', ${idx})" class="w-6 h-6 rounded-xl border-slate-200 text-indigo-600 cursor-pointer transition focus:ring-offset-2"><input type="text" value="${val || ''}" placeholder="Was steht an?" onchange="window.updatePlanTask('${type}', ${idx}, this.value)" class="plan-input flex-grow font-bold text-slate-800 tracking-tight ${currentPlan.done && currentPlan.done.includes(`${type}-${idx}`) ? 'task-done' : ''}"></div>`).join('');
             };
             renderSec('plan-section-big', currentPlan.big || [''], 'big');
             renderSec('plan-section-medium', currentPlan.medium || ['', '', ''], 'medium');
@@ -549,7 +551,7 @@
 
         // --- AUTH & LISTENERS INITIALISIERUNG ---
 
-        const startPlanListener = (date) => {
+        async function startPlanListener(date) {
             if (planUnsubscribe) planUnsubscribe();
             const p = doc(db, 'artifacts', appId, 'users', userId, 'plans', date);
             planUnsubscribe = onSnapshot(p, d => {
@@ -561,12 +563,10 @@
                     checkPreviousDayForOpenTasks(date);
                 }
                 renderPlan();
-            }, err => {
-                console.error("Plan listener error", err);
-            });
-        };
+            }, err => console.error("Plan sync failure", err));
+        }
 
-        const checkPreviousDayForOpenTasks = async (currentDateStr) => {
+        async function checkPreviousDayForOpenTasks(currentDateStr) {
             const current = new Date(currentDateStr); current.setDate(current.getDate() - 1);
             const prevStr = current.toISOString().split('T')[0];
             try {
@@ -582,40 +582,44 @@
                     if(hasOpen) document.getElementById('carry-over-zone')?.classList.remove('hidden');
                 }
             } catch(e) {}
-        };
+        }
 
-        const startListeners = () => {
-            const path = (coll) => collection(db, 'artifacts', appId, 'users', userId, coll);
-            
-            onSnapshot(path('customers'), async (snap) => {
-                customers = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                if (customers.length === 0 && !isSeeding) await seedCustomers();
-                renderCustomers(); renderSelectors(); renderDashboard(); renderProjects(); renderTaskPool();
-            });
-            onSnapshot(path('projects'), (snap) => {
-                projects = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                renderProjects(); renderSelectors(); renderDashboard();
-            });
-            onSnapshot(path('tasks'), (snap) => {
-                tasks = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                renderBoard(); renderDashboard(); renderProjects(); renderTaskPool();
-                if(activeProjectId) renderProjectDetails(activeProjectId);
-            });
-            onSnapshot(path('timeLogs'), (snap) => {
-                timeLogs = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                renderReports(); renderDashboard();
-            });
-            startPlanListener(selectedPlanDate);
-        };
+        async function startListeners() {
+            try {
+                const path = (coll) => collection(db, 'artifacts', appId, 'users', userId, coll);
+                onSnapshot(path('customers'), async (snap) => {
+                    customers = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                    if (customers.length === 0 && !isSeeding) await seedCustomers();
+                    renderCustomers(); renderSelectors(); renderDashboard(); renderProjects(); renderTaskPool();
+                });
+                onSnapshot(path('projects'), (snap) => {
+                    projects = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                    renderProjects(); renderSelectors(); renderDashboard();
+                });
+                onSnapshot(path('tasks'), (snap) => {
+                    tasks = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                    renderBoard(); renderDashboard(); renderProjects(); renderTaskPool();
+                    if(activeProjectId) renderProjectDetails(activeProjectId);
+                });
+                onSnapshot(path('timeLogs'), (snap) => {
+                    timeLogs = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                    renderReports(); renderDashboard();
+                });
+                startPlanListener(selectedPlanDate);
+                document.getElementById('main-content').classList.remove('hidden');
+            } catch (err) {
+                console.error("Critical listener failure", err);
+            }
+        }
 
-        const seedCustomers = async () => {
+        async function seedCustomers() {
             isSeeding = true;
             const defaults = ["Mandant A", "Mandant B"];
             try { for (let name of defaults) await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'customers'), { name, color: colors[customers.length % colors.length] }); } 
             finally { isSeeding = false; }
-        };
+        }
 
-        // --- WINDOW GLOBALS ---
+        // --- WINDOW GLOBALS (CONTRACT FOR UI) ---
 
         window.init = async () => {
             try {
@@ -624,9 +628,7 @@
                 } else {
                     await signInAnonymously(auth);
                 }
-            } catch(e) {
-                console.error("Auth error", e);
-            }
+            } catch(e) { console.error("Initial Auth failure", e); }
             
             onAuthStateChanged(auth, u => {
                 if (u) {
@@ -634,7 +636,6 @@
                     const statusEl = document.getElementById('auth-status');
                     if(statusEl) statusEl.textContent = `UID: ${userId.substring(0,8)}`;
                     document.getElementById('login-center').classList.add('hidden');
-                    document.getElementById('main-content').classList.remove('hidden');
                     startListeners();
                 } else {
                     document.getElementById('login-center').classList.remove('hidden');
@@ -682,10 +683,7 @@
             await window.savePlan();
         };
 
-        window.savePlan = async () => { 
-            if(!userId) return;
-            await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'plans', selectedPlanDate), currentPlan); 
-        };
+        window.savePlan = async () => { if(!userId) return; await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'plans', selectedPlanDate), currentPlan); };
 
         window.carryOverOpenTasks = async () => {
             const current = new Date(selectedPlanDate); current.setDate(current.getDate() - 1);
@@ -695,7 +693,7 @@
                 const pPlan = d.data();
                 const newPlan = JSON.parse(JSON.stringify(currentPlan));
                 ['big', 'medium', 'small'].forEach(type => {
-                    pPlan[type].forEach((val, idx) => {
+                    (pPlan[type] || []).forEach((val, idx) => {
                         if(val && val.trim() !== "" && !(pPlan.done && pPlan.done.includes(`${type}-${idx}`))) {
                             const eIdx = newPlan[type].findIndex(s => !s || s.trim() === "");
                             if(eIdx !== -1) newPlan[type][eIdx] = val;
@@ -713,7 +711,42 @@
             input.value = '';
         };
 
-        // --- KI & VOICE (Zusatzlogik) ---
+        window.openProjectDetails = (id) => {
+            const p = projects.find(p => p.id === id); const c = customers.find(c => c.id === p.customerId); activeProjectId = id;
+            document.getElementById('pd-title').textContent = p.title; document.getElementById('pd-customer').textContent = c ? c.name : 'Unbekannt'; document.getElementById('pd-desc').value = p.desc || '';
+            const availableTasks = tasks.filter(t => t.customerId === p.customerId && t.projectId !== id);
+            document.getElementById('pd-link-task-select').innerHTML = '<option value="">Task wählen...</option>' + availableTasks.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
+            document.getElementById('pd-tasks-list').innerHTML = tasks.filter(t => t.projectId === id).map(t => `<div class="p-3 bg-white rounded-xl shadow-sm text-xs flex justify-between items-center border-l-4" style="border-left-color:${t.status==='done'?'#22c55e':'#fb923c'}"><span class="font-bold text-slate-700 truncate mr-2">${t.title}</span><button onclick="window.unlinkTask('${t.id}')" class="text-slate-300 hover:text-red-500 transition"><i data-lucide="link-2-off" class="w-3 h-3"></i></button></div>`).join('');
+            document.getElementById('project-detail-modal').classList.remove('hidden'); lucide.createIcons();
+        };
+
+        window.openEditModal = (id) => {
+            const t = tasks.find(x => x.id === id); if(!t) return;
+            document.getElementById('edit-task-id').value = id; document.getElementById('edit-task-title').value = t.title;
+            const cS = document.getElementById('edit-task-customer');
+            cS.innerHTML = customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            cS.value = t.customerId || "";
+            document.getElementById('edit-task-project').innerHTML = '<option value="">Kein Thema</option>' + projects.filter(p => p.customerId === t.customerId).map(p => `<option value="${p.id}">${p.title}</option>`).join('');
+            document.getElementById('edit-task-project').value = t.projectId || "";
+            document.getElementById('edit-task-modal').classList.remove('hidden');
+        };
+
+        window.deleteCustomer = async (id) => { if(confirm("Mandant löschen?")) await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'customers', id)); };
+        window.deleteTask = async (id) => { if(confirm("Task löschen?")) await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id)); };
+        window.togglePriority = async (id, v) => { await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { isHighPriority: v }); };
+        window.updateHours = async (id, v) => { await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { currentDuration: parseFloat(v) || 0 }); };
+        window.unlinkTask = async (id) => { await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { projectId: "" }); };
+
+        window.exportCSV = (custId) => {
+            const customer = customers.find(c => c.id === custId); const now = new Date();
+            const logs = timeLogs.filter(l => l.customerId === custId && new Date(l.timestamp).getMonth() === now.getMonth());
+            let csv = "\uFEFFDatum;Tätigkeit;Dauer (h)\n";
+            logs.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp)).forEach(l => { csv += `${new Date(l.timestamp).toLocaleDateString()};"${l.taskTitle.replace(/"/g, '""')}";${l.duration.toString().replace('.', ',')}\n`; });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `Report_${customer.name}_${now.getMonth()+1}.csv`; link.click();
+        };
+
+        // --- KI & VOICE ---
         let recognition = null;
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -730,7 +763,8 @@
                         method: 'POST', body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
                     });
                     const result = await response.json();
-                    const aiData = JSON.parse(result.candidates?.[0]?.content?.parts?.[0]?.text.replace(/```json|```/g, '').trim());
+                    const aiJsonStr = result.candidates?.[0]?.content?.parts?.[0]?.text.replace(/```json|```/g, '').trim();
+                    const aiData = JSON.parse(aiJsonStr);
                     const matched = customers.find(c => c.name.toLowerCase() === aiData.customer?.toLowerCase());
                     await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'tasks'), {
                         title: aiData.task || text, customerId: matched ? matched.id : "", projectId: "", status: 'backlog', date: new Date().toISOString().split('T')[0], createdAt: new Date().toISOString()
@@ -738,50 +772,13 @@
                 } catch (err) {}
             };
         }
-
-        window.startVoiceInput = () => { if(recognition) recognition.start(); else alert("Spracherkennung nicht unterstützt."); };
-        window.closeEditModal = () => document.getElementById('edit-task-modal').classList.add('hidden');
-        window.deleteCustomer = async (id) => { if(confirm("Mandant löschen?")) await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'customers', id)); };
-        window.deleteTask = async (id) => { if(confirm("Task löschen?")) await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id)); };
-        window.togglePriority = async (id, v) => { await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { isHighPriority: v }); };
-        window.updateHours = async (id, v) => { await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { currentDuration: parseFloat(v) || 0 }); };
-
-        window.openProjectDetails = (id) => {
-            const p = projects.find(p => p.id === id); const c = customers.find(c => c.id === p.customerId); activeProjectId = id;
-            document.getElementById('pd-title').textContent = p.title; document.getElementById('pd-customer').textContent = c ? c.name : 'Unbekannt'; document.getElementById('pd-desc').value = p.desc || '';
-            const availableTasks = tasks.filter(t => t.customerId === p.customerId && t.projectId !== id);
-            document.getElementById('pd-link-task-select').innerHTML = '<option value="">Task wählen...</option>' + availableTasks.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
-            document.getElementById('pd-tasks-list').innerHTML = tasks.filter(t => t.projectId === id).map(t => `<div class="p-3 bg-white rounded-xl shadow-sm text-xs flex justify-between items-center border-l-4" style="border-left-color:${t.status==='done'?'#22c55e':'#fb923c'}"><span class="font-bold text-slate-700 truncate mr-2">${t.title}</span><button onclick="window.unlinkTask('${t.id}')" class="text-slate-300 hover:text-red-500"><i data-lucide="link-2-off" class="w-3 h-3"></i></button></div>`).join('');
-            document.getElementById('project-detail-modal').classList.remove('hidden'); lucide.createIcons();
-        };
-
-        window.openEditModal = (id) => {
-            const t = tasks.find(x => x.id === id); if(!t) return;
-            document.getElementById('edit-task-id').value = id; document.getElementById('edit-task-title').value = t.title;
-            const cS = document.getElementById('edit-task-customer');
-            cS.innerHTML = customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-            cS.value = t.customerId || "";
-            document.getElementById('edit-task-project').innerHTML = '<option value="">Kein Thema</option>' + projects.filter(p => p.customerId === t.customerId).map(p => `<option value="${p.id}">${p.title}</option>`).join('');
-            document.getElementById('edit-task-project').value = t.projectId || "";
-            document.getElementById('edit-task-modal').classList.remove('hidden');
-        };
-
-        window.unlinkTask = async (id) => { await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { projectId: "" }); };
-
-        window.exportCSV = (custId) => {
-            const customer = customers.find(c => c.id === custId); const now = new Date();
-            const logs = timeLogs.filter(l => l.customerId === custId && new Date(l.timestamp).getMonth() === now.getMonth());
-            let csv = "\uFEFFDatum;Projekt;Dauer (h)\n";
-            logs.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp)).forEach(l => { csv += `${new Date(l.timestamp).toLocaleDateString()};"${l.taskTitle.replace(/"/g, '""')}";${l.duration.toString().replace('.', ',')}\n`; });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `Report_${customer.name}.csv`; link.click();
-        };
+        window.startVoiceInput = () => { if(recognition) recognition.start(); else alert("Voice Input wird nicht unterstützt."); };
 
         // --- SUBMITS ---
-        
         document.getElementById('plan-date-picker').onchange = (e) => { selectedPlanDate = e.target.value; startPlanListener(selectedPlanDate); };
         document.querySelectorAll('.tab-button').forEach(b => b.onclick = () => window.switchTab(b.dataset.tab));
         document.getElementById('logout-btn').onclick = () => signOut(auth);
+        document.getElementById('cancel-time').onclick = () => document.getElementById('time-modal').classList.add('hidden');
         
         document.getElementById('dash-task-form').onsubmit = async (e) => {
             e.preventDefault();
@@ -795,7 +792,7 @@
             if(dur > 0) {
                 await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'timeLogs'), { taskId: "quick", taskTitle: document.getElementById('ql-title').value, customerId: document.getElementById('ql-customer').value, duration: dur, timestamp: document.getElementById('ql-date').value });
                 e.target.reset(); document.getElementById('ql-date').value = new Date().toISOString().split('T')[0];
-                alert("Buchung gespeichert!");
+                alert("Buchung erfolgreich!");
             }
         };
 
@@ -806,8 +803,12 @@
             window.closeEditModal();
         };
 
-        document.getElementById('pd-save-main-btn').onclick = async () => { await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'projects', activeProjectId), { desc: document.getElementById('pd-desc').value }); alert("Projekt-Details gespeichert."); };
-        document.getElementById('pd-link-task-btn').onclick = async () => { const tId = document.getElementById('pd-link-task-select').value; if(tId) await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', tId), { projectId: activeProjectId }); };
+        document.getElementById('customer-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('cust-name').value;
+            await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'customers'), { name, color: colors[customers.length % colors.length] });
+            e.target.reset();
+        };
 
         document.querySelectorAll('.drop-zone').forEach(z => {
             z.ondragover = (e) => { e.preventDefault(); z.classList.add('drop-zone-active'); };
@@ -836,16 +837,7 @@
                 await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'timeLogs'), { taskId: t.id, taskTitle: t.title, customerId: t.customerId, duration: dur, timestamp: date });
                 await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', pendingDropId), { status: 'done', currentDuration: 0 });
                 document.getElementById('time-modal').classList.add('hidden'); pendingDropId = null;
-            } else { alert("Bitte Dauer eingeben."); }
-        };
-
-        document.getElementById('cancel-time').onclick = () => document.getElementById('time-modal').classList.add('hidden');
-
-        document.getElementById('customer-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const name = document.getElementById('cust-name').value;
-            await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'customers'), { name, color: colors[customers.length % colors.length] });
-            e.target.reset();
+            }
         };
 
         // --- STARTUP ---
