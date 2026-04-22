@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consultancy OS - Ultimate Edition</title>
+    <title>Consultancy OS - Pro Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
@@ -21,10 +21,8 @@
             cursor: pointer;
             transition: all 0.2s;
             color: #64748b;
-            display: flex;
-            align-items: center;
         }
-        .tab-button:hover { background-color: #f3f4f6; border-radius: 12px 12px 0 0; }
+        .tab-button:hover { background-color: #f3f4f6; }
         .tab-button.active {
             border-bottom-color: #4f46e5;
             color: #4f46e5;
@@ -32,7 +30,7 @@
         }
 
         .drop-zone {
-            min-height: 500px;
+            min-height: 450px;
             flex-grow: 1;
             display: flex;
             flex-direction: column;
@@ -44,7 +42,7 @@
             background-color: #f1f5f9;
             border-color: #4f46e5;
             border-style: dashed;
-            border-radius: 2.5rem;
+            border-radius: 2rem;
         }
 
         .task-card {
@@ -58,8 +56,9 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             border-bottom: 3px solid #fbc02d;
             transition: all 0.2s ease;
+            position: relative;
         }
-        .project-card:hover { transform: translateY(-4px); box-shadow: 0 15px 20px -5px rgba(0, 0, 0, 0.1); }
+        .project-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
 
         .priority-high {
             border-right: 6px solid #ef4444 !important;
@@ -70,14 +69,13 @@
             width: 100%;
             padding: 0.6rem 1rem;
             border: 1px solid #e2e8f0;
-            border-radius: 0.85rem;
+            border-radius: 0.75rem;
             font-size: 0.875rem;
             outline: none;
             transition: all 0.2s;
-            background: white;
         }
         .plan-input:focus { border-color: #4f46e5; box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
-        .task-done { text-decoration: line-through; opacity: 0.4; background-color: #f1f5f9 !important; }
+        .task-done { text-decoration: line-through; opacity: 0.4; background-color: #f1f5f9; }
 
         @keyframes pulse-red {
             0%, 100% { transform: scale(1); opacity: 1; }
@@ -94,6 +92,14 @@
             gap: 2rem;
             align-items: start;
         }
+
+        .archive-item {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
     <script type="module" src="https://unpkg.com/lucide@latest"></script>
 </head>
@@ -103,29 +109,29 @@
 
         <!-- Header -->
         <header class="flex flex-col sm:flex-row justify-between items-center bg-white p-5 rounded-[2rem] shadow-sm border border-gray-200">
-            <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-3">
                 <div class="bg-indigo-600 p-2.5 rounded-2xl text-white shadow-indigo-200 shadow-lg">
                     <i data-lucide="layout-grid"></i>
                 </div>
                 <div>
                     <h1 class="text-xl font-black text-gray-900 tracking-tight">Consultancy OS</h1>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Workspace v2.1</p>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Workflow & 1-3-5 Planner</p>
                 </div>
             </div>
             <div class="flex items-center space-x-4 mt-4 sm:mt-0">
-                <div id="auth-status" class="text-xs font-bold text-slate-400 px-4 py-1.5 bg-slate-50 rounded-full border border-slate-100">Prüfe Cloud...</div>
+                <div id="auth-status" class="text-xs font-bold text-slate-400 px-4 py-1.5 bg-slate-50 rounded-full">Initialisierung...</div>
                 <button id="logout-btn" onclick="window.handleLogout()" class="hidden bg-red-50 text-red-600 px-4 py-2 rounded-xl text-xs font-black hover:bg-red-100 transition uppercase tracking-wider">Logout</button>
             </div>
         </header>
 
         <!-- Navigation Tabs -->
-        <nav id="nav-tabs" class="hidden flex space-x-1 border-b border-gray-200 overflow-x-auto bg-white rounded-[1.5rem] shadow-sm p-1.5">
-            <button class="tab-button active" onclick="window.switchTab('dashboard')"><i data-lucide="home" class="w-4 h-4 mr-2"></i>Dashboard</button>
-            <button class="tab-button" onclick="window.switchTab('board')"><i data-lucide="trello" class="w-4 h-4 mr-2"></i>Board</button>
-            <button class="tab-button" onclick="window.switchTab('projects')"><i data-lucide="map" class="w-4 h-4 mr-2"></i>Landkarte</button>
-            <button class="tab-button" onclick="window.switchTab('plan')"><i data-lucide="calendar-check" class="w-4 h-4 mr-2"></i>Tagesplan</button>
-            <button class="tab-button" onclick="window.switchTab('analysis')"><i data-lucide="bar-chart-3" class="w-4 h-4 mr-2"></i>Zeiterfassung</button>
-            <button class="tab-button" onclick="window.switchTab('management')"><i data-lucide="settings" class="w-4 h-4 mr-2"></i>Setup</button>
+        <nav id="nav-tabs" class="hidden flex space-x-1 border-b border-gray-200 overflow-x-auto bg-white rounded-3xl shadow-sm p-1.5">
+            <button class="tab-button active" onclick="window.switchTab('dashboard')"><i data-lucide="home" class="w-4 h-4 inline mr-2"></i>Dashboard</button>
+            <button class="tab-button" onclick="window.switchTab('board')"><i data-lucide="trello" class="w-4 h-4 inline mr-2"></i>Board</button>
+            <button class="tab-button" onclick="window.switchTab('projects')"><i data-lucide="map" class="w-4 h-4 inline mr-2"></i>Landkarte</button>
+            <button class="tab-button" onclick="window.switchTab('plan')"><i data-lucide="calendar-check" class="w-4 h-4 inline mr-2"></i>Tagesplan</button>
+            <button class="tab-button" onclick="window.switchTab('analysis')"><i data-lucide="bar-chart-3" class="w-4 h-4 inline mr-2"></i>Zeiterfassung</button>
+            <button class="tab-button" onclick="window.switchTab('management')"><i data-lucide="settings" class="w-4 h-4 inline mr-2"></i>Setup</button>
         </nav>
 
         <!-- Loading Indicator -->
@@ -154,23 +160,28 @@
             <!-- TAB: DASHBOARD -->
             <div id="tab-dashboard" class="tab-content space-y-8 animate-in fade-in duration-500">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex items-center space-x-5 transition hover:shadow-md">
+                    <div class="bg-white p-8 rounded-[3rem] shadow-sm border border-slate-100 flex items-center space-x-5 transition hover:shadow-md">
                         <div class="bg-orange-100 p-4 rounded-3xl text-orange-600 shadow-inner"><i data-lucide="activity" class="w-7 h-7"></i></div>
-                        <div><p class="text-xs font-black uppercase text-slate-400 tracking-widest">In Arbeit</p><p id="stat-active-tasks" class="text-3xl font-black text-slate-800">0 Tasks</p></div>
+                        <div><p class="text-xs font-black uppercase text-slate-400 tracking-widest">Offen</p><p id="stat-active-tasks" class="text-3xl font-black text-slate-800">0 Tasks</p></div>
                     </div>
-                    <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex items-center space-x-5 transition hover:shadow-md">
+                    <div class="bg-white p-8 rounded-[3rem] shadow-sm border border-slate-100 flex items-center space-x-5 transition hover:shadow-md">
                         <div class="bg-indigo-100 p-4 rounded-3xl text-indigo-600 shadow-inner"><i data-lucide="layers" class="w-7 h-7"></i></div>
                         <div><p class="text-xs font-black uppercase text-slate-400 tracking-widest">Themen</p><p id="stat-total-projects" class="text-3xl font-black text-slate-800">0 Themen</p></div>
                     </div>
-                    <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex items-center space-x-5 transition hover:shadow-md">
+                    <div class="bg-white p-8 rounded-[3rem] shadow-sm border border-slate-100 flex items-center space-x-5 transition hover:shadow-md">
                         <div class="bg-green-100 p-4 rounded-3xl text-green-600 shadow-inner"><i data-lucide="clock" class="w-7 h-7"></i></div>
-                        <div><p class="text-xs font-black uppercase text-slate-400 tracking-widest">Stunden</p><p id="stat-monthly-hours" class="text-3xl font-black text-slate-800">0.00 h</p></div>
+                        <div><p class="text-xs font-black uppercase text-slate-400 tracking-widest">Monat</p><p id="stat-monthly-hours" class="text-3xl font-black text-slate-800">0.00 h</p></div>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div class="lg:col-span-2 space-y-6">
-                        <h3 class="text-2xl font-black text-slate-800 flex items-center tracking-tight"><i data-lucide="alert-circle" class="mr-3 text-red-500 w-8 h-8"></i> Fokus & Dringend</h3>
+                        <div class="flex items-center justify-between px-2">
+                            <h3 class="text-2xl font-black text-slate-800 flex items-center tracking-tight"><i data-lucide="alert-circle" class="mr-3 text-red-500 w-8 h-8"></i> Fokus & Dringend</h3>
+                            <select id="dash-customer-filter" onchange="window.renderDashboard()" class="p-2 text-xs font-black border border-slate-200 rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                                <option value="all">Alle Mandanten</option>
+                            </select>
+                        </div>
                         <div id="urgent-tasks-container" class="grid grid-cols-1 md:grid-cols-2 gap-5"></div>
                         <div id="no-urgent-tasks" class="hidden bg-white p-16 rounded-[3.5rem] border border-dashed border-slate-200 text-center">
                             <div class="bg-slate-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-200"><i data-lucide="check-circle-2" class="w-10 h-10"></i></div>
@@ -179,30 +190,30 @@
                     </div>
 
                     <div class="bg-white p-8 rounded-[3rem] shadow-sm border border-slate-100 space-y-6 self-start sticky top-6">
-                        <h3 class="font-black text-slate-800 text-xl tracking-tight uppercase">Schnellerfassung</h3>
+                        <h3 class="font-black text-slate-800 text-xl tracking-tight uppercase">Quick Erfassung</h3>
                         <form onsubmit="window.addDashboardTask(event)" class="space-y-4">
                             <div class="relative">
-                                <input type="text" id="dash-task-title" placeholder="Was steht an?" required class="w-full p-4 pr-12 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 transition font-semibold">
-                                <button type="button" onclick="window.startVoiceInput()" class="absolute right-4 top-4 text-slate-400 hover:text-indigo-600 transition">
+                                <input type="text" id="dash-task-title" placeholder="Was ist zu tun?" required class="w-full p-4 pr-12 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 transition font-semibold">
+                                <button type="button" onclick="window.startVoiceInput()" title="KI Sprach-Eingabe" class="absolute right-4 top-4 text-slate-400 hover:text-indigo-600 transition">
                                     <i data-lucide="mic" class="w-6 h-6"></i>
                                 </button>
                             </div>
                             <select id="dash-task-customer" required class="w-full p-4 border border-slate-200 rounded-2xl bg-slate-50 font-bold text-sm text-slate-600 outline-none"></select>
-                            <button type="submit" class="w-full bg-slate-900 text-white p-4 rounded-2xl font-black hover:bg-black transition shadow-xl uppercase tracking-widest text-xs">Task anlegen</button>
+                            <button type="submit" class="w-full bg-slate-900 text-white p-4 rounded-2xl font-black hover:bg-black transition shadow-xl uppercase tracking-widest text-xs">Anlegen</button>
                         </form>
                         <div id="dash-voice-indicator" class="hidden text-center text-red-600 text-xs font-black animate-pulse bg-red-50 p-4 rounded-2xl flex items-center justify-center">
-                            <i data-lucide="mic" class="w-5 h-5 mr-3"></i> KI HÖRT ZU...
+                            <i data-lucide="mic" class="w-4 h-4 mr-3"></i> KI HÖRT ZU...
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- TAB: BOARD -->
-            <div id="tab-board" class="tab-content hidden space-y-6">
+            <div id="tab-board" class="tab-content hidden space-y-6 animate-in fade-in duration-500">
                 <div class="flex flex-wrap items-center justify-between gap-4 bg-white p-5 rounded-[2rem] border border-gray-100 shadow-sm">
                     <div class="flex items-center space-x-3 px-2">
                         <i data-lucide="filter" class="text-indigo-500 w-6 h-6"></i>
-                        <span class="text-xs font-black uppercase text-slate-400 tracking-widest">Filter:</span>
+                        <span class="text-xs font-black uppercase text-slate-400 tracking-widest">Ansicht filtern:</span>
                     </div>
                     <select id="board-customer-filter" onchange="window.renderBoard()" class="p-3 pr-12 text-sm font-black border border-slate-200 rounded-2xl bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-500 transition">
                         <option value="all">Alle Mandanten</option>
@@ -214,11 +225,11 @@
                         <div id="col-backlog" class="drop-zone" data-status="backlog" ondragover="event.preventDefault()" ondrop="window.handleDrop(event, 'backlog')"></div>
                     </div>
                     <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-gray-200 flex flex-col min-h-[750px]">
-                        <h3 class="font-black text-orange-500 text-[10px] uppercase tracking-[0.25em] border-b pb-4 mb-8 px-2">Aktiv</h3>
+                        <h3 class="font-black text-orange-500 text-[10px] uppercase tracking-[0.25em] border-b pb-4 mb-8 px-2">In Bearbeitung</h3>
                         <div id="col-progress" class="drop-zone" data-status="progress" ondragover="event.preventDefault()" ondrop="window.handleDrop(event, 'progress')"></div>
                     </div>
                     <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-gray-200 flex flex-col min-h-[750px]">
-                        <h3 class="font-black text-green-500 text-[10px] uppercase tracking-[0.25em] border-b pb-4 mb-8 px-2">Fertig</h3>
+                        <h3 class="font-black text-green-500 text-[10px] uppercase tracking-[0.25em] border-b pb-4 mb-8 px-2">Erledigt</h3>
                         <div id="col-done" class="drop-zone" data-status="done" ondragover="event.preventDefault()" ondrop="window.handleDrop(event, 'done')"></div>
                     </div>
                 </div>
@@ -228,8 +239,8 @@
             <div id="tab-projects" class="tab-content hidden space-y-8 animate-in fade-in duration-500">
                 <div class="bg-white p-10 rounded-[3.5rem] shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6">
                     <div>
-                        <h2 class="text-4xl font-black text-slate-800 tracking-tight">Landkarte</h2>
-                        <p class="text-sm text-slate-400 font-bold uppercase tracking-widest mt-2">Themen pro Mandant</p>
+                        <h2 class="text-4xl font-black text-slate-800 tracking-tight">Themen-Landkarte</h2>
+                        <p class="text-sm text-slate-400 font-bold uppercase tracking-widest mt-2">Strategische Mandanten-Struktur</p>
                     </div>
                     <button onclick="window.openProjectCreateModal()" class="bg-indigo-600 text-white px-10 py-5 rounded-2xl font-black shadow-2xl shadow-indigo-100 hover:bg-indigo-700 transition flex items-center uppercase text-xs tracking-widest">
                         <i data-lucide="plus-circle" class="w-6 h-6 mr-3"></i> Neues Thema
@@ -243,14 +254,17 @@
                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
                     <div class="lg:col-span-3 space-y-8">
                         <header class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 bg-white p-10 rounded-[3.5rem] border border-slate-100 shadow-sm transition hover:shadow-md">
-                            <div class="flex items-center space-x-5">
-                                <h2 class="text-4xl font-black text-gray-800 tracking-tight">Tagesfokus</h2>
-                                <input type="date" id="plan-date-picker" onchange="window.handlePlanDateChange(this.value)" class="p-3 text-sm border-none bg-indigo-50 text-indigo-700 font-black rounded-2xl focus:ring-0 cursor-pointer shadow-inner">
-                            </div>
-                            <div id="carry-over-zone" class="hidden">
-                                <button onclick="window.carryOverOpenTasks()" class="bg-orange-50 text-orange-600 border border-orange-200 px-6 py-3 rounded-2xl text-xs font-black hover:bg-orange-100 transition uppercase tracking-wider flex items-center">
-                                    <i data-lucide="rotate-ccw" class="w-4 h-4 mr-3"></i> Punkte vom Vortag?
-                                </button>
+                            <div>
+                                <div class="flex items-center space-x-5 mb-2">
+                                    <h2 class="text-4xl font-black text-gray-800 tracking-tight">Tagesfokus</h2>
+                                    <input type="date" id="plan-date-picker" onchange="window.handlePlanDateChange(this.value)" class="p-3 text-sm border-none bg-indigo-50 text-indigo-700 font-black rounded-2xl focus:ring-0 cursor-pointer shadow-inner">
+                                </div>
+                                <p class="text-sm text-slate-400 font-bold uppercase tracking-widest ml-1">1 Big Thing • 3 Medium • 5 Small</p>
+                                <div id="carry-over-zone" class="hidden mt-6">
+                                    <button onclick="window.carryOverOpenTasks()" class="bg-orange-50 text-orange-600 border border-orange-200 px-6 py-3 rounded-2xl text-xs font-black hover:bg-orange-100 transition flex items-center shadow-sm uppercase tracking-wider">
+                                        <i data-lucide="rotate-ccw" class="w-5 h-5 mr-3"></i> Punkte vom Vortag übernehmen?
+                                    </button>
+                                </div>
                             </div>
                             <div class="text-right space-y-2">
                                 <span id="plan-progress-percent" class="text-5xl font-black text-indigo-600 tracking-tighter">0%</span>
@@ -259,15 +273,28 @@
                         </header>
 
                         <div id="planner-container" class="space-y-8">
-                            <section class="bg-white p-10 rounded-[3.5rem] border border-indigo-100 shadow-sm"><h3 class="text-xs font-black text-indigo-600 uppercase mb-8 flex items-center tracking-widest"><i data-lucide="crown" class="w-6 h-6 mr-4"></i> 1 BIG THING</h3><div id="plan-section-big" class="space-y-5"></div></section>
+                            <section class="bg-white p-10 rounded-[3.5rem] border border-indigo-100 shadow-sm transition hover:shadow-md">
+                                <h3 class="text-xs font-black text-indigo-600 uppercase mb-8 flex items-center tracking-widest"><i data-lucide="crown" class="w-6 h-6 mr-4"></i> 1 BIG THING</h3>
+                                <div id="plan-section-big" class="space-y-5"></div>
+                            </section>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <section class="bg-white p-10 rounded-[3.5rem] border border-slate-100 shadow-sm"><h3 class="text-xs font-black text-slate-400 uppercase mb-8 flex items-center tracking-widest"><i data-lucide="list" class="w-6 h-6 mr-4 text-slate-300"></i> 3 MEDIUM THINGS</h3><div id="plan-section-medium" class="space-y-5"></div></section>
-                                <section class="bg-white p-10 rounded-[3.5rem] border border-slate-100 shadow-sm"><h3 class="text-xs font-black text-slate-400 uppercase mb-8 flex items-center tracking-widest"><i data-lucide="zap" class="w-6 h-6 mr-4 text-yellow-500"></i> 5 SMALL THINGS</h3><div id="plan-section-small" class="space-y-5"></div></section>
+                                <section class="bg-white p-10 rounded-[3.5rem] border border-slate-100 shadow-sm transition hover:shadow-md">
+                                    <h3 class="text-xs font-black text-slate-400 uppercase mb-8 flex items-center tracking-widest"><i data-lucide="list" class="w-6 h-6 mr-4 text-slate-300"></i> 3 MEDIUM THINGS</h3><div id="plan-section-medium" class="space-y-5"></div>
+                                </section>
+                                <section class="bg-white p-10 rounded-[3.5rem] border border-slate-100 shadow-sm transition hover:shadow-md">
+                                    <h3 class="text-xs font-black text-slate-400 uppercase mb-8 flex items-center tracking-widest"><i data-lucide="zap" class="w-6 h-6 mr-4 text-yellow-500"></i> 5 SMALL THINGS</h3><div id="plan-section-small" class="space-y-5"></div>
+                                </section>
                             </div>
+                            
+                            <!-- Tagesarchiv -->
+                            <section class="bg-slate-50 p-10 rounded-[3.5rem] border border-slate-200">
+                                <h3 class="text-xs font-black text-slate-400 uppercase mb-8 flex items-center tracking-widest"><i data-lucide="archive" class="w-6 h-6 mr-4 opacity-50"></i> Heute erledigt (Archiv)</h3>
+                                <div id="plan-archive" class="space-y-3"></div>
+                            </section>
                         </div>
                     </div>
                     <div class="bg-slate-900 text-white p-8 rounded-[3.5rem] shadow-2xl flex flex-col h-[calc(100vh-140px)] sticky top-6">
-                        <h4 class="text-2xl font-black flex items-center mb-6 tracking-tight"><i data-lucide="archive" class="w-7 h-7 mr-3 text-indigo-400"></i> Task-Pool</h4>
+                        <h4 class="text-2xl font-black flex items-center mb-6 tracking-tight"><i data-lucide="archive" class="w-7 h-7 mr-3 text-indigo-400"></i> Pool</h4>
                         <div id="task-pool" class="space-y-4 overflow-y-auto flex-grow pr-2"></div>
                     </div>
                 </div>
@@ -283,25 +310,25 @@
                     <h3 class="font-black text-slate-800 text-3xl tracking-tight uppercase">Direktbuchung</h3>
                     <form onsubmit="window.handleQuickLog(event)" class="space-y-6">
                         <div class="grid grid-cols-2 gap-5">
-                            <select id="ql-customer" required class="w-full p-4 border border-slate-100 bg-slate-50 rounded-2xl font-bold text-sm outline-none"></select>
+                            <select id="ql-customer" required class="w-full p-4 border border-slate-100 bg-slate-50 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-indigo-500"></select>
                             <input type="date" id="ql-date" required class="w-full p-4 border border-slate-100 bg-slate-50 rounded-2xl font-black text-sm text-indigo-600 outline-none">
                         </div>
                         <input type="text" id="ql-title" placeholder="Tätigkeit..." required class="w-full p-5 border border-slate-100 bg-slate-50 rounded-2xl text-sm font-semibold outline-none focus:ring-2 focus:ring-indigo-500">
                         <input type="number" id="ql-duration" step="0.25" min="0" placeholder="0.00" required class="w-full p-8 border border-gray-50 bg-slate-50 rounded-[2.5rem] text-6xl font-black text-center focus:ring-4 focus:ring-indigo-50 outline-none">
-                        <button type="submit" class="w-full bg-indigo-600 text-white p-6 rounded-2xl font-black hover:bg-indigo-700 transition shadow-2xl uppercase tracking-widest text-xs">Buchen</button>
+                        <button type="submit" class="w-full bg-indigo-600 text-white p-6 rounded-2xl font-black hover:bg-indigo-700 transition shadow-2xl uppercase tracking-widest text-xs">Verbuchen</button>
                     </form>
                  </div>
             </div>
 
             <!-- TAB: SETUP -->
             <div id="tab-management" class="tab-content hidden animate-in fade-in duration-500">
-                <div class="bg-white p-12 rounded-[3.5rem] border border-slate-100 max-w-2xl mx-auto shadow-sm">
-                    <h3 class="font-black mb-10 text-xs uppercase tracking-widest text-slate-400 border-b pb-6 text-center">Mandantenverwaltung</h3>
+                <div class="bg-white p-12 rounded-[3.5rem] border border-slate-100 max-w-2xl mx-auto shadow-sm text-center">
+                    <h3 class="font-black mb-10 text-xs uppercase tracking-widest text-slate-400 border-b pb-6">Setup</h3>
                     <form onsubmit="window.handleAddCustomer(event)" class="flex gap-4 mb-12">
-                        <input type="text" id="cust-name" placeholder="Name..." required class="flex-grow p-5 border border-slate-100 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-black text-lg">
+                        <input type="text" id="cust-name" placeholder="Mandant Name..." required class="flex-grow p-5 border border-slate-100 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-black text-lg">
                         <button type="submit" class="bg-blue-600 text-white px-10 rounded-2xl shadow-xl hover:bg-blue-700 transition"><i data-lucide="plus" class="w-8 h-8"></i></button>
                     </form>
-                    <div id="customer-list" class="space-y-4"></div>
+                    <div id="customer-list" class="space-y-4 text-left"></div>
                 </div>
             </div>
         </div>
@@ -309,8 +336,8 @@
 
     <!-- MODALS -->
     <div id="edit-task-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-80 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-        <div class="bg-white p-10 rounded-[3.5rem] shadow-2xl w-full max-w-md border border-gray-100">
-            <h2 class="text-3xl font-black text-slate-800 mb-8 tracking-tight">Bearbeiten</h2>
+        <div class="bg-white p-10 rounded-[3.5rem] shadow-2xl w-full max-w-md border border-gray-100 text-slate-800">
+            <h2 class="text-3xl font-black mb-8 tracking-tight">Task bearbeiten</h2>
             <form onsubmit="window.handleTaskEdit(event)" class="space-y-6">
                 <input type="hidden" id="edit-task-id">
                 <input type="text" id="edit-task-title" required class="w-full p-5 border border-slate-100 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-lg">
@@ -340,7 +367,7 @@
     </div>
 
     <div id="time-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-80 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-        <div class="bg-white p-8 rounded-[3rem] shadow-2xl w-full max-w-sm border border-gray-200 text-center">
+        <div class="bg-white p-8 rounded-[3rem] shadow-2xl w-full max-w-sm border border-gray-200 text-center text-slate-800">
             <h2 class="text-2xl font-black mb-4 flex justify-center tracking-tight"><i data-lucide="clock" class="mr-3 text-indigo-600 w-8 h-8"></i> Buchen</h2>
             <p id="time-modal-task-name" class="text-[10px] text-slate-400 mb-8 font-black uppercase tracking-widest border-b pb-4"></p>
             <div class="space-y-6 mb-8 text-left">
@@ -373,11 +400,13 @@
         let tasks = [];
         let projects = [];
         let timeLogs = [];
-        let currentPlan = { big: [''], medium: ['', '', ''], small: ['', '', '', '', ''], done: [] };
+        let currentPlan = { big: [''], medium: ['', '', ''], small: ['', '', '', '', ''], archive: [] };
         let planUnsubscribe = null;
         let selectedPlanDate = new Date().toISOString().split('T')[0];
         let pendingDropId = null;
         let isLoginMode = true;
+
+        const colors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316', '#14B8A6', '#6366F1'];
 
         // --- HOISTED RENDERER FUNCTIONS ---
 
@@ -385,9 +414,9 @@
             const list = document.getElementById('customer-list');
             if (!list) return;
             list.innerHTML = customers.map(c => `
-                <div class="flex items-center justify-between p-5 bg-slate-50 rounded-2xl mb-3 border border-slate-100 group">
+                <div class="flex items-center justify-between p-5 bg-slate-50 rounded-2xl mb-3 border border-slate-100 transition hover:bg-slate-100">
                     <div class="flex items-center text-sm font-black text-slate-700">
-                        <span class="w-4 h-4 rounded-full mr-4 shadow-inner" style="background-color:${c.color}"></span>${c.name}
+                        <span class="w-3 h-3 rounded-full mr-4 shadow-inner" style="background-color:${c.color}"></span>${c.name}
                     </div>
                     <button onclick="window.deleteCustomer('${c.id}')" class="text-slate-300 hover:text-red-500 transition opacity-0 group-hover:opacity-100">
                         <i data-lucide="trash-2" class="w-5 h-5"></i>
@@ -398,19 +427,22 @@
         }
 
         function renderSelectors() {
-            const ids = ['dash-task-customer', 'ql-customer', 'board-customer-filter', 'edit-task-customer', 'proj-customer'];
+            const ids = ['dash-task-customer', 'ql-customer', 'board-customer-filter', 'edit-task-customer', 'proj-customer', 'dash-customer-filter'];
             const opts = customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
             ids.forEach(id => {
                 const el = document.getElementById(id);
                 if(el) {
                     const prev = el.value;
-                    el.innerHTML = (id === 'board-customer-filter' ? '<option value="all">Alle Mandanten</option>' : '<option value="" disabled selected>Wählen...</option>') + opts;
+                    el.innerHTML = (id.includes('filter') ? '<option value="all">Alle Mandanten</option>' : '<option value="" disabled selected>Wählen...</option>') + opts;
                     if(prev && [...el.options].some(o => o.value === prev)) el.value = prev;
                 }
             });
         }
 
         function renderDashboard() {
+            const filterEl = document.getElementById('dash-customer-filter');
+            const filter = filterEl ? filterEl.value : 'all';
+
             const activeCount = tasks.filter(t => t.status === 'progress').length;
             const now = new Date();
             const monthlyHours = timeLogs.filter(l => new Date(l.timestamp).getMonth() === now.getMonth()).reduce((s, l) => s + (parseFloat(l.duration) || 0), 0);
@@ -423,21 +455,24 @@
             if(sH) sH.textContent = `${monthlyHours.toFixed(2)} h`;
 
             const container = document.getElementById('urgent-tasks-container');
-            if (!container) return;
-            const urgent = tasks.filter(t => t.isHighPriority && t.status !== 'done');
-            if (urgent.length === 0) {
-                container.innerHTML = '';
-                document.getElementById('no-urgent-tasks')?.classList.remove('hidden');
-            } else {
-                document.getElementById('no-urgent-tasks')?.classList.add('hidden');
-                container.innerHTML = urgent.map(t => {
-                    const c = customers.find(x => x.id === t.customerId);
-                    return `<div class="bg-white p-7 rounded-[2.5rem] shadow-sm border border-l-[10px] border-slate-100 transition hover:shadow-xl" style="border-left-color: ${c ? c.color : '#cbd5e1'}">
-                        <div class="flex justify-between items-start mb-3"><span class="text-[10px] font-black uppercase text-indigo-400 tracking-[0.2em]">${c ? c.name : 'Allgemein'}</span></div>
-                        <h4 class="font-bold text-slate-900 leading-snug mb-5 text-xl tracking-tight">${t.title}</h4>
-                        <button onclick="window.switchTab('board')" class="text-indigo-600 font-black text-[10px] uppercase hover:underline">Zum Board</button>
-                    </div>`;
-                }).join('');
+            if (container) {
+                let urgent = tasks.filter(t => t.isHighPriority && t.status !== 'done');
+                if(filter !== 'all') urgent = urgent.filter(t => t.customerId === filter);
+
+                if (urgent.length === 0) {
+                    container.innerHTML = '';
+                    document.getElementById('no-urgent-tasks')?.classList.remove('hidden');
+                } else {
+                    document.getElementById('no-urgent-tasks')?.classList.add('hidden');
+                    container.innerHTML = urgent.map(t => {
+                        const c = customers.find(x => x.id === t.customerId);
+                        return `<div class="bg-white p-7 rounded-[2.5rem] shadow-sm border border-l-[10px] border-slate-100 transition hover:shadow-xl" style="border-left-color: ${c ? c.color : '#cbd5e1'}">
+                            <div class="flex justify-between items-start mb-3"><span class="text-[10px] font-black uppercase text-indigo-400 tracking-[0.2em]">${c ? c.name : 'Allgemein'}</span></div>
+                            <h4 class="font-bold text-slate-900 leading-snug mb-5 text-xl tracking-tight">${t.title}</h4>
+                            <button onclick="window.switchTab('board')" class="text-indigo-600 font-black text-[10px] uppercase hover:underline">Board öffnen</button>
+                        </div>`;
+                    }).join('');
+                }
             }
             lucide.createIcons();
         }
@@ -448,7 +483,7 @@
             view.innerHTML = customers.map(c => {
                 const cProjs = projects.filter(p => p.customerId === c.id);
                 return `
-                    <div class="project-column bg-white p-8 rounded-[3.5rem] shadow-sm border border-slate-100 flex flex-col space-y-6">
+                    <div class="project-column bg-white p-8 rounded-[3.5rem] shadow-sm border border-slate-100 flex flex-col space-y-6 transition hover:shadow-md">
                         <div class="flex items-center justify-between pb-4 border-b">
                             <h3 class="text-sm font-black uppercase text-slate-600 tracking-widest font-bold">${c.name}</h3>
                             <span class="text-[10px] bg-indigo-50 text-indigo-600 font-black px-2.5 py-1 rounded-full">${cProjs.length}</span>
@@ -464,7 +499,7 @@
                                         </div>
                                         <div class="mt-2 pt-2 border-t border-yellow-100 flex gap-2">
                                             <input type="text" id="quick-task-${p.id}" placeholder="Task..." class="flex-grow p-1.5 text-[10px] bg-white border border-yellow-200 rounded-xl outline-none font-bold" onkeyup="if(event.key==='Enter') window.quickAddTaskOnMap('${p.id}', '${c.id}')">
-                                            <button onclick="window.quickAddTaskOnMap('${p.id}', '${c.id}')" class="bg-yellow-600 text-white p-1.5 rounded-lg"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                                            <button onclick="window.quickAddTaskOnMap('${p.id}', '${c.id}')" class="bg-yellow-600 text-white p-1.5 rounded-lg shadow-sm"><i data-lucide="plus" class="w-4 h-4"></i></button>
                                         </div>
                                     </div>
                                 `;
@@ -507,7 +542,7 @@
             const openTasks = tasks.filter(t => t.status !== 'done');
             container.innerHTML = openTasks.map(t => {
                 const c = customers.find(x => x.id === t.customerId);
-                return `<div class="bg-slate-800 p-5 rounded-[2rem] border border-slate-700 mb-4 transition hover:border-indigo-500 shadow-xl"><div class="flex justify-between items-start mb-3"><span class="text-[9px] font-black uppercase text-indigo-400 tracking-[0.2em] truncate max-w-[100px]">${c ? c.name : '...'}</span><div class="flex space-x-1.5"><button onclick="window.assignToPlan('${t.id}', 'big')" class="w-7 h-7 bg-indigo-600 rounded-xl text-[11px] font-black hover:bg-indigo-500 transition shadow-lg">1</button><button onclick="window.assignToPlan('${t.id}', 'medium')" class="w-7 h-7 bg-slate-600 rounded-xl text-[11px] font-black hover:bg-slate-500 transition">3</button><button onclick="window.assignToPlan('${t.id}', 'small')" class="w-7 h-7 bg-yellow-600 rounded-xl text-[11px] font-black hover:bg-yellow-500 transition shadow-lg">5</button></div></div><p class="text-xs text-slate-100 font-bold leading-relaxed">${t.title}</p></div>`;
+                return `<div class="bg-slate-800 p-5 rounded-[2rem] border border-slate-700 mb-4 transition hover:border-indigo-500 shadow-xl"><div class="flex justify-between items-start mb-3"><span class="text-[9px] font-black uppercase text-indigo-400 tracking-[0.2em] truncate max-w-[100px]">${c ? c.name : '...'}</span><div class="flex space-x-1.5"><button onclick="window.assignToPlan('${t.id}', 'big')" class="w-7 h-7 bg-indigo-600 rounded-xl text-[11px] font-black">1</button><button onclick="window.assignToPlan('${t.id}', 'medium')" class="w-7 h-7 bg-slate-600 rounded-xl text-[11px] font-black hover:bg-slate-500 transition">3</button><button onclick="window.assignToPlan('${t.id}', 'small')" class="w-7 h-7 bg-yellow-600 rounded-xl text-[11px] font-black hover:bg-yellow-500 transition shadow-lg">5</button></div></div><p class="text-xs text-slate-100 font-bold leading-relaxed">${t.title}</p></div>`;
             }).join('');
             lucide.createIcons();
         }
@@ -515,18 +550,40 @@
         function renderPlan() {
             const renderSec = (id, items, type) => {
                 const c = document.getElementById(id); if (!c) return;
-                c.innerHTML = (items || []).map((val, idx) => `<div class="flex items-center space-x-4 mb-4"><input type="checkbox" ${currentPlan.done && currentPlan.done.includes(`${type}-${idx}`) ? 'checked' : ''} onchange="window.togglePlanTask('${type}', ${idx})" class="w-7 h-7 rounded-2xl border-slate-200 text-indigo-600 cursor-pointer transition focus:ring-offset-2"><input type="text" value="${val || ''}" placeholder="..." onchange="window.updatePlanTask('${type}', ${idx}, this.value)" class="plan-input flex-grow font-black text-slate-800 tracking-tight ${currentPlan.done && currentPlan.done.includes(`${type}-${idx}`) ? 'task-done' : ''}"></div>`).join('');
+                c.innerHTML = (items || []).map((val, idx) => `
+                    <div class="flex items-center space-x-4 mb-4">
+                        <input type="checkbox" onchange="window.togglePlanTask('${type}', ${idx})" class="w-7 h-7 rounded-2xl border-slate-200 text-indigo-600 cursor-pointer transition focus:ring-offset-2">
+                        <input type="text" value="${val || ''}" placeholder="..." onchange="window.updatePlanTask('${type}', ${idx}, this.value)" class="plan-input flex-grow font-black text-slate-800 tracking-tight">
+                    </div>
+                `).join('');
             };
             renderSec('plan-section-big', currentPlan.big || [''], 'big');
             renderSec('plan-section-medium', currentPlan.medium || ['', '', ''], 'medium');
             renderSec('plan-section-small', currentPlan.small || ['', '', '', '', ''], 'small');
+            
+            // Archiv Rendern
+            const archiveCont = document.getElementById('plan-archive');
+            if(archiveCont) {
+                archiveCont.innerHTML = (currentPlan.archive || []).map(a => `
+                    <div class="archive-item flex items-center justify-between p-4 bg-white rounded-2xl shadow-sm border border-slate-100 mb-2">
+                        <div class="flex items-center">
+                            <i data-lucide="check-circle-2" class="w-4 h-4 text-green-500 mr-3"></i>
+                            <span class="text-sm font-bold text-slate-700 line-through opacity-50">${a.title}</span>
+                        </div>
+                        <span class="text-[9px] font-black uppercase text-slate-300 tracking-widest">${a.type === 'big' ? 'Big Thing' : a.type === 'medium' ? 'Medium' : 'Quick Win'}</span>
+                    </div>
+                `).reverse().join('');
+            }
+            
             updatePlanStats();
+            lucide.createIcons();
         }
 
         function updatePlanStats() {
-            const total = (currentPlan.big||[]).filter(x=>x.trim()).length + (currentPlan.medium||[]).filter(x=>x.trim()).length + (currentPlan.small||[]).filter(x=>x.trim()).length;
-            const done = currentPlan.done ? currentPlan.done.length : 0;
-            const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+            const openCount = (currentPlan.big||[]).filter(x=>x.trim()).length + (currentPlan.medium||[]).filter(x=>x.trim()).length + (currentPlan.small||[]).filter(x=>x.trim()).length;
+            const doneCount = currentPlan.archive ? currentPlan.archive.length : 0;
+            const total = openCount + doneCount;
+            const percent = total > 0 ? Math.round((doneCount / total) * 100) : 0;
             const pt = document.getElementById('plan-progress-percent');
             const pb = document.getElementById('plan-progress-bar');
             if(pt) pt.textContent = `${percent}%`;
@@ -551,13 +608,8 @@
             if (planUnsubscribe) planUnsubscribe();
             const p = doc(db, 'artifacts', appId, 'users', userId, 'plans', date);
             planUnsubscribe = onSnapshot(p, d => {
-                if(d.exists()) {
-                    currentPlan = d.data();
-                    document.getElementById('carry-over-zone')?.classList.add('hidden');
-                } else {
-                    currentPlan = { big: [''], medium: ['', '', ''], small: ['', '', '', '', ''], done: [] };
-                    checkPreviousDayForOpenTasks(date);
-                }
+                if(d.exists()) currentPlan = d.data();
+                else currentPlan = { big: [''], medium: ['', '', ''], small: ['', '', '', '', ''], archive: [] };
                 renderPlan();
             });
         }
@@ -571,8 +623,8 @@
                     const prevPlan = d.data();
                     let hasOpen = false;
                     ['big', 'medium', 'small'].forEach(type => {
-                        (prevPlan[type] || []).forEach((val, idx) => {
-                            if(val && val.trim() !== "" && !(prevPlan.done && prevPlan.done.includes(`${type}-${idx}`))) hasOpen = true;
+                        (prevPlan[type] || []).forEach((val) => {
+                            if(val && val.trim() !== "") hasOpen = true;
                         });
                     });
                     if(hasOpen) document.getElementById('carry-over-zone')?.classList.remove('hidden');
@@ -588,7 +640,6 @@
             onSnapshot(path('timeLogs'), snap => { timeLogs = snap.docs.map(d => ({id: d.id, ...d.data()})); renderReports(); renderDashboard(); });
             startPlanListener(selectedPlanDate);
 
-            // Loader-Sicherheitsnetz
             setTimeout(() => {
                 document.getElementById('loading-indicator').classList.add('hidden');
                 document.getElementById('main-content').classList.remove('hidden');
@@ -646,8 +697,11 @@
         window.assignToPlan = async (taskId, type) => {
             const t = tasks.find(x => x.id === taskId);
             const freeIdx = currentPlan[type].findIndex(s => !s || s.trim() === "");
-            if (freeIdx !== -1) { currentPlan[type][freeIdx] = t.title; await window.savePlan(); }
-            else alert("Slots belegt!");
+            if (freeIdx !== -1) { 
+                currentPlan[type][freeIdx] = t.title; 
+                await window.savePlan(); 
+            }
+            else alert("Alle Slots belegt!");
         };
 
         window.updatePlanTask = async (type, idx, val) => {
@@ -661,9 +715,18 @@
         };
 
         window.togglePlanTask = async (type, idx) => {
-            const key = `${type}-${idx}`; if(!currentPlan.done) currentPlan.done = [];
-            if(currentPlan.done.includes(key)) currentPlan.done = currentPlan.done.filter(k => k !== key);
-            else currentPlan.done.push(key);
+            const val = currentPlan[type][idx];
+            if (!val || val.trim() === "") return;
+
+            const globalTask = tasks.find(t => t.title.toLowerCase() === val.toLowerCase());
+            if(globalTask) {
+                await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', globalTask.id), { status: 'done' });
+            }
+
+            if (!currentPlan.archive) currentPlan.archive = [];
+            currentPlan.archive.push({ title: val, type: type, timestamp: new Date().toISOString() });
+            currentPlan[type][idx] = "";
+
             await window.savePlan();
         };
 
@@ -676,8 +739,8 @@
                 const pPlan = d.data();
                 const newPlan = JSON.parse(JSON.stringify(currentPlan));
                 ['big', 'medium', 'small'].forEach(type => {
-                    pPlan[type].forEach((val, idx) => {
-                        if(val && val.trim() !== "" && !(pPlan.done && pPlan.done.includes(`${type}-${idx}`))) {
+                    pPlan[type].forEach((val) => {
+                        if(val && val.trim() !== "") {
                             const eIdx = newPlan[type].findIndex(s => !s || s.trim() === "");
                             if(eIdx !== -1) newPlan[type][eIdx] = val;
                         }
