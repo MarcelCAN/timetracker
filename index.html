@@ -127,7 +127,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-black text-gray-900 tracking-tight">Consultancy OS</h1>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Workspace v2.2</p>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Workspace v2.3</p>
                 </div>
             </div>
             <div class="flex items-center space-x-4 mt-4 sm:mt-0">
@@ -261,7 +261,7 @@
                 <div id="project-board-view" class="project-grid-container pb-20"></div>
             </div>
 
-            <!-- TAB: TAGESPLAN -->
+            <!-- TAB: TAGESPLAN (1-3-5) -->
             <div id="tab-plan" class="tab-content hidden space-y-8 animate-in fade-in duration-500">
                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
                     <div class="lg:col-span-3 space-y-8">
@@ -271,42 +271,49 @@
                                     <h2 class="text-4xl font-black text-gray-800 tracking-tight">Tagesfokus</h2>
                                     <input type="date" id="plan-date-picker" onchange="window.handlePlanDateChange(this.value)" class="p-3 text-sm border-none bg-indigo-50 text-indigo-700 font-black rounded-2xl focus:ring-0 cursor-pointer shadow-inner">
                                 </div>
-                                <p class="text-sm text-slate-400 font-bold uppercase tracking-widest ml-1">Fokussierung nach der 1-3-5 Methode</p>
+                                <p class="text-sm text-slate-400 font-bold uppercase tracking-widest ml-1">1 Big Thing • 3 Medium • 5 Small</p>
+                                
                                 <div id="carry-over-zone" class="hidden mt-6">
                                     <button onclick="window.carryOverOpenTasks()" class="bg-orange-50 text-orange-600 border border-orange-200 px-6 py-3 rounded-2xl text-xs font-black hover:bg-orange-100 transition flex items-center shadow-sm uppercase tracking-wider">
                                         <i data-lucide="rotate-ccw" class="w-5 h-5 mr-3"></i> Punkte vom Vortag übernehmen?
                                     </button>
                                 </div>
                             </div>
+
                             <div class="text-right space-y-2">
                                 <span id="plan-progress-percent" class="text-5xl font-black text-indigo-600 tracking-tighter">0%</span>
                                 <div class="w-56 bg-gray-100 rounded-full h-4 shadow-inner"><div id="plan-progress-bar" class="bg-indigo-600 h-4 rounded-full transition-all duration-1000 shadow-lg" style="width: 0%"></div></div>
+                                <p class="text-[10px] font-black uppercase text-slate-300 tracking-[0.3em] text-center mt-2">Daily Progress</p>
                             </div>
                         </header>
 
                         <div id="planner-container" class="space-y-8">
                             <section class="bg-white p-10 rounded-[3.5rem] border border-indigo-100 shadow-sm transition hover:shadow-md">
-                                <h3 class="text-xs font-black text-indigo-600 uppercase mb-8 flex items-center tracking-widest"><i data-lucide="crown" class="w-6 h-6 mr-4"></i> 1 BIG THING (Fokus)</h3>
+                                <h3 class="text-xs font-black text-indigo-600 uppercase mb-8 flex items-center tracking-[0.3em]"><i data-lucide="crown" class="w-6 h-6 mr-4"></i> 1 Großes Thema (Focus)</h3>
                                 <div id="plan-section-big" class="space-y-5"></div>
                             </section>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <section class="bg-white p-10 rounded-[3.5rem] border border-slate-100 shadow-sm transition hover:shadow-md">
-                                    <h3 class="text-xs font-black text-slate-400 uppercase mb-8 flex items-center tracking-widest"><i data-lucide="list" class="w-6 h-6 mr-4 text-slate-300"></i> 3 MEDIUM THINGS</h3><div id="plan-section-medium" class="space-y-5"></div>
+                                    <h3 class="text-xs font-black text-slate-400 uppercase mb-8 flex items-center tracking-[0.2em]"><i data-lucide="list" class="w-6 h-6 mr-4 text-slate-300"></i> 3 Mittlere Aufgaben</h3>
+                                    <div id="plan-section-medium" class="space-y-5"></div>
                                 </section>
                                 <section class="bg-white p-10 rounded-[3.5rem] border border-slate-100 shadow-sm transition hover:shadow-md">
-                                    <h3 class="text-xs font-black text-slate-400 uppercase mb-8 flex items-center tracking-widest"><i data-lucide="zap" class="w-6 h-6 mr-4 text-yellow-500"></i> 5 SMALL THINGS</h3><div id="plan-section-small" class="space-y-5"></div>
+                                    <h3 class="text-xs font-black text-slate-400 uppercase mb-8 flex items-center tracking-[0.2em]"><i data-lucide="zap" class="w-6 h-6 mr-4 text-yellow-500"></i> 5 Quick Wins</h3>
+                                    <div id="plan-section-small" class="space-y-5"></div>
                                 </section>
                             </div>
                             
-                            <!-- Tagesarchiv -->
+                            <!-- Tagesarchiv (Erledigt) -->
                             <section class="bg-slate-50 p-10 rounded-[3.5rem] border border-slate-200">
-                                <h3 class="text-xs font-black text-slate-400 uppercase mb-8 flex items-center tracking-widest"><i data-lucide="archive" class="w-6 h-6 mr-4 opacity-50"></i> Heute erledigt (Archiv)</h3>
+                                <h3 class="text-xs font-black text-slate-400 uppercase mb-8 flex items-center tracking-[0.3em]"><i data-lucide="archive" class="w-6 h-6 mr-4 opacity-50"></i> Heute erledigt (Archiv)</h3>
                                 <div id="plan-archive" class="space-y-3"></div>
                             </section>
                         </div>
                     </div>
+                    
                     <div class="bg-slate-900 text-white p-8 rounded-[3.5rem] shadow-2xl flex flex-col h-[calc(100vh-140px)] sticky top-6">
-                        <h4 class="text-2xl font-black flex items-center mb-6 tracking-tight"><i data-lucide="archive" class="w-7 h-7 mr-3 text-indigo-400"></i> Task-Pool</h4>
+                        <h4 class="text-2xl font-black flex items-center mb-2 tracking-tight"><i data-lucide="archive" class="w-7 h-7 mr-3 text-indigo-400"></i> Task-Pool</h4>
+                        <p class="text-[10px] text-slate-500 font-bold uppercase mb-8 tracking-[0.15em] leading-relaxed">Klick zum Planen (1, 3, 5):</p>
                         <div id="task-pool" class="space-y-4 overflow-y-auto flex-grow pr-2"></div>
                     </div>
                 </div>
@@ -315,7 +322,7 @@
             <!-- TAB: ZEITERFASSUNG -->
             <div id="tab-analysis" class="tab-content hidden grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in fade-in duration-500">
                  <div class="bg-slate-900 p-12 rounded-[3.5rem] shadow-xl text-white space-y-10">
-                    <h3 class="font-black text-slate-400 border-b border-slate-800 pb-6 text-xs uppercase tracking-widest">Leistungsnachweis</h3>
+                    <h3 class="font-black text-slate-400 border-b border-slate-800 pb-6 text-xs uppercase tracking-[0.3em]">Leistungs-Nachweis</h3>
                     <div id="monthly-stats" class="space-y-5"></div>
                  </div>
                  <div class="bg-white p-12 rounded-[3.5rem] shadow-sm border border-slate-200 space-y-10 self-start">
@@ -327,7 +334,7 @@
                         </div>
                         <input type="text" id="ql-title" placeholder="Was hast du getan?" required class="w-full p-5 border border-slate-100 bg-slate-50 rounded-2xl text-sm font-semibold outline-none focus:ring-2 focus:ring-indigo-500">
                         <input type="number" id="ql-duration" step="0.25" min="0" placeholder="0.00" required class="w-full p-8 border border-gray-50 bg-slate-50 rounded-[2.5rem] text-6xl font-black text-center focus:ring-4 focus:ring-indigo-50 outline-none">
-                        <button type="submit" class="w-full bg-indigo-600 text-white p-6 rounded-2xl font-black hover:bg-indigo-700 transition shadow-2xl uppercase tracking-widest text-xs">Verbuchen</button>
+                        <button type="submit" class="w-full bg-indigo-600 text-white p-6 rounded-2xl font-black hover:bg-indigo-700 transition shadow-2xl shadow-indigo-200 uppercase tracking-widest text-xs">Verbuchen</button>
                     </form>
                  </div>
             </div>
@@ -335,9 +342,9 @@
             <!-- TAB: SETUP -->
             <div id="tab-management" class="tab-content hidden animate-in fade-in duration-500">
                 <div class="bg-white p-12 rounded-[3.5rem] border border-slate-100 max-w-2xl mx-auto shadow-sm text-center">
-                    <h3 class="font-black mb-10 text-xs uppercase tracking-widest text-slate-400 border-b pb-6">Setup</h3>
+                    <h3 class="font-black mb-10 text-xs uppercase tracking-[0.3em] text-slate-400 border-b pb-6">Setup & Mandanten</h3>
                     <form onsubmit="window.handleAddCustomer(event)" class="flex gap-4 mb-12">
-                        <input type="text" id="cust-name" placeholder="Mandant Name..." required class="flex-grow p-5 border border-slate-100 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-black text-lg">
+                        <input type="text" id="cust-name" placeholder="Name..." required class="flex-grow p-5 border border-slate-100 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 font-black text-lg">
                         <button type="submit" class="bg-blue-600 text-white px-10 rounded-2xl shadow-xl hover:bg-blue-700 transition"><i data-lucide="plus" class="w-8 h-8"></i></button>
                     </form>
                     <div id="customer-list" class="space-y-4 text-left"></div>
@@ -355,7 +362,6 @@
                 <input type="text" id="edit-task-title" required class="w-full p-5 border border-slate-100 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-lg">
                 <div class="grid grid-cols-2 gap-4">
                     <select id="edit-task-customer" required class="w-full p-4 border border-slate-100 bg-slate-50 rounded-xl font-bold text-xs"></select>
-                    <select id="edit-task-project" class="w-full p-4 border border-slate-100 bg-slate-50 rounded-xl font-bold text-xs"><option value="">Kein Thema</option></select>
                 </div>
                 <div class="grid grid-cols-2 gap-4 pt-6">
                     <button type="button" onclick="window.closeEditModal()" class="p-5 text-slate-400 font-black uppercase tracking-widest text-[10px]">Abbruch</button>
@@ -399,7 +405,7 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
         import { getFirestore, doc, deleteDoc, setDoc, onSnapshot, collection, addDoc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
-        // --- SETUP ---
+        // --- KONFIGURATION ---
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{"apiKey": "AIzaSyDramsPfqWtBGdvHyMAos0nhyT0t4EMkAg","authDomain": "timetracker-7bf2a.firebaseapp.com","projectId": "timetracker-7bf2a","storageBucket": "timetracker-7bf2a.firebasestorage.app","messagingSenderId": "3152109841","appId": "1:3152109841:web:4e83e101949907c056acb0"}');
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -421,15 +427,27 @@
 
         const colors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316', '#14B8A6', '#6366F1'];
 
+        // --- UI TOOLS ---
+        function showToast(msg, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-10 left-1/2 -translate-x-1/2 p-4 rounded-2xl shadow-2xl font-bold text-white z-[100] animate-in fade-in slide-in-from-bottom-5 duration-300 ${type === 'error' ? 'bg-red-500' : 'bg-indigo-600'}`;
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('animate-out', 'fade-out', 'slide-out-to-bottom-5');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
         // --- RENDERER FUNCTIONS (HOISTED) ---
 
         function renderCustomers() {
             const list = document.getElementById('customer-list');
             if (!list) return;
             list.innerHTML = customers.map(c => `
-                <div class="flex items-center justify-between p-5 bg-slate-50 rounded-2xl mb-3 border border-slate-100 transition hover:bg-slate-100">
+                <div class="flex items-center justify-between p-5 bg-slate-50 rounded-2xl mb-3 border border-slate-100 transition hover:bg-slate-100 group">
                     <div class="flex items-center text-sm font-black text-slate-700">
-                        <span class="w-3 h-3 rounded-full mr-4 shadow-inner" style="background-color:${c.color}"></span>${c.name}
+                        <span class="w-4 h-4 rounded-full mr-4 shadow-inner" style="background-color:${c.color}"></span>${c.name}
                     </div>
                     <button onclick="window.deleteCustomer('${c.id}')" class="text-slate-300 hover:text-red-500 transition opacity-0 group-hover:opacity-100">
                         <i data-lucide="trash-2" class="w-5 h-5"></i>
@@ -460,12 +478,9 @@
             const now = new Date();
             const monthlyHours = timeLogs.filter(l => new Date(l.timestamp).getMonth() === now.getMonth()).reduce((s, l) => s + (parseFloat(l.duration) || 0), 0);
             
-            const sA = document.getElementById('stat-active-tasks');
-            const sP = document.getElementById('stat-total-projects');
-            const sH = document.getElementById('stat-monthly-hours');
-            if(sA) sA.textContent = `${activeCount} Tasks`;
-            if(sP) sP.textContent = `${projects.length} Themen`;
-            if(sH) sH.textContent = `${monthlyHours.toFixed(2)} h`;
+            if(document.getElementById('stat-active-tasks')) document.getElementById('stat-active-tasks').textContent = `${activeCount} Tasks`;
+            if(document.getElementById('stat-total-projects')) document.getElementById('stat-total-projects').textContent = `${projects.length} Themen`;
+            if(document.getElementById('stat-monthly-hours')) document.getElementById('stat-monthly-hours').textContent = `${monthlyHours.toFixed(2)} h`;
 
             const container = document.getElementById('urgent-tasks-container');
             if (container) {
@@ -482,7 +497,7 @@
                         return `<div class="bg-white p-7 rounded-[2.5rem] shadow-sm border border-l-[10px] border-slate-100 transition hover:shadow-xl" style="border-left-color: ${c ? c.color : '#cbd5e1'}">
                             <div class="flex justify-between items-start mb-3"><span class="text-[10px] font-black uppercase text-indigo-400 tracking-[0.2em]">${c ? c.name : 'Allgemein'}</span></div>
                             <h4 class="font-bold text-slate-900 leading-snug mb-5 text-xl tracking-tight">${t.title}</h4>
-                            <button onclick="window.switchTab('board')" class="text-indigo-600 font-black text-[10px] uppercase hover:underline">Zum Board</button>
+                            <button onclick="window.switchTab('board')" class="text-indigo-600 font-black text-[10px] uppercase hover:underline">Board öffnen</button>
                         </div>`;
                     }).join('');
                 }
@@ -539,17 +554,16 @@
                     container.appendChild(gEl);
                     g.tasks.forEach(t => {
                         const card = document.createElement('div');
-                        card.className = `task-card bg-white p-5 rounded-3xl shadow-sm border border-slate-200 border-l-[10px] group relative pointer-events-auto ${t.isHighPriority ? 'priority-high' : ''}`;
+                        card.className = `task-card bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 border-l-[10px] group relative pointer-events-auto ${t.isHighPriority ? 'priority-high' : ''}`;
                         card.style.borderLeftColor = g.c.color; card.draggable = true; card.setAttribute('data-id', t.id);
                         
-                        // Kunden-Badge auf der Karte für bessere Sichtbarkeit
                         const customerBadge = `<span class="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider mb-2 inline-block shadow-sm" style="background-color: ${g.c.color}20; color: ${g.c.color}">${g.c.name}</span>`;
                         
                         card.innerHTML = `
                             <div class="flex flex-col">
                                 ${customerBadge}
                                 <div class="flex justify-between items-start mb-2">
-                                    <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Aufgabe</span>
+                                    <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Task</span>
                                     <div class="flex space-x-2 opacity-0 group-hover:opacity-100 transition">
                                         <button onclick="window.togglePriority('${t.id}', ${!t.isHighPriority})"><i data-lucide="zap" class="w-4 h-4 ${t.isHighPriority ? 'text-red-500 fill-current' : 'text-slate-300'}"></i></button>
                                         <button onclick="window.openEditModal('${t.id}')"><i data-lucide="pencil" class="w-4 h-4 text-slate-300 hover:text-indigo-500 transition"></i></button>
@@ -583,7 +597,7 @@
                 c.innerHTML = (items || []).map((val, idx) => `
                     <div class="flex items-center space-x-4 mb-4">
                         <input type="checkbox" onchange="window.togglePlanTask('${type}', ${idx})" class="w-7 h-7 rounded-2xl border-slate-200 text-indigo-600 cursor-pointer transition focus:ring-offset-2">
-                        <input type="text" value="${val || ''}" placeholder="..." onchange="window.updatePlanTask('${type}', ${idx}, this.value)" class="plan-input flex-grow font-black text-slate-800 tracking-tight">
+                        <input type="text" value="${val || ''}" placeholder="Leer..." onchange="window.updatePlanTask('${type}', ${idx}, this.value)" class="plan-input flex-grow font-black text-slate-800 tracking-tight">
                     </div>
                 `).join('');
             };
@@ -591,7 +605,6 @@
             renderSec('plan-section-medium', currentPlan.medium || ['', '', ''], 'medium');
             renderSec('plan-section-small', currentPlan.small || ['', '', '', '', ''], 'small');
             
-            // Archiv Rendern
             const archiveCont = document.getElementById('plan-archive');
             if(archiveCont) {
                 archiveCont.innerHTML = (currentPlan.archive || []).map(a => `
@@ -604,7 +617,6 @@
                     </div>
                 `).reverse().join('');
             }
-            
             updatePlanStats();
             lucide.createIcons();
         }
@@ -628,7 +640,7 @@
             container.innerHTML = customers.map(cust => {
                 const total = logs.filter(l => l.customerId === cust.id).reduce((s, l) => s + (parseFloat(l.duration) || 0), 0);
                 if (total === 0) return '';
-                return `<div class="bg-slate-800 bg-opacity-40 p-6 rounded-[2rem] border border-slate-700 flex justify-between items-center mb-4 group transition hover:bg-opacity-50 transition-all"><span class="font-bold text-slate-200 text-lg">${cust.name}</span><span class="text-3xl font-black text-white tracking-tighter">${total.toFixed(2)}h</span></div>`;
+                return `<div class="bg-slate-800 bg-opacity-40 p-6 rounded-[2rem] border border-slate-700 flex justify-between items-center mb-4 transition hover:bg-opacity-50"><span class="font-bold text-slate-200 text-lg">${cust.name}</span><span class="text-3xl font-black text-white tracking-tighter">${total.toFixed(2)}h</span></div>`;
             }).join('') || '<div class="text-center py-12 text-slate-500 text-sm font-black uppercase tracking-widest opacity-40">Keine Daten.</div>';
         }
 
@@ -708,11 +720,11 @@
             const target = document.getElementById(`tab-${tabId}`);
             if(target) target.classList.remove('hidden');
             
-            // Re-render based on tab
             if(tabId === 'projects') renderProjects();
             if(tabId === 'dashboard') renderDashboard();
-            if(tabId === 'plan') renderPlan();
+            if(tabId === 'plan') { renderPlan(); renderTaskPool(); }
             if(tabId === 'board') renderBoard();
+            if(tabId === 'analysis') renderReports();
             
             lucide.createIcons();
         };
@@ -843,27 +855,42 @@
 
         window.handlePlanDateChange = (val) => { selectedPlanDate = val; startPlanListener(val); };
 
-        // --- KI & VOICE IMPLEMENTIERUNG ---
+        // --- KI & VOICE ---
         let recognition = null;
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechRecognition();
             recognition.lang = 'de-DE';
-            recognition.interimResults = false;
-            recognition.maxAlternatives = 1;
-
             recognition.onstart = () => {
                 document.getElementById('dash-voice-indicator')?.classList.remove('hidden');
                 document.getElementById('mic-btn-dash')?.classList.add('mic-active');
             };
-
             recognition.onend = () => {
                 document.getElementById('dash-voice-indicator')?.classList.add('hidden');
                 document.getElementById('mic-btn-dash')?.classList.remove('mic-active');
             };
-
             recognition.onresult = async (event) => {
                 const text = event.results[0][0].transcript;
+                if (!text.trim()) return;
+
+                if (!geminiApiKey) {
+                    // Fallback ohne Key: Task direkt anlegen
+                    try {
+                        await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'tasks'), { 
+                            title: text, 
+                            customerId: "", 
+                            status: 'backlog', 
+                            date: new Date().toISOString().split('T')[0], 
+                            createdAt: new Date().toISOString() 
+                        });
+                        showToast("Task erfasst (Backlog)");
+                    } catch(e) {
+                        document.getElementById('dash-task-title').value = text;
+                        showToast("In Eingabefeld kopiert");
+                    }
+                    return;
+                }
+
                 const customerNames = customers.map(c => c.name).join(', ');
                 const prompt = `Extrahiere Mandant und Task-Titel aus dem Text. Mandanten: [${customerNames}]. Antwort nur JSON: {"customer": "Name", "task": "Titel"}. Text: "${text}"`;
                 
@@ -882,16 +909,17 @@
                         date: new Date().toISOString().split('T')[0], 
                         createdAt: new Date().toISOString() 
                     });
+                    showToast("Task erkannt & gespeichert");
                 } catch (err) {
-                    // Fallback: Einfach als Task im Dashboard eintragen
                     document.getElementById('dash-task-title').value = text;
+                    showToast("KI Analyse fehlgeschlagen");
                 }
             };
         }
 
         window.startVoiceInput = () => {
             if (recognition) recognition.start();
-            else alert("Spracherkennung wird von diesem Browser nicht unterstützt.");
+            else alert("Spracherkennung wird nicht unterstützt.");
         };
 
         window.init();
